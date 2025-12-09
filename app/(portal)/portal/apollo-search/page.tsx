@@ -703,9 +703,9 @@ export default function ApolloSearchPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)]">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b">
+      <div className="flex items-center justify-between p-4 border-b shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600">
             <Search className="h-6 w-6 text-white" />
@@ -745,10 +745,10 @@ export default function ApolloSearchPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <div className="border-b px-4">
               <TabsList className="h-10">
                 <TabsTrigger value="chat" className="gap-2">
@@ -762,9 +762,9 @@ export default function ApolloSearchPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="chat" className="flex-1 flex flex-col m-0 overflow-hidden">
+            <TabsContent value="chat" className="flex-1 flex flex-col m-0 min-h-0 overflow-hidden">
               {/* Messages */}
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea className="flex-1 min-h-0 p-4">
                 <div className="space-y-4 max-w-4xl mx-auto">
                   {messages.map((message) => (
                     <div
@@ -1020,8 +1020,8 @@ export default function ApolloSearchPage() {
               </div>
             </TabsContent>
 
-            <TabsContent value="results" className="flex-1 m-0 overflow-hidden">
-              <ScrollArea className="h-full p-4">
+            <TabsContent value="results" className="flex-1 m-0 min-h-0 overflow-hidden">
+              <ScrollArea className="h-full min-h-0 p-4">
                 <div className="max-w-4xl mx-auto space-y-4">
                   {allResults.length === 0 ? (
                     <div className="text-center py-12">
