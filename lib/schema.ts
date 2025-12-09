@@ -449,6 +449,54 @@ export interface TeamMemberDoc {
   updatedAt: Timestamp;
 }
 
+/** Platform Settings document in Firestore */
+export interface PlatformSettingsDoc {
+  id: string;
+  // API Integrations
+  integrations: {
+    mattermost?: {
+      apiKey?: string;
+      webhookUrl?: string;
+      serverUrl?: string;
+      teamId?: string;
+      status: "connected" | "disconnected" | "error";
+      lastTested?: Timestamp;
+    };
+    apollo?: {
+      apiKey?: string;
+      accountId?: string;
+      status: "connected" | "disconnected" | "error";
+      lastTested?: Timestamp;
+    };
+    gohighlevel?: {
+      apiKey?: string;
+      locationId?: string;
+      agencyId?: string;
+      status: "connected" | "disconnected" | "error";
+      lastTested?: Timestamp;
+    };
+    zoom?: {
+      apiKey?: string;
+      apiSecret?: string;
+      accountId?: string;
+      status: "connected" | "disconnected" | "error";
+      lastTested?: Timestamp;
+    };
+  };
+  // LLM Configuration
+  llmConfig?: {
+    provider: string;
+    model: string;
+    apiKey?: string;
+    ollamaUrl?: string;
+    useOllama: boolean;
+  };
+  // Webhook Events
+  webhookEvents?: Record<string, boolean>;
+  updatedAt: Timestamp;
+  updatedBy?: string;
+}
+
 // ============================================================================
 // Collection Names
 // ============================================================================
@@ -482,6 +530,8 @@ export const COLLECTIONS = {
   STRATEGIC_PARTNERS: "strategicPartners",
   // Team Members
   TEAM_MEMBERS: "teamMembers",
+  // Platform Settings
+  PLATFORM_SETTINGS: "platformSettings",
 } as const;
 
 // ============================================================================
@@ -526,6 +576,9 @@ export const strategicPartnersCollection = () => getCollection<StrategicPartnerD
 
 // Team Members collection reference
 export const teamMembersCollection = () => getCollection<TeamMemberDoc>(COLLECTIONS.TEAM_MEMBERS);
+
+// Platform Settings collection reference
+export const platformSettingsCollection = () => getCollection<PlatformSettingsDoc>(COLLECTIONS.PLATFORM_SETTINGS);
 
 // ============================================================================
 // Subcollection Helpers

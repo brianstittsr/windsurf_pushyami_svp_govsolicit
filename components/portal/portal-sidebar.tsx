@@ -48,6 +48,8 @@ import {
   Shield,
   Rocket,
   Battery,
+  UserCog,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +112,16 @@ const workItems = [
 ];
 
 const adminItems = [
+  {
+    title: "Team Members",
+    href: "/portal/admin/team-members",
+    icon: UserCog,
+  },
+  {
+    title: "Strategic Partners",
+    href: "/portal/admin/strategic-partners",
+    icon: Building2,
+  },
   {
     title: "Hero Management",
     href: "/portal/admin/hero",

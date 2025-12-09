@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,9 +43,13 @@ import {
   RefreshCw,
   Send,
   User,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WEBHOOK_EVENTS, testWebhookConnection, sendToBrianStitt, type WebhookEventType } from "@/lib/mattermost";
+import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS, type PlatformSettingsDoc } from "@/lib/schema";
 
 interface ApiKeyConfig {
   id: string;
@@ -118,6 +122,8 @@ const llmProviders = [
   { id: "ollama", name: "Ollama (Local)", models: ["llama2", "codellama", "mistral", "mixtral"] },
 ];
 
+const SETTINGS_DOC_ID = "global";
+
 export default function SettingsPage() {
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [apiKeys, setApiKeys] = useState<Record<string, Record<string, string>>>({});
@@ -128,6 +134,9 @@ export default function SettingsPage() {
   const [brianStittMessage, setBrianStittMessage] = useState("");
   const [brianStittDialogOpen, setBrianStittDialogOpen] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [hasChanges, setHasChanges] = useState(false);
   const [llmConfig, setLlmConfig] = useState({
     provider: "openai",
     model: "gpt-4o",
@@ -135,6 +144,134 @@ export default function SettingsPage() {
     ollamaUrl: "http://localhost:11434",
     useOllama: false,
   });
+
+  // Load settings from Firebase on mount
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const docRef = doc(db, COLLECTIONS.PLATFORM_SETTINGS, SETTINGS_DOC_ID);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data() as PlatformSettingsDoc;
+          
+          // Load integrations into apiKeys state
+          if (data.integrations) {
+            const loadedApiKeys: Record<string, Record<string, string>> = {};
+            
+            if (data.integrations.mattermost) {
+              loadedApiKeys.mattermost = {
+                apiKey: data.integrations.mattermost.apiKey || "",
+                webhook: data.integrations.mattermost.webhookUrl || "",
+                serverUrl: data.integrations.mattermost.serverUrl || "",
+                teamId: data.integrations.mattermost.teamId || "",
+              };
+            }
+            if (data.integrations.apollo) {
+              loadedApiKeys.apollo = {
+                apiKey: data.integrations.apollo.apiKey || "",
+                accountId: data.integrations.apollo.accountId || "",
+              };
+            }
+            if (data.integrations.gohighlevel) {
+              loadedApiKeys.gohighlevel = {
+                apiKey: data.integrations.gohighlevel.apiKey || "",
+                locationId: data.integrations.gohighlevel.locationId || "",
+                agencyId: data.integrations.gohighlevel.agencyId || "",
+              };
+            }
+            if (data.integrations.zoom) {
+              loadedApiKeys.zoom = {
+                apiKey: data.integrations.zoom.apiKey || "",
+                apiSecret: data.integrations.zoom.apiSecret || "",
+                accountId: data.integrations.zoom.accountId || "",
+              };
+            }
+            
+            setApiKeys(loadedApiKeys);
+          }
+          
+          // Load LLM config
+          if (data.llmConfig) {
+            setLlmConfig({
+              provider: data.llmConfig.provider || "openai",
+              model: data.llmConfig.model || "gpt-4o",
+              apiKey: data.llmConfig.apiKey || "",
+              ollamaUrl: data.llmConfig.ollamaUrl || "http://localhost:11434",
+              useOllama: data.llmConfig.useOllama || false,
+            });
+          }
+          
+          // Load webhook events
+          if (data.webhookEvents) {
+            setWebhookEvents(prev => ({ ...prev, ...data.webhookEvents }));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading settings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSettings();
+  }, []);
+
+  // Save settings to Firebase
+  const saveSettings = async () => {
+    setSaving(true);
+    try {
+      const docRef = doc(db, COLLECTIONS.PLATFORM_SETTINGS, SETTINGS_DOC_ID);
+      
+      const settingsData: Partial<PlatformSettingsDoc> = {
+        id: SETTINGS_DOC_ID,
+        integrations: {
+          mattermost: {
+            apiKey: apiKeys.mattermost?.apiKey,
+            webhookUrl: apiKeys.mattermost?.webhook,
+            serverUrl: apiKeys.mattermost?.serverUrl,
+            teamId: apiKeys.mattermost?.teamId,
+            status: testingStatus.mattermost === "success" ? "connected" : "disconnected",
+          },
+          apollo: {
+            apiKey: apiKeys.apollo?.apiKey,
+            accountId: apiKeys.apollo?.accountId,
+            status: testingStatus.apollo === "success" ? "connected" : "disconnected",
+          },
+          gohighlevel: {
+            apiKey: apiKeys.gohighlevel?.apiKey,
+            locationId: apiKeys.gohighlevel?.locationId,
+            agencyId: apiKeys.gohighlevel?.agencyId,
+            status: testingStatus.gohighlevel === "success" ? "connected" : "disconnected",
+          },
+          zoom: {
+            apiKey: apiKeys.zoom?.apiKey,
+            apiSecret: apiKeys.zoom?.apiSecret,
+            accountId: apiKeys.zoom?.accountId,
+            status: testingStatus.zoom === "success" ? "connected" : "disconnected",
+          },
+        },
+        llmConfig: {
+          provider: llmConfig.provider,
+          model: llmConfig.model,
+          apiKey: llmConfig.apiKey,
+          ollamaUrl: llmConfig.ollamaUrl,
+          useOllama: llmConfig.useOllama,
+        },
+        webhookEvents: webhookEvents as Record<string, boolean>,
+        updatedAt: Timestamp.now(),
+      };
+      
+      await setDoc(docRef, settingsData, { merge: true });
+      setHasChanges(false);
+      alert("Settings saved successfully!");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      alert("Error saving settings. Check console for details.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const toggleShowKey = (id: string) => {
     setShowKeys(prev => ({ ...prev, [id]: !prev[id] }));
@@ -145,6 +282,7 @@ export default function SettingsPage() {
       ...prev,
       [configId]: { ...prev[configId], [field]: value },
     }));
+    setHasChanges(true);
   };
 
   const testConnection = async (configId: string) => {
@@ -203,13 +341,17 @@ export default function SettingsPage() {
 
   const toggleWebhookEvent = (eventType: WebhookEventType) => {
     setWebhookEvents(prev => ({ ...prev, [eventType]: !prev[eventType] }));
+    setHasChanges(true);
   };
 
-  const saveSettings = () => {
-    // In production, this would save to a database
-    console.log("Saving settings:", { apiKeys, llmConfig });
-    alert("Settings saved successfully!");
-  };
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -221,9 +363,13 @@ export default function SettingsPage() {
             Manage API keys, webhooks, and integrations
           </p>
         </div>
-        <Button onClick={saveSettings}>
-          <Save className="mr-2 h-4 w-4" />
-          Save All Settings
+        <Button onClick={saveSettings} disabled={saving}>
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          {saving ? "Saving..." : hasChanges ? "Save Changes" : "Save All Settings"}
         </Button>
       </div>
 

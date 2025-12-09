@@ -274,5 +274,13 @@ service cloud.firestore {
       allow update: if isTeamMember();
       allow delete: if isAdmin();
     }
+
+    // Platform Settings - read/write by admins/team only
+    match /platformSettings/{settingsId} {
+      allow read: if isAuthenticated();
+      allow create: if isTeamMember();
+      allow update: if isTeamMember();
+      allow delete: if isAdmin();
+    }
   }
 }
