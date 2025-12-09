@@ -539,12 +539,14 @@ export const COLLECTIONS = {
 // ============================================================================
 
 /** Get typed collection reference */
-export const getCollection = <T>(collectionName: string): CollectionReference<T> => {
+export const getCollection = <T>(collectionName: string): CollectionReference<T> | null => {
+  if (!db) return null;
   return collection(db, collectionName) as CollectionReference<T>;
 };
 
 /** Get typed document reference */
-export const getDocRef = <T>(collectionName: string, docId: string): DocumentReference<T> => {
+export const getDocRef = <T>(collectionName: string, docId: string): DocumentReference<T> | null => {
+  if (!db) return null;
   return doc(db, collectionName, docId) as DocumentReference<T>;
 };
 
@@ -585,27 +587,32 @@ export const platformSettingsCollection = () => getCollection<PlatformSettingsDo
 // ============================================================================
 
 /** Get milestones subcollection for a project */
-export const projectMilestonesCollection = (projectId: string) => {
+export const projectMilestonesCollection = (projectId: string): CollectionReference<MilestoneDoc> | null => {
+  if (!db) return null;
   return collection(db, COLLECTIONS.PROJECTS, projectId, "milestones") as CollectionReference<MilestoneDoc>;
 };
 
 /** Get action items subcollection for a meeting */
-export const meetingActionItemsCollection = (meetingId: string) => {
+export const meetingActionItemsCollection = (meetingId: string): CollectionReference<ActionItemDoc> | null => {
+  if (!db) return null;
   return collection(db, COLLECTIONS.MEETINGS, meetingId, "actionItems") as CollectionReference<ActionItemDoc>;
 };
 
 /** Get milestones subcollection for a rock */
-export const rockMilestonesCollection = (rockId: string) => {
+export const rockMilestonesCollection = (rockId: string): CollectionReference<RockMilestoneDoc> | null => {
+  if (!db) return null;
   return collection(db, COLLECTIONS.ROCKS, rockId, "milestones") as CollectionReference<RockMilestoneDoc>;
 };
 
 /** Get certifications subcollection for an organization */
-export const organizationCertificationsCollection = (orgId: string) => {
+export const organizationCertificationsCollection = (orgId: string): CollectionReference<CertificationDoc> | null => {
+  if (!db) return null;
   return collection(db, COLLECTIONS.ORGANIZATIONS, orgId, "certifications") as CollectionReference<CertificationDoc>;
 };
 
 /** Get capabilities subcollection for an organization */
-export const organizationCapabilitiesCollection = (orgId: string) => {
+export const organizationCapabilitiesCollection = (orgId: string): CollectionReference<Capability> | null => {
+  if (!db) return null;
   return collection(db, COLLECTIONS.ORGANIZATIONS, orgId, "capabilities") as CollectionReference<Capability>;
 };
 
@@ -624,7 +631,8 @@ export const fromTimestamp = (timestamp: Timestamp): Date => {
 };
 
 /** Generate a new document ID */
-export const generateId = (collectionName: string): string => {
+export const generateId = (collectionName: string): string | null => {
+  if (!db) return null;
   return doc(collection(db, collectionName)).id;
 };
 
