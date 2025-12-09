@@ -259,11 +259,12 @@ service cloud.firestore {
     // Strategic Partners
     // =========================================================================
 
-    // Strategic Partners - read by all authenticated, write by admins/team
+    // Strategic Partners - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
     match /strategicPartners/{partnerId} {
-      allow read: if isAuthenticated();
-      allow create: if isTeamMember();
-      allow update: if isTeamMember();
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
       allow delete: if isAdmin();
     }
 
