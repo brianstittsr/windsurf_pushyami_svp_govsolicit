@@ -1,0 +1,771 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Linkedin,
+  Sparkles,
+  Image as ImageIcon,
+  Link2,
+  FileText,
+  Send,
+  Loader2,
+  Plus,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Copy,
+  Eye,
+  RefreshCw,
+  Upload,
+  ExternalLink,
+  Calendar,
+  Clock,
+  Save,
+  Wand2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface ReferenceLink {
+  id: string;
+  url: string;
+  title: string;
+  status: "pending" | "valid" | "invalid" | "checking";
+  description?: string;
+}
+
+interface ArticleDraft {
+  id: string;
+  title: string;
+  content: string;
+  images: string[];
+  referenceLinks: ReferenceLink[];
+  status: "draft" | "scheduled" | "published";
+  createdAt: Date;
+  scheduledFor?: Date;
+}
+
+interface GeneratedContent {
+  title: string;
+  content: string;
+  hashtags: string[];
+}
+
+export default function LinkedInContentPage() {
+  const [activeTab, setActiveTab] = useState("create");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isVerifyingLinks, setIsVerifyingLinks] = useState(false);
+  
+  // Article creation state
+  const [articleTopic, setArticleTopic] = useState("");
+  const [articleTone, setArticleTone] = useState("professional");
+  const [articleLength, setArticleLength] = useState("medium");
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  
+  // Image upload state
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Reference links state
+  const [referenceLinks, setReferenceLinks] = useState<ReferenceLink[]>([]);
+  const [newLinkUrl, setNewLinkUrl] = useState("");
+  
+  // Drafts state
+  const [drafts, setDrafts] = useState<ArticleDraft[]>([]);
+  const [showPreview, setShowPreview] = useState(false);
+
+  // Generate article content using AI
+  const generateArticle = async () => {
+    if (!articleTopic.trim()) return;
+    
+    setIsGenerating(true);
+    
+    // Simulate AI generation (in production, this would call an AI API)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const lengthGuide = {
+      short: 150,
+      medium: 300,
+      long: 500,
+    };
+    
+    const toneGuide = {
+      professional: "formal and business-focused",
+      casual: "friendly and conversational",
+      thought_leader: "insightful and authoritative",
+      storytelling: "narrative and engaging",
+    };
+    
+    // Generate mock content based on topic
+    const generated: GeneratedContent = {
+      title: `${articleTopic}: Key Insights for Industry Leaders`,
+      content: `In today's rapidly evolving business landscape, ${articleTopic.toLowerCase()} has become a critical factor for success.
+
+As industry professionals, we must stay ahead of the curve and embrace new strategies that drive growth and innovation.
+
+Here are three key insights I've gathered from my experience:
+
+1. **Embrace Change**: The most successful organizations are those that adapt quickly to market shifts. ${articleTopic} is no exception.
+
+2. **Focus on Value**: Rather than chasing trends, focus on delivering genuine value to your customers and stakeholders.
+
+3. **Build Relationships**: Strong professional networks are invaluable. Connect with others in your industry and share knowledge freely.
+
+I'd love to hear your thoughts on this topic. What strategies have worked for you?
+
+#${articleTopic.replace(/\s+/g, "")} #BusinessStrategy #ProfessionalDevelopment #Leadership`,
+      hashtags: [
+        articleTopic.replace(/\s+/g, ""),
+        "BusinessStrategy",
+        "ProfessionalDevelopment",
+        "Leadership",
+        "Innovation",
+      ],
+    };
+    
+    setGeneratedContent(generated);
+    setEditedTitle(generated.title);
+    setEditedContent(generated.content);
+    setIsGenerating(false);
+  };
+
+  // Regenerate content
+  const regenerateContent = async () => {
+    setIsGenerating(true);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate slightly different content
+    const variations = [
+      `The landscape of ${articleTopic.toLowerCase()} is changing faster than ever before.`,
+      `Have you noticed how ${articleTopic.toLowerCase()} is transforming our industry?`,
+      `Let me share some thoughts on ${articleTopic.toLowerCase()} that might surprise you.`,
+    ];
+    
+    const randomIntro = variations[Math.floor(Math.random() * variations.length)];
+    
+    setEditedContent(`${randomIntro}
+
+After years of experience in this field, I've identified several patterns that consistently lead to success:
+
+🎯 **Strategic Focus**: Prioritize initiatives that align with your core business objectives.
+
+💡 **Innovation Mindset**: Don't be afraid to experiment and learn from failures.
+
+🤝 **Collaboration**: The best results come from diverse teams working together.
+
+📈 **Continuous Improvement**: Small, consistent improvements compound over time.
+
+What's your take on ${articleTopic.toLowerCase()}? I'd love to start a conversation in the comments.
+
+#${articleTopic.replace(/\s+/g, "")} #ThoughtLeadership #BusinessGrowth`);
+    
+    setIsGenerating(false);
+  };
+
+  // Handle image upload
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+    
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImages(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Remove uploaded image
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Add reference link
+  const addReferenceLink = () => {
+    if (!newLinkUrl.trim()) return;
+    
+    const newLink: ReferenceLink = {
+      id: `link-${Date.now()}`,
+      url: newLinkUrl,
+      title: "",
+      status: "pending",
+    };
+    
+    setReferenceLinks(prev => [...prev, newLink]);
+    setNewLinkUrl("");
+  };
+
+  // Remove reference link
+  const removeReferenceLink = (id: string) => {
+    setReferenceLinks(prev => prev.filter(link => link.id !== id));
+  };
+
+  // Verify all reference links using AI
+  const verifyAllLinks = async () => {
+    setIsVerifyingLinks(true);
+    
+    // Update all links to checking status
+    setReferenceLinks(prev => prev.map(link => ({ ...link, status: "checking" as const })));
+    
+    // Simulate AI verification for each link
+    for (let i = 0; i < referenceLinks.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setReferenceLinks(prev => prev.map((link, index) => {
+        if (index === i) {
+          // Simulate validation - check if URL is properly formatted
+          const isValidUrl = /^https?:\/\/.+\..+/.test(link.url);
+          return {
+            ...link,
+            status: isValidUrl ? "valid" as const : "invalid" as const,
+            title: isValidUrl ? `Article from ${new URL(link.url).hostname}` : "Invalid URL",
+            description: isValidUrl ? "Link verified and accessible" : "URL format is invalid or inaccessible",
+          };
+        }
+        return link;
+      }));
+    }
+    
+    setIsVerifyingLinks(false);
+  };
+
+  // Save as draft
+  const saveDraft = () => {
+    const draft: ArticleDraft = {
+      id: `draft-${Date.now()}`,
+      title: editedTitle,
+      content: editedContent,
+      images: uploadedImages,
+      referenceLinks,
+      status: "draft",
+      createdAt: new Date(),
+    };
+    
+    setDrafts(prev => [...prev, draft]);
+  };
+
+  // Copy content to clipboard
+  const copyToClipboard = () => {
+    const fullContent = `${editedTitle}\n\n${editedContent}`;
+    navigator.clipboard.writeText(fullContent);
+  };
+
+  return (
+    <div className="h-[calc(100vh-4rem)] flex">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Header */}
+        <div className="border-b px-6 py-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-blue-600 to-blue-700">
+                <Linkedin className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold flex items-center gap-2">
+                  LinkedIn Content
+                  <Badge variant="secondary" className="text-xs">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    AI Powered
+                  </Badge>
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Create and publish AI-generated LinkedIn articles
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-orange-600 border-orange-300">
+                Not Connected
+              </Badge>
+              <Button variant="outline" size="sm">
+                Connect LinkedIn
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="border-b px-4">
+            <TabsList className="h-10">
+              <TabsTrigger value="create" className="gap-2">
+                <Wand2 className="h-4 w-4" />
+                Create Article
+              </TabsTrigger>
+              <TabsTrigger value="drafts" className="gap-2">
+                <FileText className="h-4 w-4" />
+                Drafts ({drafts.length})
+              </TabsTrigger>
+              <TabsTrigger value="scheduled" className="gap-2">
+                <Calendar className="h-4 w-4" />
+                Scheduled
+              </TabsTrigger>
+              <TabsTrigger value="published" className="gap-2">
+                <CheckCircle className="h-4 w-4" />
+                Published
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Create Article Tab */}
+          <TabsContent value="create" className="flex-1 m-0 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6 max-w-4xl mx-auto space-y-6">
+                {/* AI Generation Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-blue-600" />
+                      AI Article Generator
+                    </CardTitle>
+                    <CardDescription>
+                      Describe your topic and let AI generate professional LinkedIn content
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Topic or Theme</Label>
+                      <Textarea
+                        placeholder="e.g., The importance of digital transformation in manufacturing, Leadership lessons from my career, How AI is changing the supply chain..."
+                        value={articleTopic}
+                        onChange={(e) => setArticleTopic(e.target.value)}
+                        rows={3}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Tone</Label>
+                        <Select value={articleTone} onValueChange={setArticleTone}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="professional">Professional</SelectItem>
+                            <SelectItem value="casual">Casual & Friendly</SelectItem>
+                            <SelectItem value="thought_leader">Thought Leader</SelectItem>
+                            <SelectItem value="storytelling">Storytelling</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Length</Label>
+                        <Select value={articleLength} onValueChange={setArticleLength}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="short">Short (~150 words)</SelectItem>
+                            <SelectItem value="medium">Medium (~300 words)</SelectItem>
+                            <SelectItem value="long">Long (~500 words)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={generateArticle} 
+                      disabled={!articleTopic.trim() || isGenerating}
+                      className="w-full"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Generate Article
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Generated/Edited Content */}
+                {(generatedContent || editedContent) && (
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Article Content
+                        </CardTitle>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={regenerateContent} disabled={isGenerating}>
+                            <RefreshCw className={cn("h-4 w-4 mr-1", isGenerating && "animate-spin")} />
+                            Regenerate
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                            <Copy className="h-4 w-4 mr-1" />
+                            Copy
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setShowPreview(true)}>
+                            <Eye className="h-4 w-4 mr-1" />
+                            Preview
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Title</Label>
+                        <Input
+                          value={editedTitle}
+                          onChange={(e) => setEditedTitle(e.target.value)}
+                          placeholder="Article title..."
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Content</Label>
+                        <Textarea
+                          value={editedContent}
+                          onChange={(e) => setEditedContent(e.target.value)}
+                          rows={12}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Image Upload Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ImageIcon className="h-5 w-5" />
+                      Images
+                    </CardTitle>
+                    <CardDescription>
+                      Upload images to include with your article
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div 
+                      className="border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload or drag and drop
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PNG, JPG, GIF up to 10MB
+                      </p>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={handleImageUpload}
+                      />
+                    </div>
+                    
+                    {uploadedImages.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4">
+                        {uploadedImages.map((image, index) => (
+                          <div key={index} className="relative group">
+                            <img
+                              src={image}
+                              alt={`Upload ${index + 1}`}
+                              className="w-full h-32 object-cover rounded-lg"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => removeImage(index)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Reference Links Section */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Link2 className="h-5 w-5" />
+                          Reference Links
+                        </CardTitle>
+                        <CardDescription>
+                          Add links to sources and related content
+                        </CardDescription>
+                      </div>
+                      {referenceLinks.length > 0 && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={verifyAllLinks}
+                          disabled={isVerifyingLinks}
+                        >
+                          {isVerifyingLinks ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              Verifying...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 mr-1" />
+                              AI Verify All
+                            </>
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com/article"
+                        value={newLinkUrl}
+                        onChange={(e) => setNewLinkUrl(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && addReferenceLink()}
+                      />
+                      <Button onClick={addReferenceLink} disabled={!newLinkUrl.trim()}>
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                    
+                    {referenceLinks.length > 0 && (
+                      <div className="space-y-2">
+                        {referenceLinks.map((link) => (
+                          <div 
+                            key={link.id} 
+                            className="flex items-center gap-3 p-3 border rounded-lg"
+                          >
+                            <div className="flex-shrink-0">
+                              {link.status === "pending" && (
+                                <AlertCircle className="h-5 w-5 text-muted-foreground" />
+                              )}
+                              {link.status === "checking" && (
+                                <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                              )}
+                              {link.status === "valid" && (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              )}
+                              {link.status === "invalid" && (
+                                <XCircle className="h-5 w-5 text-red-500" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {link.title || link.url}
+                              </p>
+                              {link.description && (
+                                <p className="text-xs text-muted-foreground">
+                                  {link.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground truncate">
+                                {link.url}
+                              </p>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => window.open(link.url, "_blank")}
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => removeReferenceLink(link.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Action Buttons */}
+                {editedContent && (
+                  <div className="flex gap-3 justify-end">
+                    <Button variant="outline" onClick={saveDraft}>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Draft
+                    </Button>
+                    <Button variant="outline">
+                      <Clock className="h-4 w-4 mr-2" />
+                      Schedule
+                    </Button>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Send className="h-4 w-4 mr-2" />
+                      Publish to LinkedIn
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Drafts Tab */}
+          <TabsContent value="drafts" className="flex-1 m-0 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full p-6">
+              <div className="max-w-4xl mx-auto">
+                {drafts.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium">No drafts yet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Create an article and save it as a draft
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {drafts.map((draft) => (
+                      <Card key={draft.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold">{draft.title}</h3>
+                              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                {draft.content}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <span>Created {draft.createdAt.toLocaleDateString()}</span>
+                                {draft.images.length > 0 && (
+                                  <span>{draft.images.length} image(s)</span>
+                                )}
+                                {draft.referenceLinks.length > 0 && (
+                                  <span>{draft.referenceLinks.length} link(s)</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                Edit
+                              </Button>
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          {/* Scheduled Tab */}
+          <TabsContent value="scheduled" className="flex-1 m-0 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No scheduled posts</h3>
+                <p className="text-sm text-muted-foreground">
+                  Schedule articles to be published automatically
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Published Tab */}
+          <TabsContent value="published" className="flex-1 m-0 min-h-0 overflow-hidden">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-medium">No published articles</h3>
+                <p className="text-sm text-muted-foreground">
+                  Connect your LinkedIn account to publish articles
+                </p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Article Preview</DialogTitle>
+            <DialogDescription>
+              How your article will appear on LinkedIn
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border rounded-lg p-4 bg-white">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center">
+                  <span className="text-white font-bold">SV</span>
+                </div>
+                <div>
+                  <p className="font-semibold">Strategic Value+</p>
+                  <p className="text-xs text-muted-foreground">Just now • 🌐</p>
+                </div>
+              </div>
+              <h2 className="font-bold text-lg mb-2">{editedTitle}</h2>
+              <div className="whitespace-pre-wrap text-sm">{editedContent}</div>
+              {uploadedImages.length > 0 && (
+                <div className="mt-4">
+                  <img
+                    src={uploadedImages[0]}
+                    alt="Article image"
+                    className="w-full rounded-lg"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              Close
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Send className="h-4 w-4 mr-2" />
+              Publish
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

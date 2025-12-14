@@ -51,6 +51,7 @@ import {
   UserCog,
   Building2,
   Search,
+  Linkedin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -121,6 +122,12 @@ const workItems = [
     title: "Deals",
     href: "/portal/deals",
     icon: DollarSign,
+  },
+  {
+    title: "LinkedIn Content",
+    href: "/portal/linkedin-content",
+    icon: Linkedin,
+    badge: "AI",
   },
 ];
 

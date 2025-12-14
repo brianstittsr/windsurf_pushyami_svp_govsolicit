@@ -112,6 +112,19 @@ const apiConfigs: ApiKeyConfig[] = [
     ],
     status: "disconnected",
   },
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    description: "Professional networking and content publishing",
+    icon: Zap,
+    keyField: "Access Token",
+    additionalFields: [
+      { name: "clientId", label: "Client ID", placeholder: "your-client-id" },
+      { name: "clientSecret", label: "Client Secret", placeholder: "your-client-secret" },
+      { name: "organizationId", label: "Organization ID (optional)", placeholder: "organization-urn" },
+    ],
+    status: "disconnected",
+  },
 ];
 
 const llmProviders = [
