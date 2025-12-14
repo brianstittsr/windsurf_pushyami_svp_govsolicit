@@ -262,9 +262,20 @@ export async function POST(request: NextRequest) {
 
         if (response.ok && data.matches?.[0]) {
           const person = data.matches[0];
+          // Filter out Apollo's placeholder emails that indicate the email wasn't revealed
+          const isPlaceholder = (email: string) => 
+            !email || 
+            email.includes("email_not_unlocked") || 
+            email.includes("@domain.com") ||
+            email === "email@domain.com";
+          
+          const email = person.email && !isPlaceholder(person.email) 
+            ? person.email 
+            : person.personal_emails?.find((e: string) => !isPlaceholder(e)) || null;
+          
           return NextResponse.json({
             connected: true,
-            email: person.email || person.personal_emails?.[0] || null,
+            email,
             person,
           });
         } else {
@@ -284,9 +295,19 @@ export async function POST(request: NextRequest) {
             const fallbackData = await fallbackResponse.json();
             
             if (fallbackResponse.ok && fallbackData.person) {
+              const isPlaceholder = (email: string) => 
+                !email || 
+                email.includes("email_not_unlocked") || 
+                email.includes("@domain.com") ||
+                email === "email@domain.com";
+              
+              const fallbackEmail = fallbackData.person.email && !isPlaceholder(fallbackData.person.email)
+                ? fallbackData.person.email
+                : fallbackData.person.personal_emails?.find((e: string) => !isPlaceholder(e)) || null;
+              
               return NextResponse.json({
                 connected: true,
-                email: fallbackData.person.email || fallbackData.person.personal_emails?.[0] || null,
+                email: fallbackEmail,
                 person: fallbackData.person,
               });
             }
