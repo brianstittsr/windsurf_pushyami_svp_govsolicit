@@ -61,6 +61,7 @@ import {
   Search,
   Linkedin,
   FileSignature,
+  Bot,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -148,6 +149,12 @@ const workItems = [
     title: "DocuSeal",
     href: "/portal/docuseal",
     icon: FileSignature,
+  },
+  {
+    title: "AI Workforce",
+    href: "/portal/ai-workforce",
+    icon: Bot,
+    badge: "AI",
   },
 ];
 
