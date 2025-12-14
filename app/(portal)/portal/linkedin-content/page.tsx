@@ -82,7 +82,7 @@ export default function LinkedInContentPage() {
   // Article creation state
   const [articleTopic, setArticleTopic] = useState("");
   const [articleTone, setArticleTone] = useState("professional");
-  const [articleLength, setArticleLength] = useState("medium");
+  const [articleLength, setArticleLength] = useState("long");
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
@@ -109,9 +109,10 @@ export default function LinkedInContentPage() {
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     const lengthGuide = {
-      short: 150,
-      medium: 300,
-      long: 500,
+      short: 300,
+      medium: 600,
+      long: 1000,
+      extended: 1500,
     };
     
     const toneGuide = {
@@ -382,9 +383,10 @@ What's your take on ${articleTopic.toLowerCase()}? I'd love to start a conversat
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="short">Short (~150 words)</SelectItem>
-                            <SelectItem value="medium">Medium (~300 words)</SelectItem>
-                            <SelectItem value="long">Long (~500 words)</SelectItem>
+                            <SelectItem value="short">Short (~300 words)</SelectItem>
+                            <SelectItem value="medium">Medium (~600 words)</SelectItem>
+                            <SelectItem value="long">Long (~1000 words)</SelectItem>
+                            <SelectItem value="extended">Extended (~1500 words)</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
