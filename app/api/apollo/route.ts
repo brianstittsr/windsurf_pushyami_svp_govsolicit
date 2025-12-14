@@ -100,6 +100,54 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      case "search_by_company_title": {
+        // Search for people by company name and job title
+        const searchBody: Record<string, unknown> = {
+          page: searchParams?.page || 1,
+          per_page: searchParams?.per_page || 25,
+        };
+
+        // Company name is the primary search criteria
+        if (searchParams?.companyName && searchParams.companyName.trim()) {
+          searchBody.q_organization_name = searchParams.companyName.trim();
+        }
+
+        // Job titles to filter by
+        if (searchParams?.titles?.length > 0) {
+          searchBody.person_titles = searchParams.titles;
+        }
+
+        // Optional additional filters
+        if (searchParams?.locations?.length > 0) {
+          searchBody.person_locations = searchParams.locations;
+        }
+        if (searchParams?.employee_ranges?.length > 0) {
+          searchBody.organization_num_employees_ranges = searchParams.employee_ranges;
+        }
+
+        const response = await fetch(`${APOLLO_API_BASE}/mixed_people/search`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(searchBody),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.people) {
+          return NextResponse.json({
+            connected: true,
+            results: data.people || [],
+            pagination: data.pagination || {},
+            total: data.pagination?.total_entries || 0,
+          });
+        } else {
+          return NextResponse.json(
+            { connected: false, error: data.error || data.message || "Search failed", results: [] },
+            { status: response.status }
+          );
+        }
+      }
+
       case "search_companies": {
         // Search for companies/organizations
         const companySearchBody: Record<string, unknown> = {
@@ -175,8 +223,12 @@ export async function POST(request: NextRequest) {
       }
 
       case "reveal_email": {
-        // Reveal email for a specific person using Apollo's people/match endpoint
+        // Reveal email for a specific person using Apollo's people/bulk_match endpoint
         const personId = searchParams?.personId;
+        const firstName = searchParams?.firstName;
+        const lastName = searchParams?.lastName;
+        const company = searchParams?.company;
+        const linkedIn = searchParams?.linkedIn;
         
         if (!personId) {
           return NextResponse.json(
@@ -185,28 +237,64 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Use Apollo's people endpoint to get enriched data including email
-        const response = await fetch(`${APOLLO_API_BASE}/people/match`, {
+        // Build the match request - Apollo needs identifying info, not just ID
+        const matchDetails: Record<string, unknown> = {
+          reveal_personal_emails: true,
+        };
+        
+        // Add identifying information
+        if (firstName) matchDetails.first_name = firstName;
+        if (lastName) matchDetails.last_name = lastName;
+        if (company) matchDetails.organization_name = company;
+        if (linkedIn) matchDetails.linkedin_url = linkedIn;
+
+        // Use Apollo's people/bulk_match endpoint which can use Apollo IDs
+        const response = await fetch(`${APOLLO_API_BASE}/people/bulk_match`, {
           method: "POST",
           headers,
           body: JSON.stringify({
-            id: personId,
             reveal_personal_emails: true,
+            details: [{ id: personId, ...matchDetails }],
           }),
         });
 
         const data = await response.json();
 
-        if (response.ok && data.person) {
+        if (response.ok && data.matches?.[0]) {
+          const person = data.matches[0];
           return NextResponse.json({
             connected: true,
-            email: data.person.email || data.person.personal_emails?.[0] || null,
-            person: data.person,
+            email: person.email || person.personal_emails?.[0] || null,
+            person,
           });
         } else {
+          // Fallback: try the single match endpoint with name/company
+          if (firstName && lastName && company) {
+            const fallbackResponse = await fetch(`${APOLLO_API_BASE}/people/match`, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                organization_name: company,
+                reveal_personal_emails: true,
+              }),
+            });
+            
+            const fallbackData = await fallbackResponse.json();
+            
+            if (fallbackResponse.ok && fallbackData.person) {
+              return NextResponse.json({
+                connected: true,
+                email: fallbackData.person.email || fallbackData.person.personal_emails?.[0] || null,
+                person: fallbackData.person,
+              });
+            }
+          }
+          
           return NextResponse.json(
             { connected: false, error: data.error || data.message || "Failed to reveal email" },
-            { status: response.status }
+            { status: response.status || 400 }
           );
         }
       }
@@ -214,6 +302,10 @@ export async function POST(request: NextRequest) {
       case "reveal_phone": {
         // Reveal phone for a specific person
         const personId = searchParams?.personId;
+        const firstName = searchParams?.firstName;
+        const lastName = searchParams?.lastName;
+        const company = searchParams?.company;
+        const linkedIn = searchParams?.linkedIn;
         
         if (!personId) {
           return NextResponse.json(
@@ -222,30 +314,68 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        const response = await fetch(`${APOLLO_API_BASE}/people/match`, {
+        // Build the match request
+        const matchDetails: Record<string, unknown> = {
+          reveal_phone_number: true,
+        };
+        
+        if (firstName) matchDetails.first_name = firstName;
+        if (lastName) matchDetails.last_name = lastName;
+        if (company) matchDetails.organization_name = company;
+        if (linkedIn) matchDetails.linkedin_url = linkedIn;
+
+        const response = await fetch(`${APOLLO_API_BASE}/people/bulk_match`, {
           method: "POST",
           headers,
           body: JSON.stringify({
-            id: personId,
             reveal_phone_number: true,
+            details: [{ id: personId, ...matchDetails }],
           }),
         });
 
         const data = await response.json();
 
-        if (response.ok && data.person) {
-          const phone = data.person.phone_numbers?.[0]?.sanitized_number || 
-                       data.person.mobile_phone || 
-                       data.person.corporate_phone || null;
+        if (response.ok && data.matches?.[0]) {
+          const person = data.matches[0];
+          const phone = person.phone_numbers?.[0]?.sanitized_number || 
+                       person.mobile_phone || 
+                       person.corporate_phone || null;
           return NextResponse.json({
             connected: true,
             phone,
-            person: data.person,
+            person,
           });
         } else {
+          // Fallback: try the single match endpoint with name/company
+          if (firstName && lastName && company) {
+            const fallbackResponse = await fetch(`${APOLLO_API_BASE}/people/match`, {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                first_name: firstName,
+                last_name: lastName,
+                organization_name: company,
+                reveal_phone_number: true,
+              }),
+            });
+            
+            const fallbackData = await fallbackResponse.json();
+            
+            if (fallbackResponse.ok && fallbackData.person) {
+              const phone = fallbackData.person.phone_numbers?.[0]?.sanitized_number || 
+                           fallbackData.person.mobile_phone || 
+                           fallbackData.person.corporate_phone || null;
+              return NextResponse.json({
+                connected: true,
+                phone,
+                person: fallbackData.person,
+              });
+            }
+          }
+          
           return NextResponse.json(
             { connected: false, error: data.error || data.message || "Failed to reveal phone" },
-            { status: response.status }
+            { status: response.status || 400 }
           );
         }
       }
