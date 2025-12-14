@@ -285,5 +285,89 @@ service cloud.firestore {
       allow update: if true;
       allow delete: if isAdmin();
     }
+
+    // =========================================================================
+    // Apollo Integration Collections
+    // =========================================================================
+
+    // Apollo Purchased Contacts - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /apolloPurchasedContacts/{contactId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Apollo Saved Lists - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /apolloSavedLists/{listId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // ThomasNet Supplier Search Collections
+    // =========================================================================
+
+    // ThomasNet Saved Suppliers - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /thomasnetSavedSuppliers/{supplierId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // ThomasNet Saved Lists - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /thomasnetSavedLists/{listId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // =========================================================================
+    // Networking Profile Collections
+    // =========================================================================
+
+    // Affiliate Biographies - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /affiliateBiographies/{bioId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // GAINS Profiles - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /gainsProfiles/{profileId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Contact Spheres - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /contactSpheres/{sphereId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
+    // Previous Customers - read/write allowed for development
+    // TODO: Restrict to authenticated users in production
+    match /previousCustomers/{customersId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
   }
 }
