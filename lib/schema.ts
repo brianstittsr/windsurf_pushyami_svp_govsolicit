@@ -562,6 +562,60 @@ export interface ApolloSavedListDoc {
 }
 
 // ============================================================================
+// ThomasNet Supplier Search Types
+// ============================================================================
+
+/** ThomasNet saved supplier document */
+export interface ThomasNetSupplierDoc {
+  id: string;
+  thomasnetId?: string;
+  companyName: string;
+  description?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  phone?: string;
+  website?: string;
+  categories?: string[];
+  certifications?: string[];
+  annualRevenue?: string;
+  employeeCount?: string;
+  yearFounded?: string;
+  thomasnetUrl?: string;
+  savedAt: Timestamp;
+  updatedAt: Timestamp;
+  notes?: string;
+}
+
+/** Supplier entry in a saved list */
+export interface SavedSupplierContact {
+  thomasnetId?: string;
+  companyName: string;
+  description?: string;
+  location?: string;
+  city?: string;
+  state?: string;
+  phone?: string;
+  website?: string;
+  categories?: string[];
+  certifications?: string[];
+  employeeCount?: string;
+  thomasnetUrl?: string;
+  addedAt: Timestamp;
+}
+
+/** Saved supplier list */
+export interface ThomasNetSavedListDoc {
+  id: string;
+  name: string;
+  description?: string;
+  suppliers: SavedSupplierContact[];
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
 // Collection Names
 // ============================================================================
 
@@ -600,6 +654,10 @@ export const COLLECTIONS = {
   APOLLO_PURCHASED_CONTACTS: "apolloPurchasedContacts",
   // Apollo Saved Lists
   APOLLO_SAVED_LISTS: "apolloSavedLists",
+  // ThomasNet Saved Suppliers
+  THOMASNET_SAVED_SUPPLIERS: "thomasnetSavedSuppliers",
+  // ThomasNet Saved Lists
+  THOMASNET_SAVED_LISTS: "thomasnetSavedLists",
 } as const;
 
 // ============================================================================
