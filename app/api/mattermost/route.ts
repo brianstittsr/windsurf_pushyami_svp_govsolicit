@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  return NextResponse.json({ status: "Mattermost API is running" });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

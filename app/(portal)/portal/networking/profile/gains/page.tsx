@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,11 @@ import {
   Wrench,
   CheckCircle,
   Info,
+  Loader2,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 
 interface GainsForm {
   goals: string;
@@ -93,10 +97,53 @@ const gainsFields = [
   },
 ];
 
+// Temporary user ID until auth is implemented
+const TEMP_USER_ID = "current-user";
+
 export default function GainsPage() {
   const [form, setForm] = useState<GainsForm>(initialForm);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [docId, setDocId] = useState<string | null>(null);
+
+  // Load existing data on mount
+  useEffect(() => {
+    const loadGainsProfile = async () => {
+      if (!db) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const q = query(
+          collection(db, COLLECTIONS.GAINS_PROFILES),
+          where("affiliateId", "==", TEMP_USER_ID)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const docData = querySnapshot.docs[0];
+          setDocId(docData.id);
+          const data = docData.data();
+          
+          setForm({
+            goals: data.goals || "",
+            accomplishments: data.accomplishments || "",
+            interests: data.interests || "",
+            networks: data.networks || "",
+            skills: data.skills || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading GAINS profile:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadGainsProfile();
+  }, []);
 
   const updateField = (field: keyof GainsForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -104,17 +151,55 @@ export default function GainsPage() {
   };
 
   const handleSave = async () => {
+    if (!db) return;
+    
     setIsSaving(true);
-    // TODO: Save to Firebase
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    try {
+      const gainsData = {
+        affiliateId: TEMP_USER_ID,
+        goals: form.goals,
+        accomplishments: form.accomplishments,
+        interests: form.interests,
+        networks: form.networks,
+        skills: form.skills,
+        updatedAt: Timestamp.now(),
+      };
+      
+      const documentId = docId || `gains_${TEMP_USER_ID}`;
+      const docRef = doc(db, COLLECTIONS.GAINS_PROFILES, documentId);
+      
+      await setDoc(docRef, {
+        ...gainsData,
+        createdAt: docId ? undefined : Timestamp.now(),
+      }, { merge: true });
+      
+      if (!docId) {
+        setDocId(documentId);
+      }
+      
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error saving GAINS profile:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const completedFields = Object.values(form).filter((v) => v.trim() !== "").length;
   const totalFields = Object.keys(form).length;
   const completionPercent = Math.round((completedFields / totalFields) * 100);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Loading GAINS profile...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,10 +16,28 @@ import {
   ChevronRight,
   Sparkles,
   FileText,
+  Loader2,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 
-// Profile sections with completion status
-const profileSections = [
+// Temporary user ID until auth is implemented
+const TEMP_USER_ID = "current-user";
+
+interface ProfileSection {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  fields: string[];
+  isComplete: boolean;
+  lastUpdated: string | null;
+}
+
+// Profile sections base config
+const profileSectionsConfig = [
   {
     id: "biography",
     title: "Member Biography",
@@ -27,8 +45,10 @@ const profileSections = [
     icon: User,
     href: "/portal/networking/profile/biography",
     fields: ["Business Name", "Profession", "Location", "Personal Info"],
-    isComplete: false,
-    lastUpdated: null,
+    collection: COLLECTIONS.AFFILIATE_BIOGRAPHIES,
+    checkComplete: (data: Record<string, unknown>) => {
+      return !!(data.businessName && data.profession && data.location);
+    },
   },
   {
     id: "gains",
@@ -37,8 +57,10 @@ const profileSections = [
     icon: Target,
     href: "/portal/networking/profile/gains",
     fields: ["Goals", "Accomplishments", "Interests", "Networks", "Skills"],
-    isComplete: false,
-    lastUpdated: null,
+    collection: COLLECTIONS.GAINS_PROFILES,
+    checkComplete: (data: Record<string, unknown>) => {
+      return !!(data.goals && data.accomplishments && data.interests && data.networks && data.skills);
+    },
   },
   {
     id: "contact-sphere",
@@ -47,8 +69,11 @@ const profileSections = [
     icon: Users,
     href: "/portal/networking/profile/contact-sphere",
     fields: ["Sphere Name", "Top 10 Members", "Top 3 Professions Needed"],
-    isComplete: false,
-    lastUpdated: null,
+    collection: COLLECTIONS.CONTACT_SPHERES,
+    checkComplete: (data: Record<string, unknown>) => {
+      const members = data.members as Array<{ name?: string }> | undefined;
+      return !!(data.sphereName && members && members.filter(m => m?.name).length >= 3);
+    },
   },
   {
     id: "customers",
@@ -57,15 +82,111 @@ const profileSections = [
     icon: Briefcase,
     href: "/portal/networking/profile/customers",
     fields: ["Customer List", "Services Provided", "Ideal Client Flags"],
-    isComplete: false,
-    lastUpdated: null,
+    collection: COLLECTIONS.PREVIOUS_CUSTOMERS,
+    checkComplete: (data: Record<string, unknown>) => {
+      const customers = data.customers as Array<{ name?: string }> | undefined;
+      return !!(customers && customers.filter(c => c?.name).length >= 3);
+    },
   },
 ];
 
 export default function NetworkingProfilePage() {
+  const [profileSections, setProfileSections] = useState<ProfileSection[]>(
+    profileSectionsConfig.map(s => ({
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      icon: s.icon,
+      href: s.href,
+      fields: s.fields,
+      isComplete: false,
+      lastUpdated: null,
+    }))
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load completion status from Firebase
+  useEffect(() => {
+    const loadCompletionStatus = async () => {
+      if (!db) {
+        setIsLoading(false);
+        return;
+      }
+
+      const firestore = db; // Capture for TypeScript narrowing
+
+      try {
+        const updatedSections = await Promise.all(
+          profileSectionsConfig.map(async (config) => {
+            try {
+              const q = query(
+                collection(firestore, config.collection),
+                where("affiliateId", "==", TEMP_USER_ID)
+              );
+              const querySnapshot = await getDocs(q);
+              
+              let isComplete = false;
+              let lastUpdated: string | null = null;
+              
+              if (!querySnapshot.empty) {
+                const data = querySnapshot.docs[0].data();
+                isComplete = config.checkComplete(data);
+                if (data.updatedAt?.toDate) {
+                  lastUpdated = data.updatedAt.toDate().toLocaleDateString();
+                }
+              }
+              
+              return {
+                id: config.id,
+                title: config.title,
+                description: config.description,
+                icon: config.icon,
+                href: config.href,
+                fields: config.fields,
+                isComplete,
+                lastUpdated,
+              };
+            } catch (error) {
+              console.error(`Error loading ${config.id}:`, error);
+              return {
+                id: config.id,
+                title: config.title,
+                description: config.description,
+                icon: config.icon,
+                href: config.href,
+                fields: config.fields,
+                isComplete: false,
+                lastUpdated: null,
+              };
+            }
+          })
+        );
+        
+        setProfileSections(updatedSections);
+      } catch (error) {
+        console.error("Error loading profile completion status:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCompletionStatus();
+  }, []);
+
   const completedSections = profileSections.filter((s) => s.isComplete).length;
   const totalSections = profileSections.length;
   const completionPercent = Math.round((completedSections / totalSections) * 100);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Loading profile status...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

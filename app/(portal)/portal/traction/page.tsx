@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -59,6 +70,8 @@ import {
   Send,
   Loader2,
   Play,
+  Save,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -174,21 +187,60 @@ const initialMeetings: Meeting[] = [
   { id: "meeting-2", date: "2025-01-13", startTime: "09:00", endTime: "10:30", attendees: ["John Smith", "Sarah Johnson", "Mike Chen", "Emily Davis"], rating: 9, issuesSolved: 4, rocksReviewed: true, scorecardReviewed: true, todoCompletionRate: 90 },
 ];
 
+// Empty form states
+const emptyRock: Omit<Rock, "id"> = { description: "", owner: "", dueDate: "", status: "on-track", progress: 0, quarter: "Q1 2025" };
+const emptyMetric: Omit<ScorecardMetric, "id"> = { name: "", goal: 0, actual: 0, owner: "", trend: "flat", unit: "" };
+const emptyIssue: Omit<Issue, "id"> = { description: "", priority: "medium", identifiedDate: new Date().toISOString().split("T")[0], owner: "", status: "open" };
+const emptyTodo: Omit<Todo, "id"> = { description: "", owner: "", dueDate: "", status: "not-started", createdDate: new Date().toISOString().split("T")[0] };
+const emptyMeeting: Omit<Meeting, "id"> = { date: new Date().toISOString().split("T")[0], startTime: "09:00", endTime: "10:30", attendees: [], rating: 8, issuesSolved: 0, rocksReviewed: false, scorecardReviewed: false, todoCompletionRate: 0 };
+const emptyTeamMember: Omit<TeamMember, "id"> = { name: "", role: "", getsIt: null, wantsIt: null, capacityToDoIt: null, rightSeat: null };
+
 export default function TractionDashboardPage() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [rocks] = useState<Rock[]>(initialRocks);
-  const [metrics] = useState<ScorecardMetric[]>(initialMetrics);
-  const [issues] = useState<Issue[]>(initialIssues);
-  const [todos] = useState<Todo[]>(initialTodos);
-  const [team] = useState<TeamMember[]>(initialTeam);
-  const [meetings] = useState<Meeting[]>(initialMeetings);
-  const [currentQuarter] = useState("Q1 2025");
+  const [rocks, setRocks] = useState<Rock[]>(initialRocks);
+  const [metrics, setMetrics] = useState<ScorecardMetric[]>(initialMetrics);
+  const [issues, setIssues] = useState<Issue[]>(initialIssues);
+  const [todos, setTodos] = useState<Todo[]>(initialTodos);
+  const [team, setTeam] = useState<TeamMember[]>(initialTeam);
+  const [meetings, setMeetings] = useState<Meeting[]>(initialMeetings);
+  const [currentQuarter, setCurrentQuarter] = useState("Q1 2025");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [playbookPhase, setPlaybookPhase] = useState<string>("intro");
   const [showPlaybookChat, setShowPlaybookChat] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Form dialog states
+  const [showRockForm, setShowRockForm] = useState(false);
+  const [showMetricForm, setShowMetricForm] = useState(false);
+  const [showIssueForm, setShowIssueForm] = useState(false);
+  const [showTodoForm, setShowTodoForm] = useState(false);
+  const [showMeetingForm, setShowMeetingForm] = useState(false);
+  const [showTeamMemberForm, setShowTeamMemberForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Edit states
+  const [editingRock, setEditingRock] = useState<Rock | null>(null);
+  const [editingMetric, setEditingMetric] = useState<ScorecardMetric | null>(null);
+  const [editingIssue, setEditingIssue] = useState<Issue | null>(null);
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
+  const [editingTeamMember, setEditingTeamMember] = useState<TeamMember | null>(null);
+
+  // Form data states
+  const [rockForm, setRockForm] = useState<Omit<Rock, "id">>(emptyRock);
+  const [metricForm, setMetricForm] = useState<Omit<ScorecardMetric, "id">>(emptyMetric);
+  const [issueForm, setIssueForm] = useState<Omit<Issue, "id">>(emptyIssue);
+  const [todoForm, setTodoForm] = useState<Omit<Todo, "id">>(emptyTodo);
+  const [meetingForm, setMeetingForm] = useState<Omit<Meeting, "id">>(emptyMeeting);
+  const [teamMemberForm, setTeamMemberForm] = useState<Omit<TeamMember, "id">>(emptyTeamMember);
+
+  // Delete state
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name: string } | null>(null);
+
+  // Team member names for dropdowns
+  const teamMemberNames = team.map(t => t.name);
 
   const calculateOverallHealth = () => {
     const rockScore = rocks.filter(r => r.status === "on-track" || r.status === "complete").length / rocks.length * 10;
@@ -227,6 +279,215 @@ export default function TractionDashboardPage() {
       case "high": return "bg-red-100 text-red-700";
       case "medium": return "bg-yellow-100 text-yellow-700";
       default: return "bg-blue-100 text-blue-700";
+    }
+  };
+
+  // CRUD Operations for Rocks
+  const openAddRock = () => {
+    setEditingRock(null);
+    setRockForm({ ...emptyRock, quarter: currentQuarter, dueDate: getQuarterEndDate(currentQuarter) });
+    setShowRockForm(true);
+  };
+
+  const openEditRock = (rock: Rock) => {
+    setEditingRock(rock);
+    setRockForm({ description: rock.description, owner: rock.owner, dueDate: rock.dueDate, status: rock.status, progress: rock.progress, quarter: rock.quarter });
+    setShowRockForm(true);
+  };
+
+  const saveRock = () => {
+    if (!rockForm.description || !rockForm.owner) return;
+    if (editingRock) {
+      setRocks(rocks.map(r => r.id === editingRock.id ? { ...editingRock, ...rockForm } : r));
+    } else {
+      setRocks([...rocks, { id: `rock-${Date.now()}`, ...rockForm }]);
+    }
+    setShowRockForm(false);
+    setRockForm(emptyRock);
+  };
+
+  const deleteRock = (id: string) => {
+    setRocks(rocks.filter(r => r.id !== id));
+  };
+
+  // CRUD Operations for Metrics
+  const openAddMetric = () => {
+    setEditingMetric(null);
+    setMetricForm(emptyMetric);
+    setShowMetricForm(true);
+  };
+
+  const openEditMetric = (metric: ScorecardMetric) => {
+    setEditingMetric(metric);
+    setMetricForm({ name: metric.name, goal: metric.goal, actual: metric.actual, owner: metric.owner, trend: metric.trend, unit: metric.unit });
+    setShowMetricForm(true);
+  };
+
+  const saveMetric = () => {
+    if (!metricForm.name || !metricForm.owner) return;
+    if (editingMetric) {
+      setMetrics(metrics.map(m => m.id === editingMetric.id ? { ...editingMetric, ...metricForm } : m));
+    } else {
+      setMetrics([...metrics, { id: `metric-${Date.now()}`, ...metricForm }]);
+    }
+    setShowMetricForm(false);
+    setMetricForm(emptyMetric);
+  };
+
+  const deleteMetric = (id: string) => {
+    setMetrics(metrics.filter(m => m.id !== id));
+  };
+
+  // CRUD Operations for Issues
+  const openAddIssue = () => {
+    setEditingIssue(null);
+    setIssueForm({ ...emptyIssue, identifiedDate: new Date().toISOString().split("T")[0] });
+    setShowIssueForm(true);
+  };
+
+  const openEditIssue = (issue: Issue) => {
+    setEditingIssue(issue);
+    setIssueForm({ description: issue.description, priority: issue.priority, identifiedDate: issue.identifiedDate, owner: issue.owner, status: issue.status });
+    setShowIssueForm(true);
+  };
+
+  const saveIssue = () => {
+    if (!issueForm.description || !issueForm.owner) return;
+    if (editingIssue) {
+      setIssues(issues.map(i => i.id === editingIssue.id ? { ...editingIssue, ...issueForm } : i));
+    } else {
+      setIssues([...issues, { id: `issue-${Date.now()}`, ...issueForm }]);
+    }
+    setShowIssueForm(false);
+    setIssueForm(emptyIssue);
+  };
+
+  const solveIssue = (id: string) => {
+    setIssues(issues.map(i => i.id === id ? { ...i, status: "solved" as const } : i));
+  };
+
+  const deleteIssue = (id: string) => {
+    setIssues(issues.filter(i => i.id !== id));
+  };
+
+  // CRUD Operations for Todos
+  const openAddTodo = () => {
+    setEditingTodo(null);
+    setTodoForm({ ...emptyTodo, createdDate: new Date().toISOString().split("T")[0] });
+    setShowTodoForm(true);
+  };
+
+  const openEditTodo = (todo: Todo) => {
+    setEditingTodo(todo);
+    setTodoForm({ description: todo.description, owner: todo.owner, dueDate: todo.dueDate, status: todo.status, createdDate: todo.createdDate });
+    setShowTodoForm(true);
+  };
+
+  const saveTodo = () => {
+    if (!todoForm.description || !todoForm.owner) return;
+    if (editingTodo) {
+      setTodos(todos.map(t => t.id === editingTodo.id ? { ...editingTodo, ...todoForm } : t));
+    } else {
+      setTodos([...todos, { id: `todo-${Date.now()}`, ...todoForm }]);
+    }
+    setShowTodoForm(false);
+    setTodoForm(emptyTodo);
+  };
+
+  const toggleTodoComplete = (id: string) => {
+    setTodos(todos.map(t => t.id === id ? { ...t, status: t.status === "complete" ? "not-started" : "complete" } : t));
+  };
+
+  const deleteTodo = (id: string) => {
+    setTodos(todos.filter(t => t.id !== id));
+  };
+
+  // CRUD Operations for Meetings
+  const openAddMeeting = () => {
+    setEditingMeeting(null);
+    setMeetingForm({ ...emptyMeeting, date: new Date().toISOString().split("T")[0], attendees: teamMemberNames });
+    setShowMeetingForm(true);
+  };
+
+  const openEditMeeting = (meeting: Meeting) => {
+    setEditingMeeting(meeting);
+    setMeetingForm({ date: meeting.date, startTime: meeting.startTime, endTime: meeting.endTime, attendees: meeting.attendees, rating: meeting.rating, issuesSolved: meeting.issuesSolved, rocksReviewed: meeting.rocksReviewed, scorecardReviewed: meeting.scorecardReviewed, todoCompletionRate: meeting.todoCompletionRate });
+    setShowMeetingForm(true);
+  };
+
+  const saveMeeting = () => {
+    if (!meetingForm.date) return;
+    if (editingMeeting) {
+      setMeetings(meetings.map(m => m.id === editingMeeting.id ? { ...editingMeeting, ...meetingForm } : m));
+    } else {
+      setMeetings([{ id: `meeting-${Date.now()}`, ...meetingForm }, ...meetings]);
+    }
+    setShowMeetingForm(false);
+    setMeetingForm(emptyMeeting);
+  };
+
+  const deleteMeeting = (id: string) => {
+    setMeetings(meetings.filter(m => m.id !== id));
+  };
+
+  // CRUD Operations for Team Members
+  const openAddTeamMember = () => {
+    setEditingTeamMember(null);
+    setTeamMemberForm(emptyTeamMember);
+    setShowTeamMemberForm(true);
+  };
+
+  const openEditTeamMember = (member: TeamMember) => {
+    setEditingTeamMember(member);
+    setTeamMemberForm({ name: member.name, role: member.role, getsIt: member.getsIt, wantsIt: member.wantsIt, capacityToDoIt: member.capacityToDoIt, rightSeat: member.rightSeat });
+    setShowTeamMemberForm(true);
+  };
+
+  const saveTeamMember = () => {
+    if (!teamMemberForm.name || !teamMemberForm.role) return;
+    if (editingTeamMember) {
+      setTeam(team.map(t => t.id === editingTeamMember.id ? { ...editingTeamMember, ...teamMemberForm } : t));
+    } else {
+      setTeam([...team, { id: `tm-${Date.now()}`, ...teamMemberForm }]);
+    }
+    setShowTeamMemberForm(false);
+    setTeamMemberForm(emptyTeamMember);
+  };
+
+  const deleteTeamMember = (id: string) => {
+    setTeam(team.filter(t => t.id !== id));
+  };
+
+  // Delete confirmation
+  const confirmDelete = (type: string, id: string, name: string) => {
+    setDeleteTarget({ type, id, name });
+    setShowDeleteConfirm(true);
+  };
+
+  const executeDelete = () => {
+    if (!deleteTarget) return;
+    switch (deleteTarget.type) {
+      case "rock": deleteRock(deleteTarget.id); break;
+      case "metric": deleteMetric(deleteTarget.id); break;
+      case "issue": deleteIssue(deleteTarget.id); break;
+      case "todo": deleteTodo(deleteTarget.id); break;
+      case "meeting": deleteMeeting(deleteTarget.id); break;
+      case "team": deleteTeamMember(deleteTarget.id); break;
+    }
+    setShowDeleteConfirm(false);
+    setDeleteTarget(null);
+  };
+
+  // Helper function to get quarter end date
+  const getQuarterEndDate = (quarter: string) => {
+    const year = quarter.split(" ")[1];
+    const q = quarter.split(" ")[0];
+    switch (q) {
+      case "Q1": return `${year}-03-31`;
+      case "Q2": return `${year}-06-30`;
+      case "Q3": return `${year}-09-30`;
+      case "Q4": return `${year}-12-31`;
+      default: return `${year}-03-31`;
     }
   };
 
@@ -394,10 +655,10 @@ export default function TractionDashboardPage() {
           <TabsContent value="rocks" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Quarterly Rocks - {currentQuarter}</h2><p className="text-sm text-muted-foreground">3-7 top priorities for the quarter</p></div><Button><Plus className="h-4 w-4 mr-2" />Add Rock</Button></div>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Quarterly Rocks - {currentQuarter}</h2><p className="text-sm text-muted-foreground">3-7 top priorities for the quarter</p></div><Button onClick={openAddRock}><Plus className="h-4 w-4 mr-2" />Add Rock</Button></div>
                 <div className="grid gap-4">
                   {rocks.map(rock => (
-                    <Card key={rock.id}><CardContent className="pt-6"><div className="flex items-start gap-4"><Badge className={cn("mt-1", getStatusColor(rock.status))}>{getStatusIcon(rock.status)}<span className="ml-1 capitalize">{rock.status.replace("-", " ")}</span></Badge><div className="flex-1"><h3 className="font-semibold">{rock.description}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{rock.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Due: {new Date(rock.dueDate).toLocaleDateString()}</span></div><div className="mt-3"><div className="flex items-center justify-between text-sm mb-1"><span>Progress</span><span className="font-medium">{rock.progress}%</span></div><Progress value={rock.progress} className="h-2" /></div></div><div className="flex gap-2"><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon"><Trash2 className="h-4 w-4" /></Button></div></div></CardContent></Card>
+                    <Card key={rock.id}><CardContent className="pt-6"><div className="flex items-start gap-4"><Badge className={cn("mt-1", getStatusColor(rock.status))}>{getStatusIcon(rock.status)}<span className="ml-1 capitalize">{rock.status.replace("-", " ")}</span></Badge><div className="flex-1"><h3 className="font-semibold">{rock.description}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{rock.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Due: {new Date(rock.dueDate).toLocaleDateString()}</span></div><div className="mt-3"><div className="flex items-center justify-between text-sm mb-1"><span>Progress</span><span className="font-medium">{rock.progress}%</span></div><Progress value={rock.progress} className="h-2" /></div></div><div className="flex gap-2"><Button variant="ghost" size="icon" onClick={() => openEditRock(rock)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("rock", rock.id, rock.description.substring(0, 30))}><Trash2 className="h-4 w-4 text-red-500" /></Button></div></div></CardContent></Card>
                   ))}
                 </div>
               </div>
@@ -407,8 +668,8 @@ export default function TractionDashboardPage() {
           <TabsContent value="scorecard" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Weekly Scorecard</h2><p className="text-sm text-muted-foreground">5-15 weekly measurables</p></div><Button><Plus className="h-4 w-4 mr-2" />Add Metric</Button></div>
-                <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Metric</TableHead><TableHead>Owner</TableHead><TableHead className="text-right">Goal</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-center">Trend</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{metrics.map(metric => (<TableRow key={metric.id}><TableCell className="font-medium">{metric.name}</TableCell><TableCell>{metric.owner}</TableCell><TableCell className="text-right">{metric.unit}{metric.goal.toLocaleString()}</TableCell><TableCell className={cn("text-right font-medium", metric.actual >= metric.goal ? "text-green-600" : "text-red-600")}>{metric.unit}{metric.actual.toLocaleString()}</TableCell><TableCell className="text-center">{getTrendIcon(metric.trend)}</TableCell><TableCell className="text-center">{metric.actual >= metric.goal ? <Badge className="bg-green-100 text-green-700">At Goal</Badge> : <Badge className="bg-red-100 text-red-700">Below Goal</Badge>}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button></TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Weekly Scorecard</h2><p className="text-sm text-muted-foreground">5-15 weekly measurables</p></div><Button onClick={openAddMetric}><Plus className="h-4 w-4 mr-2" />Add Metric</Button></div>
+                <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Metric</TableHead><TableHead>Owner</TableHead><TableHead className="text-right">Goal</TableHead><TableHead className="text-right">Actual</TableHead><TableHead className="text-center">Trend</TableHead><TableHead className="text-center">Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{metrics.map(metric => (<TableRow key={metric.id}><TableCell className="font-medium">{metric.name}</TableCell><TableCell>{metric.owner}</TableCell><TableCell className="text-right">{metric.unit}{metric.goal.toLocaleString()}</TableCell><TableCell className={cn("text-right font-medium", metric.actual >= metric.goal ? "text-green-600" : "text-red-600")}>{metric.unit}{metric.actual.toLocaleString()}</TableCell><TableCell className="text-center">{getTrendIcon(metric.trend)}</TableCell><TableCell className="text-center">{metric.actual >= metric.goal ? <Badge className="bg-green-100 text-green-700">At Goal</Badge> : <Badge className="bg-red-100 text-red-700">Below Goal</Badge>}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => openEditMetric(metric)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("metric", metric.id, metric.name)}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
               </div>
             </ScrollArea>
           </TabsContent>
@@ -416,10 +677,10 @@ export default function TractionDashboardPage() {
           <TabsContent value="issues" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Issues List</h2><p className="text-sm text-muted-foreground">IDS: Identify, Discuss, Solve</p></div><Button><Plus className="h-4 w-4 mr-2" />Add Issue</Button></div>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Issues List</h2><p className="text-sm text-muted-foreground">IDS: Identify, Discuss, Solve</p></div><Button onClick={openAddIssue}><Plus className="h-4 w-4 mr-2" />Add Issue</Button></div>
                 <div className="grid gap-4">
                   {issues.map(issue => (
-                    <Card key={issue.id}><CardContent className="pt-6"><div className="flex items-start gap-4"><Badge className={getPriorityColor(issue.priority)}>{issue.priority.toUpperCase()}</Badge><div className="flex-1"><h3 className="font-semibold">{issue.description}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{issue.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Identified: {new Date(issue.identifiedDate).toLocaleDateString()}</span><Badge variant="outline" className="capitalize">{issue.status.replace("-", " ")}</Badge></div></div><div className="flex gap-2"><Button variant="ghost" size="icon"><Edit className="h-4 w-4" /></Button>{issue.status !== "solved" && <Button variant="ghost" size="icon" className="text-green-600"><CheckCircle className="h-4 w-4" /></Button>}</div></div></CardContent></Card>
+                    <Card key={issue.id}><CardContent className="pt-6"><div className="flex items-start gap-4"><Badge className={getPriorityColor(issue.priority)}>{issue.priority.toUpperCase()}</Badge><div className="flex-1"><h3 className="font-semibold">{issue.description}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{issue.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Identified: {new Date(issue.identifiedDate).toLocaleDateString()}</span><Badge variant="outline" className="capitalize">{issue.status.replace("-", " ")}</Badge></div></div><div className="flex gap-2"><Button variant="ghost" size="icon" onClick={() => openEditIssue(issue)}><Edit className="h-4 w-4" /></Button>{issue.status !== "solved" && <Button variant="ghost" size="icon" className="text-green-600" onClick={() => solveIssue(issue.id)}><CheckCircle className="h-4 w-4" /></Button>}<Button variant="ghost" size="icon" onClick={() => confirmDelete("issue", issue.id, issue.description.substring(0, 30))}><Trash2 className="h-4 w-4 text-red-500" /></Button></div></div></CardContent></Card>
                   ))}
                 </div>
               </div>
@@ -429,10 +690,10 @@ export default function TractionDashboardPage() {
           <TabsContent value="meetings" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Level 10 Meetings</h2><p className="text-sm text-muted-foreground">Weekly leadership team meetings</p></div><Button><Plus className="h-4 w-4 mr-2" />Log Meeting</Button></div>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">Level 10 Meetings</h2><p className="text-sm text-muted-foreground">Weekly leadership team meetings</p></div><Button onClick={openAddMeeting}><Plus className="h-4 w-4 mr-2" />Log Meeting</Button></div>
                 <div className="grid gap-4">
                   {meetings.map(meeting => (
-                    <Card key={meeting.id}><CardContent className="pt-6"><div className="flex items-center justify-between"><div><h3 className="font-semibold">{new Date(meeting.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><Clock className="h-4 w-4" />{meeting.startTime} - {meeting.endTime}</span><span className="flex items-center gap-1"><Users className="h-4 w-4" />{meeting.attendees.length} attendees</span></div></div><div className="text-right"><div className="flex items-center gap-1"><span className="text-2xl font-bold">{meeting.rating}</span><span className="text-muted-foreground">/10</span></div><p className="text-sm text-muted-foreground">Meeting Rating</p></div></div><div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t"><div className="text-center"><p className="text-2xl font-bold text-purple-600">{meeting.issuesSolved}</p><p className="text-xs text-muted-foreground">Issues Solved</p></div><div className="text-center">{meeting.rocksReviewed ? <CheckCircle className="h-6 w-6 text-green-600 mx-auto" /> : <XCircle className="h-6 w-6 text-red-600 mx-auto" />}<p className="text-xs text-muted-foreground">Rocks Reviewed</p></div><div className="text-center">{meeting.scorecardReviewed ? <CheckCircle className="h-6 w-6 text-green-600 mx-auto" /> : <XCircle className="h-6 w-6 text-red-600 mx-auto" />}<p className="text-xs text-muted-foreground">Scorecard Reviewed</p></div><div className="text-center"><p className="text-2xl font-bold text-blue-600">{meeting.todoCompletionRate}%</p><p className="text-xs text-muted-foreground">To-Do Completion</p></div></div></CardContent></Card>
+                    <Card key={meeting.id}><CardContent className="pt-6"><div className="flex items-center justify-between"><div><h3 className="font-semibold">{new Date(meeting.date).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</h3><div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground"><span className="flex items-center gap-1"><Clock className="h-4 w-4" />{meeting.startTime} - {meeting.endTime}</span><span className="flex items-center gap-1"><Users className="h-4 w-4" />{meeting.attendees.length} attendees</span></div></div><div className="flex items-center gap-4"><div className="text-right"><div className="flex items-center gap-1"><span className="text-2xl font-bold">{meeting.rating}</span><span className="text-muted-foreground">/10</span></div><p className="text-sm text-muted-foreground">Meeting Rating</p></div><div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => openEditMeeting(meeting)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("meeting", meeting.id, new Date(meeting.date).toLocaleDateString())}><Trash2 className="h-4 w-4 text-red-500" /></Button></div></div></div><div className="grid grid-cols-4 gap-4 mt-4 pt-4 border-t"><div className="text-center"><p className="text-2xl font-bold text-purple-600">{meeting.issuesSolved}</p><p className="text-xs text-muted-foreground">Issues Solved</p></div><div className="text-center">{meeting.rocksReviewed ? <CheckCircle className="h-6 w-6 text-green-600 mx-auto" /> : <XCircle className="h-6 w-6 text-red-600 mx-auto" />}<p className="text-xs text-muted-foreground">Rocks Reviewed</p></div><div className="text-center">{meeting.scorecardReviewed ? <CheckCircle className="h-6 w-6 text-green-600 mx-auto" /> : <XCircle className="h-6 w-6 text-red-600 mx-auto" />}<p className="text-xs text-muted-foreground">Scorecard Reviewed</p></div><div className="text-center"><p className="text-2xl font-bold text-blue-600">{meeting.todoCompletionRate}%</p><p className="text-xs text-muted-foreground">To-Do Completion</p></div></div></CardContent></Card>
                   ))}
                 </div>
               </div>
@@ -442,10 +703,10 @@ export default function TractionDashboardPage() {
           <TabsContent value="todos" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">To-Do List</h2><p className="text-sm text-muted-foreground">Action items from Level 10 meetings</p></div><Button><Plus className="h-4 w-4 mr-2" />Add To-Do</Button></div>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">To-Do List</h2><p className="text-sm text-muted-foreground">Action items from Level 10 meetings</p></div><Button onClick={openAddTodo}><Plus className="h-4 w-4 mr-2" />Add To-Do</Button></div>
                 <div className="grid gap-4">
                   {todos.map(todo => (
-                    <Card key={todo.id} className={cn(todo.status === "complete" && "opacity-60")}><CardContent className="pt-6"><div className="flex items-center gap-4"><Checkbox checked={todo.status === "complete"} className="h-5 w-5" /><div className="flex-1"><p className={cn("font-medium", todo.status === "complete" && "line-through")}>{todo.description}</p><div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{todo.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Due: {new Date(todo.dueDate).toLocaleDateString()}</span></div></div><Badge variant="outline" className={cn("capitalize", todo.status === "complete" && "bg-green-100 text-green-700", todo.status === "in-progress" && "bg-blue-100 text-blue-700")}>{todo.status.replace("-", " ")}</Badge></div></CardContent></Card>
+                    <Card key={todo.id} className={cn(todo.status === "complete" && "opacity-60")}><CardContent className="pt-6"><div className="flex items-center gap-4"><Checkbox checked={todo.status === "complete"} className="h-5 w-5" onCheckedChange={() => toggleTodoComplete(todo.id)} /><div className="flex-1"><p className={cn("font-medium", todo.status === "complete" && "line-through")}>{todo.description}</p><div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground"><span className="flex items-center gap-1"><UserCheck className="h-4 w-4" />{todo.owner}</span><span className="flex items-center gap-1"><Calendar className="h-4 w-4" />Due: {new Date(todo.dueDate).toLocaleDateString()}</span></div></div><Badge variant="outline" className={cn("capitalize", todo.status === "complete" && "bg-green-100 text-green-700", todo.status === "in-progress" && "bg-blue-100 text-blue-700")}>{todo.status.replace("-", " ")}</Badge><div className="flex gap-1"><Button variant="ghost" size="icon" onClick={() => openEditTodo(todo)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("todo", todo.id, todo.description.substring(0, 30))}><Trash2 className="h-4 w-4 text-red-500" /></Button></div></div></CardContent></Card>
                   ))}
                 </div>
               </div>
@@ -455,8 +716,8 @@ export default function TractionDashboardPage() {
           <TabsContent value="people" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
               <div className="p-6 space-y-6">
-                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">People Analyzer (GWC)</h2><p className="text-sm text-muted-foreground">Right people in the right seats</p></div><Button><Plus className="h-4 w-4 mr-2" />Add Team Member</Button></div>
-                <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead className="text-center">Gets It</TableHead><TableHead className="text-center">Wants It</TableHead><TableHead className="text-center">Capacity</TableHead><TableHead className="text-center">Right Seat</TableHead></TableRow></TableHeader><TableBody>{team.map(member => (<TableRow key={member.id}><TableCell className="font-medium">{member.name}</TableCell><TableCell>{member.role}</TableCell><TableCell className="text-center">{member.getsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.getsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.wantsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.wantsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.capacityToDoIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.capacityToDoIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.rightSeat === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.rightSeat === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
+                <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">People Analyzer (GWC)</h2><p className="text-sm text-muted-foreground">Right people in the right seats</p></div><Button onClick={openAddTeamMember}><Plus className="h-4 w-4 mr-2" />Add Team Member</Button></div>
+                <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead className="text-center">Gets It</TableHead><TableHead className="text-center">Wants It</TableHead><TableHead className="text-center">Capacity</TableHead><TableHead className="text-center">Right Seat</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{team.map(member => (<TableRow key={member.id}><TableCell className="font-medium">{member.name}</TableCell><TableCell>{member.role}</TableCell><TableCell className="text-center">{member.getsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.getsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.wantsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.wantsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.capacityToDoIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.capacityToDoIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.rightSeat === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.rightSeat === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => openEditTeamMember(member)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("team", member.id, member.name)}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
               </div>
             </ScrollArea>
           </TabsContent>
@@ -492,6 +753,377 @@ export default function TractionDashboardPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Rock Form Dialog */}
+      <Dialog open={showRockForm} onOpenChange={setShowRockForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingRock ? "Edit Rock" : "Add New Rock"}</DialogTitle>
+            <DialogDescription>Quarterly priorities that must be completed</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rock-description">Description *</Label>
+              <Textarea id="rock-description" placeholder="What needs to be accomplished this quarter?" value={rockForm.description} onChange={(e) => setRockForm({ ...rockForm, description: e.target.value })} rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rock-owner">Owner *</Label>
+                <Select value={rockForm.owner} onValueChange={(v) => setRockForm({ ...rockForm, owner: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+                  <SelectContent>{teamMemberNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rock-due">Due Date *</Label>
+                <Input id="rock-due" type="date" value={rockForm.dueDate} onChange={(e) => setRockForm({ ...rockForm, dueDate: e.target.value })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rock-status">Status</Label>
+                <Select value={rockForm.status} onValueChange={(v: Rock["status"]) => setRockForm({ ...rockForm, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="on-track">On Track</SelectItem>
+                    <SelectItem value="at-risk">At Risk</SelectItem>
+                    <SelectItem value="off-track">Off Track</SelectItem>
+                    <SelectItem value="complete">Complete</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="rock-quarter">Quarter</Label>
+                <Select value={rockForm.quarter} onValueChange={(v) => setRockForm({ ...rockForm, quarter: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Q1 2025">Q1 2025</SelectItem>
+                    <SelectItem value="Q2 2025">Q2 2025</SelectItem>
+                    <SelectItem value="Q3 2025">Q3 2025</SelectItem>
+                    <SelectItem value="Q4 2025">Q4 2025</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Progress: {rockForm.progress}%</Label>
+              <Slider value={[rockForm.progress]} onValueChange={(v) => setRockForm({ ...rockForm, progress: v[0] })} max={100} step={5} className="w-full" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRockForm(false)}>Cancel</Button>
+            <Button onClick={saveRock} disabled={!rockForm.description || !rockForm.owner}><Save className="h-4 w-4 mr-2" />Save Rock</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Metric Form Dialog */}
+      <Dialog open={showMetricForm} onOpenChange={setShowMetricForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingMetric ? "Edit Metric" : "Add New Metric"}</DialogTitle>
+            <DialogDescription>Weekly measurable for your scorecard</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="metric-name">Metric Name *</Label>
+              <Input id="metric-name" placeholder="e.g., Weekly Revenue, New Leads" value={metricForm.name} onChange={(e) => setMetricForm({ ...metricForm, name: e.target.value })} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="metric-owner">Owner *</Label>
+                <Select value={metricForm.owner} onValueChange={(v) => setMetricForm({ ...metricForm, owner: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+                  <SelectContent>{teamMemberNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="metric-unit">Unit (optional)</Label>
+                <Select value={metricForm.unit || ""} onValueChange={(v) => setMetricForm({ ...metricForm, unit: v })}>
+                  <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="$">$ (Dollar)</SelectItem>
+                    <SelectItem value="%">% (Percent)</SelectItem>
+                    <SelectItem value="#"># (Count)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="metric-goal">Goal *</Label>
+                <Input id="metric-goal" type="number" placeholder="Target value" value={metricForm.goal || ""} onChange={(e) => setMetricForm({ ...metricForm, goal: Number(e.target.value) })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="metric-actual">Actual</Label>
+                <Input id="metric-actual" type="number" placeholder="Current value" value={metricForm.actual || ""} onChange={(e) => setMetricForm({ ...metricForm, actual: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="metric-trend">Trend</Label>
+              <Select value={metricForm.trend} onValueChange={(v: ScorecardMetric["trend"]) => setMetricForm({ ...metricForm, trend: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="up">↑ Trending Up</SelectItem>
+                  <SelectItem value="down">↓ Trending Down</SelectItem>
+                  <SelectItem value="flat">→ Flat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMetricForm(false)}>Cancel</Button>
+            <Button onClick={saveMetric} disabled={!metricForm.name || !metricForm.owner}><Save className="h-4 w-4 mr-2" />Save Metric</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Issue Form Dialog */}
+      <Dialog open={showIssueForm} onOpenChange={setShowIssueForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingIssue ? "Edit Issue" : "Add New Issue"}</DialogTitle>
+            <DialogDescription>IDS: Identify, Discuss, Solve</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="issue-description">Issue Description *</Label>
+              <Textarea id="issue-description" placeholder="Describe the issue clearly" value={issueForm.description} onChange={(e) => setIssueForm({ ...issueForm, description: e.target.value })} rows={3} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="issue-owner">Owner *</Label>
+                <Select value={issueForm.owner} onValueChange={(v) => setIssueForm({ ...issueForm, owner: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+                  <SelectContent>{teamMemberNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="issue-priority">Priority</Label>
+                <Select value={issueForm.priority} onValueChange={(v: Issue["priority"]) => setIssueForm({ ...issueForm, priority: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="issue-date">Identified Date</Label>
+                <Input id="issue-date" type="date" value={issueForm.identifiedDate} onChange={(e) => setIssueForm({ ...issueForm, identifiedDate: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="issue-status">Status</Label>
+                <Select value={issueForm.status} onValueChange={(v: Issue["status"]) => setIssueForm({ ...issueForm, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">Open</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="solved">Solved</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowIssueForm(false)}>Cancel</Button>
+            <Button onClick={saveIssue} disabled={!issueForm.description || !issueForm.owner}><Save className="h-4 w-4 mr-2" />Save Issue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Todo Form Dialog */}
+      <Dialog open={showTodoForm} onOpenChange={setShowTodoForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingTodo ? "Edit To-Do" : "Add New To-Do"}</DialogTitle>
+            <DialogDescription>Action items from Level 10 meetings</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="todo-description">To-Do Description *</Label>
+              <Textarea id="todo-description" placeholder="What needs to be done?" value={todoForm.description} onChange={(e) => setTodoForm({ ...todoForm, description: e.target.value })} rows={2} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="todo-owner">Owner *</Label>
+                <Select value={todoForm.owner} onValueChange={(v) => setTodoForm({ ...todoForm, owner: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select owner" /></SelectTrigger>
+                  <SelectContent>{teamMemberNames.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="todo-due">Due Date *</Label>
+                <Input id="todo-due" type="date" value={todoForm.dueDate} onChange={(e) => setTodoForm({ ...todoForm, dueDate: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="todo-status">Status</Label>
+              <Select value={todoForm.status} onValueChange={(v: Todo["status"]) => setTodoForm({ ...todoForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not-started">Not Started</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="complete">Complete</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTodoForm(false)}>Cancel</Button>
+            <Button onClick={saveTodo} disabled={!todoForm.description || !todoForm.owner}><Save className="h-4 w-4 mr-2" />Save To-Do</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Meeting Form Dialog */}
+      <Dialog open={showMeetingForm} onOpenChange={setShowMeetingForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingMeeting ? "Edit Meeting" : "Log Level 10 Meeting"}</DialogTitle>
+            <DialogDescription>Record your weekly leadership meeting</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="meeting-date">Date *</Label>
+                <Input id="meeting-date" type="date" value={meetingForm.date} onChange={(e) => setMeetingForm({ ...meetingForm, date: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="meeting-start">Start Time</Label>
+                <Input id="meeting-start" type="time" value={meetingForm.startTime} onChange={(e) => setMeetingForm({ ...meetingForm, startTime: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="meeting-end">End Time</Label>
+                <Input id="meeting-end" type="time" value={meetingForm.endTime} onChange={(e) => setMeetingForm({ ...meetingForm, endTime: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Meeting Rating: {meetingForm.rating}/10</Label>
+              <Slider value={[meetingForm.rating]} onValueChange={(v) => setMeetingForm({ ...meetingForm, rating: v[0] })} max={10} min={1} step={1} className="w-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="meeting-issues">Issues Solved</Label>
+                <Input id="meeting-issues" type="number" min={0} value={meetingForm.issuesSolved} onChange={(e) => setMeetingForm({ ...meetingForm, issuesSolved: Number(e.target.value) })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="meeting-todos">To-Do Completion %</Label>
+                <Input id="meeting-todos" type="number" min={0} max={100} value={meetingForm.todoCompletionRate} onChange={(e) => setMeetingForm({ ...meetingForm, todoCompletionRate: Number(e.target.value) })} />
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Checkbox id="rocks-reviewed" checked={meetingForm.rocksReviewed} onCheckedChange={(c) => setMeetingForm({ ...meetingForm, rocksReviewed: c === true })} />
+                <Label htmlFor="rocks-reviewed">Rocks Reviewed</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox id="scorecard-reviewed" checked={meetingForm.scorecardReviewed} onCheckedChange={(c) => setMeetingForm({ ...meetingForm, scorecardReviewed: c === true })} />
+                <Label htmlFor="scorecard-reviewed">Scorecard Reviewed</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowMeetingForm(false)}>Cancel</Button>
+            <Button onClick={saveMeeting} disabled={!meetingForm.date}><Save className="h-4 w-4 mr-2" />Save Meeting</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Team Member Form Dialog */}
+      <Dialog open={showTeamMemberForm} onOpenChange={setShowTeamMemberForm}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingTeamMember ? "Edit Team Member" : "Add Team Member"}</DialogTitle>
+            <DialogDescription>People Analyzer - GWC Assessment</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="member-name">Name *</Label>
+                <Input id="member-name" placeholder="Full name" value={teamMemberForm.name} onChange={(e) => setTeamMemberForm({ ...teamMemberForm, name: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="member-role">Role *</Label>
+                <Input id="member-role" placeholder="e.g., VP Sales" value={teamMemberForm.role} onChange={(e) => setTeamMemberForm({ ...teamMemberForm, role: e.target.value })} />
+              </div>
+            </div>
+            <div className="border rounded-lg p-4 space-y-4">
+              <h4 className="font-medium">GWC Assessment</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Gets It</Label>
+                  <Select value={teamMemberForm.getsIt === null ? "null" : teamMemberForm.getsIt.toString()} onValueChange={(v) => setTeamMemberForm({ ...teamMemberForm, getsIt: v === "null" ? null : v === "true" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Not Assessed</SelectItem>
+                      <SelectItem value="true">Yes ✓</SelectItem>
+                      <SelectItem value="false">No ✗</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Wants It</Label>
+                  <Select value={teamMemberForm.wantsIt === null ? "null" : teamMemberForm.wantsIt.toString()} onValueChange={(v) => setTeamMemberForm({ ...teamMemberForm, wantsIt: v === "null" ? null : v === "true" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Not Assessed</SelectItem>
+                      <SelectItem value="true">Yes ✓</SelectItem>
+                      <SelectItem value="false">No ✗</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Capacity to Do It</Label>
+                  <Select value={teamMemberForm.capacityToDoIt === null ? "null" : teamMemberForm.capacityToDoIt.toString()} onValueChange={(v) => setTeamMemberForm({ ...teamMemberForm, capacityToDoIt: v === "null" ? null : v === "true" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Not Assessed</SelectItem>
+                      <SelectItem value="true">Yes ✓</SelectItem>
+                      <SelectItem value="false">No ✗</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Right Seat</Label>
+                  <Select value={teamMemberForm.rightSeat === null ? "null" : teamMemberForm.rightSeat.toString()} onValueChange={(v) => setTeamMemberForm({ ...teamMemberForm, rightSeat: v === "null" ? null : v === "true" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="null">Not Assessed</SelectItem>
+                      <SelectItem value="true">Yes ✓</SelectItem>
+                      <SelectItem value="false">No ✗</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTeamMemberForm(false)}>Cancel</Button>
+            <Button onClick={saveTeamMember} disabled={!teamMemberForm.name || !teamMemberForm.role}><Save className="h-4 w-4 mr-2" />Save Team Member</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{deleteTarget?.name}". This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={executeDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

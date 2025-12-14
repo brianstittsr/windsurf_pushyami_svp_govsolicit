@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +17,11 @@ import {
   CheckCircle,
   Info,
   Target,
+  Loader2,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 
 interface ContactSphereMember {
   name: string;
@@ -47,10 +51,71 @@ const initialForm: ContactSphereForm = {
   commitment: "",
 };
 
+// Temporary user ID until auth is implemented
+const TEMP_USER_ID = "current-user";
+
 export default function ContactSpherePage() {
   const [form, setForm] = useState<ContactSphereForm>(initialForm);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [docId, setDocId] = useState<string | null>(null);
+
+  // Load existing data on mount
+  useEffect(() => {
+    const loadContactSphere = async () => {
+      if (!db) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const q = query(
+          collection(db, COLLECTIONS.CONTACT_SPHERES),
+          where("affiliateId", "==", TEMP_USER_ID)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const docData = querySnapshot.docs[0];
+          setDocId(docData.id);
+          const data = docData.data();
+          
+          // Map members from Firebase format
+          const members = Array(10).fill(null).map((_, i) => {
+            const member = data.members?.[i];
+            return {
+              name: member?.name || "",
+              profession: member?.profession || "",
+              company: member?.company || "",
+            };
+          });
+          
+          // Map professions from Firebase format
+          const topProfessions = Array(3).fill(null).map((_, i) => {
+            const prof = data.topProfessionsNeeded?.[i];
+            return {
+              profession: prof?.profession || "",
+              description: prof?.description || "",
+            };
+          });
+          
+          setForm({
+            sphereName: data.sphereName || "",
+            members,
+            topProfessions,
+            commitment: data.commitment || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading contact sphere:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadContactSphere();
+  }, []);
 
   const updateSphereName = (value: string) => {
     setForm((prev) => ({ ...prev, sphereName: value }));
@@ -81,12 +146,49 @@ export default function ContactSpherePage() {
   };
 
   const handleSave = async () => {
+    if (!db) return;
+    
     setIsSaving(true);
-    // TODO: Save to Firebase
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    try {
+      // Filter out empty members and professions
+      const filledMembers = form.members.filter(m => m.name.trim());
+      const filledProfessions = form.topProfessions.filter(p => p.profession.trim());
+      
+      const contactSphereData = {
+        affiliateId: TEMP_USER_ID,
+        sphereName: form.sphereName,
+        members: filledMembers.map(m => ({
+          name: m.name,
+          profession: m.profession || undefined,
+          company: m.company || undefined,
+        })),
+        topProfessionsNeeded: filledProfessions.map(p => ({
+          profession: p.profession,
+          description: p.description || undefined,
+        })),
+        commitment: form.commitment || undefined,
+        updatedAt: Timestamp.now(),
+      };
+      
+      const documentId = docId || `sphere_${TEMP_USER_ID}`;
+      const docRef = doc(db, COLLECTIONS.CONTACT_SPHERES, documentId);
+      
+      await setDoc(docRef, {
+        ...contactSphereData,
+        createdAt: docId ? undefined : Timestamp.now(),
+      }, { merge: true });
+      
+      if (!docId) {
+        setDocId(documentId);
+      }
+      
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error saving contact sphere:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const filledMembers = form.members.filter((m) => m.name.trim() !== "").length;
@@ -96,6 +198,17 @@ export default function ContactSpherePage() {
   const completionPercent = Math.round(
     ((filledMembers / 10) * 40 + (filledProfessions / 3) * 30 + (hasSphereName ? 15 : 0) + (hasCommitment ? 15 : 0))
   );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Loading contact sphere...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

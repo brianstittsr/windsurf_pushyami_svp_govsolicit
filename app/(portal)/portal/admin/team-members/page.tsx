@@ -45,6 +45,8 @@ import {
   Upload,
   UserCheck,
   UserX,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import { 
   collection, 
@@ -114,6 +116,7 @@ export default function TeamMembersPage() {
   const [editingMember, setEditingMember] = useState<TeamMemberDoc | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -585,7 +588,7 @@ export default function TeamMembersPage() {
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters and View Toggle */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -610,25 +613,43 @@ export default function TeamMembersPage() {
                 <SelectItem value="consultant">Consultant</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex items-center gap-1 border rounded-md p-1">
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="px-3"
+              >
+                <List className="h-4 w-4 mr-1" />
+                List
+              </Button>
+              <Button
+                variant={viewMode === "card" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("card")}
+                className="px-3"
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                Cards
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Members Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Team Directory</CardTitle>
-          <CardDescription>
-            {filteredMembers.length} member{filteredMembers.length !== 1 ? "s" : ""} found
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
+      {/* Members Content */}
+      {loading ? (
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex items-center justify-center">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredMembers.length === 0 ? (
-            <div className="text-center py-8">
+          </CardContent>
+        </Card>
+      ) : filteredMembers.length === 0 ? (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No team members found</h3>
               <p className="text-muted-foreground mb-4">
@@ -647,7 +668,18 @@ export default function TeamMembersPage() {
                 </Button>
               )}
             </div>
-          ) : (
+          </CardContent>
+        </Card>
+      ) : viewMode === "list" ? (
+        /* List View */
+        <Card>
+          <CardHeader>
+            <CardTitle>Team Directory</CardTitle>
+            <CardDescription>
+              {filteredMembers.length} member{filteredMembers.length !== 1 ? "s" : ""} found
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -743,9 +775,91 @@ export default function TeamMembersPage() {
                 </TableBody>
               </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Card View */
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filteredMembers.map((member) => (
+            <Card key={member.id} className="overflow-hidden">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12">
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback>
+                        {getInitials(member.firstName, member.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-lg">
+                        {member.firstName} {member.lastName}
+                      </CardTitle>
+                      {member.title && (
+                        <CardDescription>{member.title}</CardDescription>
+                      )}
+                    </div>
+                  </div>
+                  {getRoleBadge(member.role)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Expertise</p>
+                  <p className="text-sm">{member.expertise}</p>
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    <a href={`mailto:${member.emailPrimary}`} className="hover:underline truncate">
+                      {member.emailPrimary}
+                    </a>
+                  </div>
+                  {member.mobile && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Phone className="h-3 w-3" />
+                      {member.mobile}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  {member.status === "active" ? (
+                    <Badge variant="outline" className="text-green-600 border-green-600">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Active
+                    </Badge>
+                  ) : member.status === "pending" ? (
+                    <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                      Pending
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-gray-600">
+                      <UserX className="h-3 w-3 mr-1" />
+                      Inactive
+                    </Badge>
+                  )}
+                  <div className="flex gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditMember(member)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDeleteMember(member.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

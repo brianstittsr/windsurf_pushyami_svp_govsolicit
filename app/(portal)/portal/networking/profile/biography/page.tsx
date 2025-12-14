@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,11 @@ import {
   Lightbulb,
   CheckCircle,
   Info,
+  Loader2,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 
 interface BiographyForm {
   // Business Information
@@ -61,10 +65,62 @@ const initialForm: BiographyForm = {
   uniqueFact: "",
 };
 
+// Temporary user ID until auth is implemented
+const TEMP_USER_ID = "current-user";
+
 export default function BiographyPage() {
   const [form, setForm] = useState<BiographyForm>(initialForm);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [docId, setDocId] = useState<string | null>(null);
+
+  // Load existing data on mount
+  useEffect(() => {
+    const loadBiography = async () => {
+      if (!db) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const q = query(
+          collection(db, COLLECTIONS.AFFILIATE_BIOGRAPHIES),
+          where("affiliateId", "==", TEMP_USER_ID)
+        );
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+          const docData = querySnapshot.docs[0];
+          setDocId(docData.id);
+          const data = docData.data();
+          
+          setForm({
+            businessName: data.businessName || "",
+            profession: data.profession || "",
+            location: data.location || "",
+            yearsInBusiness: data.yearsInBusiness?.toString() || "",
+            previousJobs: Array.isArray(data.previousJobs) ? data.previousJobs.join("\n") : "",
+            spouse: data.spouse || "",
+            children: data.children || "",
+            pets: data.pets || "",
+            hobbies: Array.isArray(data.hobbies) ? data.hobbies.join(", ") : "",
+            activitiesOfInterest: Array.isArray(data.activitiesOfInterest) ? data.activitiesOfInterest.join(", ") : "",
+            cityOfResidence: data.cityOfResidence || "",
+            yearsInCity: data.yearsInCity?.toString() || "",
+            burningDesire: data.burningDesire || "",
+            uniqueFact: data.uniqueFact || "",
+          });
+        }
+      } catch (error) {
+        console.error("Error loading biography:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadBiography();
+  }, []);
 
   const updateField = (field: keyof BiographyForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -72,17 +128,65 @@ export default function BiographyPage() {
   };
 
   const handleSave = async () => {
+    if (!db) return;
+    
     setIsSaving(true);
-    // TODO: Save to Firebase
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    try {
+      const biographyData = {
+        affiliateId: TEMP_USER_ID,
+        businessName: form.businessName,
+        profession: form.profession,
+        location: form.location,
+        yearsInBusiness: form.yearsInBusiness ? parseInt(form.yearsInBusiness) : 0,
+        previousJobs: form.previousJobs.split("\n").filter(j => j.trim()),
+        spouse: form.spouse || undefined,
+        children: form.children || undefined,
+        pets: form.pets || undefined,
+        hobbies: form.hobbies.split(",").map(h => h.trim()).filter(h => h),
+        activitiesOfInterest: form.activitiesOfInterest.split(",").map(a => a.trim()).filter(a => a),
+        cityOfResidence: form.cityOfResidence,
+        yearsInCity: form.yearsInCity ? parseInt(form.yearsInCity) : undefined,
+        burningDesire: form.burningDesire || undefined,
+        uniqueFact: form.uniqueFact || undefined,
+        updatedAt: Timestamp.now(),
+      };
+      
+      // Use existing doc ID or create new one
+      const documentId = docId || `bio_${TEMP_USER_ID}`;
+      const docRef = doc(db, COLLECTIONS.AFFILIATE_BIOGRAPHIES, documentId);
+      
+      await setDoc(docRef, {
+        ...biographyData,
+        createdAt: docId ? undefined : Timestamp.now(),
+      }, { merge: true });
+      
+      if (!docId) {
+        setDocId(documentId);
+      }
+      
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error saving biography:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const completedFields = Object.values(form).filter((v) => v.trim() !== "").length;
   const totalFields = Object.keys(form).length;
   const completionPercent = Math.round((completedFields / totalFields) * 100);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-2 text-muted-foreground">Loading biography...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -112,7 +216,7 @@ export default function BiographyPage() {
             {completionPercent}% Complete
           </Badge>
           <Button onClick={handleSave} disabled={isSaving}>
-            <Save className="mr-2 h-4 w-4" />
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             {isSaving ? "Saving..." : "Save Biography"}
           </Button>
         </div>

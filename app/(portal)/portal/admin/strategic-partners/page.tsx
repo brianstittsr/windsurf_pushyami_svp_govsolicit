@@ -45,6 +45,10 @@ import {
   Sparkles,
   RefreshCw,
   Upload,
+  LayoutGrid,
+  List,
+  Video,
+  X,
 } from "lucide-react";
 import { 
   collection, 
@@ -57,7 +61,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { COLLECTIONS, type StrategicPartnerDoc } from "@/lib/schema";
+import { COLLECTIONS, type StrategicPartnerDoc, type ZoomRecording } from "@/lib/schema";
 
 // Initial seed data for Strategic Partners
 const seedPartners: Omit<StrategicPartnerDoc, "id" | "createdAt" | "updatedAt">[] = [
@@ -126,6 +130,7 @@ export default function StrategicPartnersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPartner, setEditingPartner] = useState<StrategicPartnerDoc | null>(null);
   const [seeding, setSeeding] = useState(false);
+  const [viewMode, setViewMode] = useState<"card" | "list">("list");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -136,8 +141,10 @@ export default function StrategicPartnersPage() {
     phone: "",
     linkedIn: "",
     notes: "",
+    zoomRecordings: [] as ZoomRecording[],
     status: "active" as "active" | "inactive" | "pending",
   });
+  const [newRecording, setNewRecording] = useState({ title: "", url: "", date: "" });
 
   // Fetch partners from Firebase
   const fetchPartners = async () => {
@@ -252,8 +259,10 @@ export default function StrategicPartnersPage() {
       phone: partner.phone || "",
       linkedIn: partner.linkedIn || "",
       notes: partner.notes || "",
+      zoomRecordings: partner.zoomRecordings || [],
       status: partner.status,
     });
+    setNewRecording({ title: "", url: "", date: "" });
     setDialogOpen(true);
   };
 
@@ -269,7 +278,27 @@ export default function StrategicPartnersPage() {
       phone: "",
       linkedIn: "",
       notes: "",
+      zoomRecordings: [],
       status: "active",
+    });
+    setNewRecording({ title: "", url: "", date: "" });
+  };
+
+  // Add a new Zoom recording to the form
+  const handleAddRecording = () => {
+    if (!newRecording.title || !newRecording.url) return;
+    setFormData({
+      ...formData,
+      zoomRecordings: [...formData.zoomRecordings, { ...newRecording }],
+    });
+    setNewRecording({ title: "", url: "", date: "" });
+  };
+
+  // Remove a Zoom recording from the form
+  const handleRemoveRecording = (index: number) => {
+    setFormData({
+      ...formData,
+      zoomRecordings: formData.zoomRecordings.filter((_, i) => i !== index),
     });
   };
 
@@ -320,7 +349,7 @@ export default function StrategicPartnersPage() {
                 Add Partner
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingPartner ? "Edit Strategic Partner" : "Add Strategic Partner"}
@@ -438,6 +467,75 @@ export default function StrategicPartnersPage() {
                     rows={2}
                   />
                 </div>
+
+                {/* Zoom Recordings Section */}
+                <div className="space-y-3 border-t pt-4">
+                  <Label className="flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    SVP Zoom Recordings
+                  </Label>
+                  
+                  {/* Existing recordings */}
+                  {formData.zoomRecordings.length > 0 && (
+                    <div className="space-y-2">
+                      {formData.zoomRecordings.map((recording, index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <Video className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{recording.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{recording.url}</p>
+                            {recording.date && (
+                              <p className="text-xs text-muted-foreground">{recording.date}</p>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 flex-shrink-0"
+                            onClick={() => handleRemoveRecording(index)}
+                          >
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add new recording */}
+                  <div className="space-y-2 p-3 border rounded-md bg-background">
+                    <p className="text-sm font-medium">Add Recording</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Recording title"
+                        value={newRecording.title}
+                        onChange={(e) => setNewRecording({ ...newRecording, title: e.target.value })}
+                      />
+                      <Input
+                        placeholder="Date (optional)"
+                        value={newRecording.date}
+                        onChange={(e) => setNewRecording({ ...newRecording, date: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Zoom recording URL"
+                        value={newRecording.url}
+                        onChange={(e) => setNewRecording({ ...newRecording, url: e.target.value })}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={handleAddRecording}
+                        disabled={!newRecording.title || !newRecording.url}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
@@ -498,36 +596,56 @@ export default function StrategicPartnersPage() {
         </Card>
       </div>
 
-      {/* Search */}
+      {/* Search and View Toggle */}
       <Card>
         <CardContent className="pt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search partners by name, company, or expertise..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search partners by name, company, or expertise..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-1 border rounded-md p-1">
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="px-3"
+              >
+                <List className="h-4 w-4 mr-1" />
+                List
+              </Button>
+              <Button
+                variant={viewMode === "card" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("card")}
+                className="px-3"
+              >
+                <LayoutGrid className="h-4 w-4 mr-1" />
+                Cards
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Partners Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Partners Directory</CardTitle>
-          <CardDescription>
-            Technology and service partners that extend SVP capabilities
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
+      {/* Partners Content */}
+      {loading ? (
+        <Card>
+          <CardContent className="py-8">
+            <div className="flex items-center justify-center">
               <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filteredPartners.length === 0 ? (
-            <div className="text-center py-8">
+          </CardContent>
+        </Card>
+      ) : filteredPartners.length === 0 ? (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center">
               <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No partners found</h3>
               <p className="text-muted-foreground mb-4">
@@ -546,7 +664,18 @@ export default function StrategicPartnersPage() {
                 </Button>
               )}
             </div>
-          ) : (
+          </CardContent>
+        </Card>
+      ) : viewMode === "list" ? (
+        /* List View */
+        <Card>
+          <CardHeader>
+            <CardTitle>Partners Directory</CardTitle>
+            <CardDescription>
+              Technology and service partners that extend SVP capabilities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -626,12 +755,10 @@ export default function StrategicPartnersPage() {
                 ))}
               </TableBody>
             </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Partner Cards (Alternative View) */}
-      {filteredPartners.length > 0 && (
+          </CardContent>
+        </Card>
+      ) : (
+        /* Card View */
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredPartners.map((partner) => (
             <Card key={partner.id} className="overflow-hidden">
@@ -658,6 +785,32 @@ export default function StrategicPartnersPage() {
                   <p className="text-xs text-muted-foreground mb-1">Expertise</p>
                   <p className="text-sm">{partner.expertise}</p>
                 </div>
+                {/* Zoom Recordings */}
+                {partner.zoomRecordings && partner.zoomRecordings.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+                      <Video className="h-3 w-3" />
+                      SVP Zoom Recordings
+                    </p>
+                    <div className="space-y-1">
+                      {partner.zoomRecordings.map((recording, idx) => (
+                        <a
+                          key={idx}
+                          href={recording.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          <Video className="h-3 w-3" />
+                          <span className="truncate">{recording.title}</span>
+                          {recording.date && (
+                            <span className="text-xs text-muted-foreground">({recording.date})</span>
+                          )}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1" asChild>
                     <a href={partner.website} target="_blank" rel="noopener noreferrer">
@@ -671,6 +824,13 @@ export default function StrategicPartnersPage() {
                     onClick={() => handleEditPartner(partner)}
                   >
                     <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeletePartner(partner.id)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
               </CardContent>
