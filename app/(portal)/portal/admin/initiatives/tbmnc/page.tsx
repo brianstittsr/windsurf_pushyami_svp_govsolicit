@@ -69,6 +69,9 @@ import {
   FileText,
   Award,
   Briefcase,
+  FileDown,
+  Send,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -270,6 +273,204 @@ export default function TBMNCSupplierReadinessPage() {
   const [isAssignAffiliateOpen, setIsAssignAffiliateOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(1);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isEmailDialogOpen, setIsEmailDialogOpen] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailSubject, setEmailSubject] = useState("TBMNC Supplier Registration Form");
+  const [emailMessage, setEmailMessage] = useState("Please find attached the TBMNC Supplier Registration Form. Complete this form and return it to begin the supplier qualification process.");
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+  // Generate PDF of the Registration Wizard
+  const generateRegistrationPdf = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      // Create a printable HTML version
+      const pdfContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TBMNC Supplier Registration Form</title>
+  <style>
+    @page { size: letter; margin: 0.75in; }
+    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.4; color: #333; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #C8A951; padding-bottom: 20px; }
+    .logo { font-size: 24pt; font-weight: bold; color: #1a1a1a; }
+    .logo-accent { color: #C8A951; }
+    .subtitle { font-size: 10pt; color: #666; margin-top: 5px; }
+    .title { font-size: 18pt; font-weight: bold; margin: 20px 0 10px; color: #1a1a1a; }
+    .section { margin: 25px 0; page-break-inside: avoid; }
+    .section-title { font-size: 14pt; font-weight: bold; color: #C8A951; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
+    .field-row { display: flex; margin-bottom: 12px; }
+    .field { flex: 1; margin-right: 15px; }
+    .field:last-child { margin-right: 0; }
+    .field-label { font-size: 9pt; font-weight: bold; color: #666; margin-bottom: 3px; }
+    .field-input { border-bottom: 1px solid #999; min-height: 20px; padding: 3px 0; }
+    .checkbox-group { display: flex; flex-wrap: wrap; }
+    .checkbox-item { width: 50%; display: flex; align-items: center; margin-bottom: 8px; }
+    .checkbox { width: 14px; height: 14px; border: 1px solid #666; margin-right: 8px; }
+    .textarea { border: 1px solid #999; min-height: 60px; padding: 5px; margin-top: 5px; }
+    .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 9pt; color: #666; text-align: center; }
+    .required { color: #c00; }
+    .instructions { background: #f5f5f5; padding: 15px; border-radius: 5px; margin-bottom: 20px; font-size: 10pt; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">Strategic Value<span class="logo-accent">+</span></div>
+    <div class="subtitle">Toyota Battery Manufacturing North Carolina - Supplier Qualification Program</div>
+  </div>
+  
+  <div class="title">Supplier Registration Form</div>
+  
+  <div class="instructions">
+    <strong>Instructions:</strong> Complete all required fields (*) and return this form along with the required attachments to begin the supplier qualification process. For questions, contact your Strategic Value+ representative.
+  </div>
+
+  <div class="section">
+    <div class="section-title">1. Company Information</div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Company Name <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">DUNS Number</div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Street Address <span class="required">*</span></div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">City <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">State <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">ZIP Code <span class="required">*</span></div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Primary Contact Name <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">Title</div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Contact Email <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">Contact Phone <span class="required">*</span></div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Website</div><div class="field-input"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2. Manufacturing Capabilities</div>
+    <div class="field-label">Primary Manufacturing Processes (check all that apply):</div>
+    <div class="checkbox-group">
+      <div class="checkbox-item"><div class="checkbox"></div>CNC Machining</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Metal Stamping</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Injection Molding</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Die Casting</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Welding</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Assembly</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Electronics/PCB</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Battery Components</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Wire Harness</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Plastics</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Coatings/Finishing</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Testing Services</div>
+    </div>
+    <div class="field-row" style="margin-top: 15px;">
+      <div class="field"><div class="field-label">Annual Revenue Range <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">Number of Employees <span class="required">*</span></div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">Facility Size (sq ft)</div><div class="field-input"></div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">3. Quality & Certifications</div>
+    <div class="field-label">Current Certifications (check all that apply):</div>
+    <div class="checkbox-group">
+      <div class="checkbox-item"><div class="checkbox"></div>ISO 9001</div>
+      <div class="checkbox-item"><div class="checkbox"></div>IATF 16949</div>
+      <div class="checkbox-item"><div class="checkbox"></div>ISO 14001</div>
+      <div class="checkbox-item"><div class="checkbox"></div>ISO 45001</div>
+      <div class="checkbox-item"><div class="checkbox"></div>AS9100</div>
+      <div class="checkbox-item"><div class="checkbox"></div>ISO 13485</div>
+      <div class="checkbox-item"><div class="checkbox"></div>NADCAP</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Other: ___________</div>
+    </div>
+    <div class="field-row" style="margin-top: 15px;">
+      <div class="field"><div class="field-label">PPAP Experience Level</div><div class="field-input"></div></div>
+    </div>
+    <div class="field-label" style="margin-top: 15px;">Quality Management System Description:</div>
+    <div class="textarea"></div>
+    <div class="field-label" style="margin-top: 15px;">Current/Past Automotive OEM Customers:</div>
+    <div class="textarea"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">4. Required Attachments</div>
+    <div class="checkbox-group">
+      <div class="checkbox-item"><div class="checkbox"></div>Company Profile/Brochure <span class="required">*</span></div>
+      <div class="checkbox-item"><div class="checkbox"></div>ISO 9001 Certificate <span class="required">*</span></div>
+      <div class="checkbox-item"><div class="checkbox"></div>IATF 16949 Certificate (if applicable)</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Financial Statements (3 years) <span class="required">*</span></div>
+      <div class="checkbox-item"><div class="checkbox"></div>Facility Photos</div>
+      <div class="checkbox-item"><div class="checkbox"></div>Equipment List</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">5. Certification</div>
+    <p style="font-size: 10pt;">I certify that all information provided is accurate and complete to the best of my knowledge. I understand that false or misleading information may result in disqualification from the supplier qualification process.</p>
+    <div class="field-row" style="margin-top: 20px;">
+      <div class="field"><div class="field-label">Authorized Signature</div><div class="field-input" style="min-height: 30px;"></div></div>
+      <div class="field"><div class="field-label">Date</div><div class="field-input"></div></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><div class="field-label">Printed Name</div><div class="field-input"></div></div>
+      <div class="field"><div class="field-label">Title</div><div class="field-input"></div></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><strong>Strategic Value+</strong> | Toyota Battery Manufacturing NC Supplier Qualification Program</p>
+    <p>For questions, contact your Strategic Value+ representative or email support@strategicvalueplus.com</p>
+    <p>Form Version 1.0 | Generated ${new Date().toLocaleDateString()}</p>
+  </div>
+</body>
+</html>
+      `;
+
+      // Open print dialog with the PDF content
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(pdfContent);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      }
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  // Send email with registration form
+  const sendRegistrationEmail = async () => {
+    if (!emailTo) {
+      alert('Please enter an email address');
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      // Create mailto link with pre-filled content
+      const mailtoLink = `mailto:${emailTo}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailMessage + '\n\nPlease download and complete the attached TBMNC Supplier Registration Form.')}`;
+      window.open(mailtoLink, '_blank');
+      setIsEmailDialogOpen(false);
+      setEmailTo('');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Error opening email client. Please try again.');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
 
   const filteredSuppliers = mockSuppliers.filter((supplier) => {
     const matchesSearch =
@@ -316,6 +517,18 @@ export default function TBMNCSupplierReadinessPage() {
           <Button variant="outline" onClick={() => setIsWizardOpen(true)}>
             <FileText className="mr-2 h-4 w-4" />
             Registration Wizard
+          </Button>
+          <Button variant="outline" onClick={generateRegistrationPdf} disabled={isGeneratingPdf}>
+            {isGeneratingPdf ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="mr-2 h-4 w-4" />
+            )}
+            Download PDF
+          </Button>
+          <Button variant="outline" onClick={() => setIsEmailDialogOpen(true)}>
+            <Mail className="mr-2 h-4 w-4" />
+            Email Form
           </Button>
           <Button onClick={() => setIsAddSupplierOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
@@ -1203,6 +1416,63 @@ export default function TBMNCSupplierReadinessPage() {
             <Button onClick={() => setIsAddSupplierOpen(false)}>
               <Plus className="mr-2 h-4 w-4" />
               Add Supplier
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Registration Form Dialog */}
+      <Dialog open={isEmailDialogOpen} onOpenChange={setIsEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Email Registration Form</DialogTitle>
+            <DialogDescription>
+              Send the TBMNC Supplier Registration Form to a potential supplier
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Recipient Email *</Label>
+              <Input
+                type="email"
+                placeholder="supplier@company.com"
+                value={emailTo}
+                onChange={(e) => setEmailTo(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Subject</Label>
+              <Input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Message</Label>
+              <Textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                rows={4}
+              />
+            </div>
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                <strong>Note:</strong> This will open your default email client with the message pre-filled. 
+                You can then attach the PDF form before sending.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={sendRegistrationEmail} disabled={isSendingEmail || !emailTo}>
+              {isSendingEmail ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
+              Open Email Client
             </Button>
           </DialogFooter>
         </DialogContent>
