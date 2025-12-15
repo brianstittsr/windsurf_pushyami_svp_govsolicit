@@ -63,6 +63,7 @@ import {
   Linkedin,
   FileSignature,
   Bot,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -172,6 +173,12 @@ const workItems = [
     href: "/portal/proposals",
     icon: FileText,
     badge: "AI",
+  },
+  {
+    title: "GoHighLevel",
+    href: "/portal/gohighlevel",
+    icon: Plug,
+    badge: "CRM",
   },
 ];
 
