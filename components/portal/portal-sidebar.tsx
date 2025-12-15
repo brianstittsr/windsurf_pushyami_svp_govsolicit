@@ -156,6 +156,12 @@ const workItems = [
     icon: Bot,
     badge: "AI",
   },
+  {
+    title: "Proposal Creator",
+    href: "/portal/proposals",
+    icon: FileText,
+    badge: "AI",
+  },
 ];
 
 const adminItems = [
