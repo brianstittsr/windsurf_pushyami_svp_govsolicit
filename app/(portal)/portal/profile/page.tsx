@@ -297,9 +297,9 @@ export default function ProfilePage() {
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Photo Upload Section */}
             <div className="relative group">
-              <Avatar className="h-32 w-32 border-4 border-background shadow-lg">
+              <Avatar className="h-64 w-64 border-4 border-background shadow-lg">
                 <AvatarImage src={avatarPreview || undefined} />
-                <AvatarFallback className="text-3xl bg-primary/10 text-primary">
+                <AvatarFallback className="text-5xl bg-primary/10 text-primary">
                   {getInitials()}
                 </AvatarFallback>
               </Avatar>
