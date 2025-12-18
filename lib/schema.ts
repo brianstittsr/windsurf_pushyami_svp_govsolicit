@@ -222,8 +222,10 @@ export interface CertificationDoc extends Omit<Certification, "dateObtained" | "
 export interface ActivityDoc extends Omit<Activity, "createdAt" | "user"> {
   createdAt: Timestamp;
   userId: string; // Reference to user
-  entityType: "opportunity" | "project" | "organization";
+  entityType: "opportunity" | "project" | "organization" | "meeting" | "document" | "task" | "rock" | "affiliate" | "team-member" | "proposal" | "calendar" | "settings";
   entityId: string;
+  entityName?: string;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================
@@ -530,6 +532,10 @@ export interface StrategicPartnerDoc {
   notes?: string;
   zoomRecordings?: ZoomRecording[];
   status: "active" | "inactive" | "pending";
+  // Additional flags - Partners/Suppliers can also be Clients
+  isClient?: boolean; // Can this partner also be served as a client?
+  clientSince?: Timestamp; // When they became a client
+  clientNotes?: string; // Notes about them as a client
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -553,6 +559,12 @@ export interface TeamMemberDoc {
   website?: string;
   role: "admin" | "team" | "affiliate" | "consultant";
   status: "active" | "inactive" | "pending";
+  // Additional flags - Affiliates/Suppliers can also be Clients
+  isClient?: boolean; // Can this affiliate/team member also be served as a client?
+  clientSince?: Timestamp; // When they became a client
+  clientNotes?: string; // Notes about them as a client
+  // Mattermost integration
+  mattermostUserId?: string; // Links to Mattermost user ID for playbook assignments
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -847,17 +859,148 @@ export interface CalendarEventDoc {
   startDate: Timestamp;
   endDate: Timestamp;
   allDay?: boolean;
-  type: 'meeting' | 'rock' | 'todo' | 'issue' | 'custom';
+  type: 'meeting' | 'rock' | 'todo' | 'issue' | 'custom' | 'one-to-one';
   color?: string;
   attendees?: string[];
   location?: string;
   recurringFrequency?: 'daily' | 'weekly' | 'monthly';
   recurringUntil?: Timestamp;
+  recurringParentId?: string; // ID of the parent recurring event
+  // GHL sync fields
+  ghlEventId?: string;
+  syncedToGhl?: boolean;
   // Traction references
   rockId?: string;
   todoId?: string;
   issueId?: string;
   meetingId?: string;
+  // 1-to-1 reference
+  oneToOneQueueItemId?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** 1-to-1 Scheduling Queue Item */
+export interface OneToOneQueueItemDoc {
+  id: string;
+  // Team member to schedule with
+  teamMemberId: string;
+  teamMemberName: string;
+  teamMemberEmail: string;
+  teamMemberExpertise?: string;
+  teamMemberAvatar?: string;
+  // Queue status
+  status: 'queued' | 'scheduled' | 'completed' | 'cancelled';
+  // Scheduling details (when scheduled)
+  scheduledDate?: Timestamp;
+  scheduledTime?: string;
+  duration?: number; // minutes
+  location?: string;
+  meetingType?: 'virtual' | 'in-person';
+  calendarEventId?: string;
+  // Notes
+  notes?: string;
+  // Priority/order
+  priority: number;
+  // Who added this to queue
+  addedBy: string;
+  addedByName?: string;
+  // Timestamps
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  scheduledAt?: Timestamp;
+  completedAt?: Timestamp;
+}
+
+// ============================================================================
+// Team Member Availability & Booking Types
+// ============================================================================
+
+/** Weekly availability slot for a team member */
+export interface AvailabilitySlot {
+  dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday, 6 = Saturday
+  startTime: string; // HH:mm format
+  endTime: string; // HH:mm format
+  isEnabled: boolean;
+}
+
+/** Team member availability settings */
+export interface TeamMemberAvailabilityDoc {
+  id: string; // Same as team member ID
+  teamMemberId: string;
+  teamMemberName: string;
+  teamMemberEmail: string;
+  // Booking page settings
+  bookingSlug: string; // Unique URL slug for booking page
+  bookingTitle?: string; // Custom title for booking page
+  bookingDescription?: string; // Description shown on booking page
+  timezone: string; // e.g., "America/New_York"
+  // Availability slots
+  weeklyAvailability: AvailabilitySlot[];
+  // Meeting settings
+  defaultMeetingDuration: number; // minutes
+  allowedDurations: number[]; // e.g., [30, 45, 60]
+  bufferBetweenMeetings: number; // minutes
+  maxAdvanceBookingDays: number; // How far in advance can book
+  minAdvanceBookingHours: number; // Minimum notice required
+  // Meeting types
+  meetingTypes: Array<{
+    id: string;
+    name: string;
+    duration: number;
+    description?: string;
+    location?: string;
+    isVirtual: boolean;
+    videoLink?: string;
+  }>;
+  // Blocked dates (specific dates unavailable)
+  blockedDates: Array<{
+    date: string; // YYYY-MM-DD
+    reason?: string;
+  }>;
+  // Status
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** Booking made by a client */
+export interface BookingDoc {
+  id: string;
+  // Team member being booked
+  teamMemberId: string;
+  teamMemberName: string;
+  teamMemberEmail: string;
+  // Client info
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string;
+  clientCompany?: string;
+  clientNotes?: string;
+  // Meeting details
+  meetingTypeId?: string;
+  meetingTypeName: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime: string; // HH:mm
+  duration: number; // minutes
+  timezone: string;
+  // Location
+  isVirtual: boolean;
+  location?: string;
+  videoLink?: string;
+  // Status
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'no-show';
+  // Calendar integration
+  calendarEventId?: string;
+  // Email notifications
+  confirmationEmailSent: boolean;
+  reminderEmailSent: boolean;
+  // Timestamps
+  bookedAt: Timestamp;
+  confirmedAt?: Timestamp;
+  cancelledAt?: Timestamp;
+  cancelReason?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -920,6 +1063,203 @@ export interface DocuSealSubmissionDoc {
 }
 
 // ============================================================================
+// Software License Keys
+// ============================================================================
+
+export type ToolType = 
+  | 'apollo-search'
+  | 'supplier-search'
+  | 'ai-workforce'
+  | 'proposal-creator'
+  | 'docuseal'
+  | 'gohighlevel'
+  | 'linkedin-content'
+  | 'bug-tracker'
+  | 'traction'
+  | 'networking'
+  | 'calendar'
+  | 'all-tools';
+
+export interface SoftwareKeyDoc {
+  id: string;
+  // Key details
+  key: string;                    // The actual license key (e.g., "SVP-XXXX-XXXX-XXXX")
+  name: string;                   // Friendly name for the key
+  description?: string;
+  // Tool access
+  tools: ToolType[];              // Which tools this key enables
+  // Assignment
+  assignedTo?: string;            // User ID or organization ID
+  assignedToName?: string;        // Name of assignee
+  assignedToEmail?: string;       // Email of assignee
+  assignmentType?: 'user' | 'organization' | 'affiliate';
+  // Validity
+  status: 'active' | 'inactive' | 'expired' | 'revoked';
+  activatedAt?: Timestamp;
+  expiresAt?: Timestamp;
+  // Usage limits
+  maxActivations?: number;        // Max number of devices/sessions
+  currentActivations: number;
+  // Metadata
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  notes?: string;
+}
+
+export interface KeyActivationDoc {
+  id: string;
+  keyId: string;
+  userId: string;
+  userEmail: string;
+  deviceInfo?: string;
+  ipAddress?: string;
+  activatedAt: Timestamp;
+  lastUsedAt: Timestamp;
+  isActive: boolean;
+}
+
+// ============================================================================
+// White-Label Deployments
+// ============================================================================
+
+export type DeploymentStatus = 'pending' | 'provisioning' | 'active' | 'suspended' | 'terminated';
+export type LicenseType = 'trial' | 'starter' | 'professional' | 'enterprise';
+export type InfrastructureProvider = 'vercel' | 'netlify' | 'self-hosted';
+
+export interface WhiteLabelDeploymentDoc {
+  id: string;
+  // Deployment Identity
+  name: string;
+  slug: string;
+  status: DeploymentStatus;
+  // Branding Configuration
+  branding: {
+    companyName: string;
+    shortName: string;
+    initials: string;
+    tagline: string;
+    primaryColor: string;
+    secondaryColor: string;
+    logoUrl?: string;
+    faviconUrl?: string;
+  };
+  // Domain Configuration
+  domains: {
+    primary: string;
+    portal?: string;
+    api?: string;
+    customDomains?: string[];
+    sslEnabled: boolean;
+  };
+  // Infrastructure
+  infrastructure: {
+    provider: InfrastructureProvider;
+    projectId?: string;
+    deploymentUrl?: string;
+    firebaseProjectId?: string;
+    region?: string;
+  };
+  // License & Billing
+  license: {
+    type: LicenseType;
+    startDate: Timestamp;
+    endDate?: Timestamp;
+    maxUsers?: number;
+    maxAffiliates?: number;
+    softwareKeys: string[];
+  };
+  // Feature Overrides
+  features: {
+    enabledTools: ToolType[];
+    customFeatures?: Record<string, boolean>;
+  };
+  // Contact Information
+  owner: {
+    userId?: string;
+    name: string;
+    email: string;
+    phone?: string;
+    company: string;
+  };
+  // Metadata
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  provisionedAt?: Timestamp;
+  lastActivityAt?: Timestamp;
+  notes?: string;
+}
+
+/** Mattermost Playbook tracking document in Firestore */
+export interface MattermostPlaybookDoc {
+  id: string;
+  mattermostPlaybookId: string; // ID from Mattermost
+  title: string;
+  description?: string;
+  teamId: string;
+  teamName?: string;
+  type: "reminder" | "rock" | "level10" | "recurring" | "custom";
+  recurrence?: "daily" | "weekly" | "biweekly" | "monthly";
+  // Assigned team members (SVP Platform IDs)
+  assignedMemberIds: string[];
+  // Mattermost user IDs
+  mattermostMemberIds: string[];
+  // Checklist configuration
+  checklists: {
+    title: string;
+    items: { title: string; description?: string }[];
+  }[];
+  // Status
+  status: "active" | "archived" | "draft";
+  // Notification settings
+  notificationsEnabled: boolean;
+  broadcastChannelId?: string;
+  reminderIntervalSeconds?: number;
+  // Metadata
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  lastDeployedAt?: Timestamp;
+}
+
+/** Mattermost Playbook Run tracking document in Firestore */
+export interface MattermostPlaybookRunDoc {
+  id: string;
+  mattermostRunId: string; // ID from Mattermost
+  playbookId: string; // SVP Platform playbook doc ID
+  mattermostPlaybookId: string; // Mattermost playbook ID
+  name: string;
+  description?: string;
+  teamId: string;
+  channelId?: string; // Mattermost channel created for the run
+  // Owner
+  ownerUserId: string; // Mattermost user ID
+  ownerMemberId?: string; // SVP Platform team member ID
+  // Status tracking
+  status: "in_progress" | "finished" | "archived";
+  currentStatus?: string;
+  // Checklist progress
+  checklistProgress: {
+    checklistIndex: number;
+    title: string;
+    totalItems: number;
+    completedItems: number;
+  }[];
+  totalTasks: number;
+  completedTasks: number;
+  completionPercentage: number;
+  // Assigned members
+  assignedMemberIds: string[];
+  mattermostMemberIds: string[];
+  // Timestamps
+  startedAt: Timestamp;
+  endedAt?: Timestamp;
+  lastStatusUpdate?: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// ============================================================================
 // Collection Names
 // ============================================================================
 
@@ -976,9 +1316,24 @@ export const COLLECTIONS = {
   GHL_IMPORTED_WORKFLOWS: "ghlImportedWorkflows",
   // Calendar Events (built-in calendar)
   CALENDAR_EVENTS: "calendarEvents",
+  // 1-to-1 Scheduling Queue
+  ONE_TO_ONE_QUEUE: "oneToOneQueue",
+  // Team Member Availability & Bookings
+  TEAM_MEMBER_AVAILABILITY: "teamMemberAvailability",
+  BOOKINGS: "bookings",
   // DocuSeal Integration Collections
   DOCUSEAL_TEMPLATES: "docusealTemplates",
   DOCUSEAL_SUBMISSIONS: "docusealSubmissions",
+  // Software License Keys
+  SOFTWARE_KEYS: "softwareKeys",
+  KEY_ACTIVATIONS: "keyActivations",
+  // White-Label Deployments
+  WHITE_LABEL_DEPLOYMENTS: "whiteLabelDeployments",
+  DEPLOYMENT_ANALYTICS: "deploymentAnalytics",
+  DEPLOYMENT_AUDIT_LOGS: "deploymentAuditLogs",
+  // Mattermost Playbooks
+  MATTERMOST_PLAYBOOKS: "mattermostPlaybooks",
+  MATTERMOST_PLAYBOOK_RUNS: "mattermostPlaybookRuns",
 } as const;
 
 // ============================================================================

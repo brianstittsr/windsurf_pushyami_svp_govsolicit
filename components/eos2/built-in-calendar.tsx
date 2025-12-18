@@ -51,7 +51,9 @@ export interface CalendarEventData {
   recurring?: {
     frequency: "daily" | "weekly" | "monthly";
     until?: Date;
+    dayOfWeek?: number; // 0=Sunday, 1=Monday, etc.
   };
+  recurringParentId?: string; // ID of the parent recurring event
 }
 
 interface BuiltInCalendarProps {
@@ -62,6 +64,7 @@ interface BuiltInCalendarProps {
   className?: string;
   showHeader?: boolean;
   defaultView?: "month" | "week" | "day";
+  onViewChange?: (view: "month" | "week" | "day") => void;
 }
 
 // Helper functions
@@ -148,6 +151,14 @@ function EventForm({ event, selectedDate, onSave, onCancel }: EventFormProps) {
   );
   const [allDay, setAllDay] = useState(event?.allDay || false);
   const [location, setLocation] = useState(event?.location || "");
+  
+  // Recurring event state
+  const [isRecurring, setIsRecurring] = useState(!!event?.recurring);
+  const [recurringFrequency, setRecurringFrequency] = useState<"daily" | "weekly" | "monthly">(event?.recurring?.frequency || "weekly");
+  const [recurringUntil, setRecurringUntil] = useState(
+    event?.recurring?.until?.toISOString().split("T")[0] || 
+    new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split("T")[0]
+  );
 
   const handleSubmit = () => {
     if (!title.trim()) return;
@@ -161,7 +172,7 @@ function EventForm({ event, selectedDate, onSave, onCancel }: EventFormProps) {
     const end = new Date(startDate);
     end.setHours(endHour, endMin, 0, 0);
 
-    onSave({
+    const eventData: Omit<CalendarEventData, "id"> = {
       title,
       description,
       type,
@@ -169,7 +180,18 @@ function EventForm({ event, selectedDate, onSave, onCancel }: EventFormProps) {
       endDate: end,
       allDay,
       location,
-    });
+    };
+
+    // Add recurring info if enabled
+    if (isRecurring) {
+      eventData.recurring = {
+        frequency: recurringFrequency,
+        until: new Date(recurringUntil),
+        dayOfWeek: start.getDay(),
+      };
+    }
+
+    onSave(eventData);
   };
 
   return (
@@ -245,6 +267,52 @@ function EventForm({ event, selectedDate, onSave, onCancel }: EventFormProps) {
         <Label htmlFor="all-day" className="cursor-pointer">All day event</Label>
       </div>
 
+      {/* Recurring Event Options */}
+      <div className="space-y-3 p-3 border rounded-lg bg-muted/30">
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="recurring"
+            checked={isRecurring}
+            onChange={(e) => setIsRecurring(e.target.checked)}
+            className="rounded"
+          />
+          <Label htmlFor="recurring" className="cursor-pointer font-medium">Recurring Event</Label>
+        </div>
+        
+        {isRecurring && (
+          <div className="space-y-3 pl-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Repeat</Label>
+                <Select value={recurringFrequency} onValueChange={(v) => setRecurringFrequency(v as "daily" | "weekly" | "monthly")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="until">Until</Label>
+                <Input
+                  id="until"
+                  type="date"
+                  value={recurringUntil}
+                  onChange={(e) => setRecurringUntil(e.target.value)}
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This event will repeat {recurringFrequency} until {new Date(recurringUntil).toLocaleDateString()}
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="location">Location</Label>
         <Input
@@ -285,9 +353,15 @@ export function BuiltInCalendar({
   className,
   showHeader = true,
   defaultView = "month",
+  onViewChange,
 }: BuiltInCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<"month" | "week" | "day">(defaultView);
+
+  const handleViewChange = (newView: "month" | "week" | "day") => {
+    setView(newView);
+    onViewChange?.(newView);
+  };
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEventData | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
@@ -302,11 +376,19 @@ export function BuiltInCalendar({
   ];
 
   const navigateMonth = (direction: number) => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
+    if (view === "day") {
+      // Navigate by day
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + direction));
+    } else {
+      // Navigate by month
+      setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
+    }
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date());
+    const today = new Date();
+    setCurrentDate(today);
+    setSelectedDate(today);
   };
 
   const getEventsForDate = useCallback((date: Date): CalendarEventData[] => {
@@ -328,11 +410,16 @@ export function BuiltInCalendar({
   };
 
   const handleCreateEvent = (eventData: Omit<CalendarEventData, "id">) => {
-    if (onEventCreate) {
+    if (selectedEvent && onEventUpdate) {
+      // Update existing event
+      onEventUpdate(selectedEvent.id, eventData);
+    } else if (onEventCreate) {
+      // Create new event
       onEventCreate(eventData);
     }
     setShowEventForm(false);
     setSelectedDate(null);
+    setSelectedEvent(null);
   };
 
   const handleDeleteEvent = () => {
@@ -353,6 +440,25 @@ export function BuiltInCalendar({
               Calendar
             </CardTitle>
             <div className="flex items-center gap-2">
+              {/* View Toggle */}
+              <div className="flex border rounded-md">
+                <Button 
+                  variant={view === "month" ? "secondary" : "ghost"} 
+                  size="sm" 
+                  className="rounded-r-none"
+                  onClick={() => handleViewChange("month")}
+                >
+                  Month
+                </Button>
+                <Button 
+                  variant={view === "day" ? "secondary" : "ghost"} 
+                  size="sm" 
+                  className="rounded-l-none"
+                  onClick={() => handleViewChange("day")}
+                >
+                  Day
+                </Button>
+              </div>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 Today
               </Button>
@@ -367,97 +473,195 @@ export function BuiltInCalendar({
         </CardHeader>
       )}
       <CardContent>
-        {/* Month Navigation */}
+        {/* Navigation */}
         <div className="flex items-center justify-between mb-4">
           <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <h3 className="text-lg font-semibold">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            {view === "day" 
+              ? `${currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`
+              : `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`
+            }
           </h3>
           <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        {/* Week Days Header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekDays.map((day) => (
-            <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
-              {day}
+        {/* Day View */}
+        {view === "day" && (
+          <div className="space-y-2">
+            {/* Time slots for the day */}
+            <div className="border rounded-lg overflow-hidden">
+              {Array.from({ length: 24 }, (_, hour) => {
+                const hourEvents = events.filter((event) => {
+                  if (!isSameDay(event.startDate, currentDate)) return false;
+                  return event.startDate.getHours() === hour;
+                });
+                
+                return (
+                  <div 
+                    key={hour} 
+                    className="flex border-b last:border-b-0 min-h-[60px] hover:bg-accent/50 cursor-pointer"
+                    onClick={() => {
+                      const newDate = new Date(currentDate);
+                      newDate.setHours(hour, 0, 0, 0);
+                      setSelectedDate(newDate);
+                      if (onEventCreate) setShowEventForm(true);
+                    }}
+                  >
+                    <div className="w-16 p-2 text-xs text-muted-foreground border-r bg-muted/30 flex-shrink-0">
+                      {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                    </div>
+                    <div className="flex-1 p-1 space-y-1">
+                      {hourEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          onClick={(e) => handleEventClick(event, e)}
+                          className={cn(
+                            "text-xs px-2 py-1 rounded flex items-center gap-2",
+                            !event.color && getEventColor(event.type),
+                            !event.color && "text-white"
+                          )}
+                          style={event.color ? { backgroundColor: event.color, color: "#ffffff" } : undefined}
+                        >
+                          {getEventIcon(event.type)}
+                          <span className="font-medium">{formatTime(event.startDate)} - {formatTime(event.endDate)}</span>
+                          <span className="truncate">{event.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((date, index) => {
-            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-            const isToday = isSameDay(date, today);
-            const dateEvents = getEventsForDate(date);
-
-            return (
-              <div
-                key={index}
-                onClick={() => handleDateClick(date)}
-                className={cn(
-                  "min-h-[80px] p-1 border rounded-md cursor-pointer transition-colors",
-                  isCurrentMonth ? "bg-background" : "bg-muted/30",
-                  isToday && "ring-2 ring-primary",
-                  "hover:bg-accent"
-                )}
-              >
-                <div className={cn(
-                  "text-sm font-medium mb-1",
-                  !isCurrentMonth && "text-muted-foreground",
-                  isToday && "text-primary"
-                )}>
-                  {date.getDate()}
+            
+            {/* Summary of today's events */}
+            <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Today&apos;s Events ({getEventsForDate(currentDate).length})</h4>
+              {getEventsForDate(currentDate).length === 0 ? (
+                <p className="text-sm text-muted-foreground">No events scheduled for today</p>
+              ) : (
+                <div className="space-y-2">
+                  {getEventsForDate(currentDate)
+                    .sort((a, b) => a.startDate.getTime() - b.startDate.getTime())
+                    .map((event) => (
+                      <div 
+                        key={event.id}
+                        onClick={(e) => handleEventClick(event, e)}
+                        className="flex items-center gap-3 p-2 bg-background rounded border cursor-pointer hover:bg-accent"
+                      >
+                        <div 
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: event.color || undefined }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{event.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                            {event.location && ` • ${event.location}`}
+                          </div>
+                        </div>
+                        {event.attendees && event.attendees.length > 0 && (
+                          <div className="text-xs text-muted-foreground">
+                            <Users className="h-3 w-3 inline mr-1" />
+                            {event.attendees.length}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                 </div>
-                <div className="space-y-1">
-                  {dateEvents.slice(0, 3).map((event) => (
-                    <div
-                      key={event.id}
-                      onClick={(e) => handleEventClick(event, e)}
-                      className={cn(
-                        "text-xs px-1 py-0.5 rounded truncate text-white flex items-center gap-1",
-                        event.color || getEventColor(event.type)
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Month View */}
+        {view === "month" && (
+          <>
+            {/* Week Days Header */}
+            <div className="grid grid-cols-7 gap-1 mb-2">
+              {weekDays.map((day) => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1">
+              {days.map((date, index) => {
+                const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                const isToday = isSameDay(date, today);
+                const dateEvents = getEventsForDate(date);
+
+                return (
+                  <div
+                    key={index}
+                    onClick={() => handleDateClick(date)}
+                    className={cn(
+                      "min-h-[80px] p-1 border rounded-md cursor-pointer transition-colors",
+                      isCurrentMonth ? "bg-background" : "bg-muted/30",
+                      isToday && "ring-2 ring-primary",
+                      "hover:bg-accent"
+                    )}
+                  >
+                    <div className={cn(
+                      "text-sm font-medium mb-1",
+                      !isCurrentMonth && "text-muted-foreground",
+                      isToday && "text-primary"
+                    )}>
+                      {date.getDate()}
+                    </div>
+                    <div className="space-y-1">
+                      {dateEvents.slice(0, 3).map((event) => (
+                        <div
+                          key={event.id}
+                          onClick={(e) => handleEventClick(event, e)}
+                          className={cn(
+                            "text-xs px-1 py-0.5 rounded truncate flex items-center gap-1",
+                            !event.color && getEventColor(event.type),
+                            !event.color && "text-white"
+                          )}
+                          style={event.color ? { backgroundColor: event.color, color: "#ffffff" } : undefined}
+                        >
+                          {getEventIcon(event.type)}
+                          <span className="truncate">{event.title}</span>
+                        </div>
+                      ))}
+                      {dateEvents.length > 3 && (
+                        <div className="text-xs text-muted-foreground px-1">
+                          +{dateEvents.length - 3} more
+                        </div>
                       )}
-                    >
-                      {getEventIcon(event.type)}
-                      <span className="truncate">{event.title}</span>
                     </div>
-                  ))}
-                  {dateEvents.length > 3 && (
-                    <div className="text-xs text-muted-foreground px-1">
-                      +{dateEvents.length - 3} more
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                  </div>
+                );
+              })}
+            </div>
 
-        {/* Legend */}
-        <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-xs">
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-purple-500" />
-            <span>Meeting</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-blue-500" />
-            <span>Rock</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-green-500" />
-            <span>To-Do</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded bg-red-500" />
-            <span>Issue</span>
-          </div>
-        </div>
+            {/* Legend */}
+            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-purple-500" />
+                <span>Meeting</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-blue-500" />
+                <span>Rock</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-green-500" />
+                <span>To-Do</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-red-500" />
+                <span>Issue</span>
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
 
       {/* Event Form Dialog */}

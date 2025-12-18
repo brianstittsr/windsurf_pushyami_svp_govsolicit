@@ -117,6 +117,121 @@ export default function ProposalsPage() {
   const [analysisResult, setAnalysisResult] = useState<DocumentAnalysisResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [isEnhancingDescription, setIsEnhancingDescription] = useState(false);
+  const [isGeneratingMilestones, setIsGeneratingMilestones] = useState(false);
+  const [isGeneratingBudget, setIsGeneratingBudget] = useState(false);
+
+  // AI Enhance Description
+  const enhanceDescription = async () => {
+    if (!proposalData.name && !proposalData.description) {
+      alert("Please enter a proposal name or description first");
+      return;
+    }
+    setIsEnhancingDescription(true);
+    try {
+      const response = await fetch("/api/ai/enhance-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: proposalData.description || "",
+          context: {
+            type: "proposal_description",
+            proposalName: proposalData.name,
+            proposalType: proposalData.type,
+            fundingSource: proposalData.fundingSource,
+            budget: proposalData.totalBudget,
+          },
+          prompt: `Create a professional, compelling proposal description for "${proposalData.name || 'this proposal'}". 
+The proposal type is ${proposalData.type || 'grant'}${proposalData.fundingSource ? ` with funding from ${proposalData.fundingSource}` : ''}.
+${proposalData.description ? `Current description to enhance: ${proposalData.description}` : 'Generate a new description from scratch.'}
+Make it clear, professional, and highlight the value proposition and expected outcomes.`,
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.enhancedText) {
+        setProposalData({ ...proposalData, description: result.enhancedText });
+      }
+    } catch (error) {
+      console.error("Error enhancing description:", error);
+    } finally {
+      setIsEnhancingDescription(false);
+    }
+  };
+
+  // AI Generate Milestones
+  const generateMilestones = async () => {
+    if (!proposalData.name) {
+      alert("Please enter a proposal name first");
+      return;
+    }
+    setIsGeneratingMilestones(true);
+    try {
+      const response = await fetch("/api/ai/generate-milestones", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposalName: proposalData.name,
+          proposalType: proposalData.type,
+          description: proposalData.description,
+          startDate: proposalData.startDate,
+          endDate: proposalData.endDate,
+          existingMilestones: proposalData.projectMilestones,
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.milestones) {
+        const newMilestones = result.milestones.map((m: any, i: number) => ({
+          id: `milestone-ai-${Date.now()}-${i}`,
+          name: m.name,
+          description: m.description,
+          dueDate: m.dueDate || "",
+          status: "not_started",
+          responsibleParties: m.responsibleParties || [],
+          dependencies: m.dependencies || [],
+        }));
+        setProposalData({
+          ...proposalData,
+          projectMilestones: [...(proposalData.projectMilestones || []), ...newMilestones],
+        });
+      }
+    } catch (error) {
+      console.error("Error generating milestones:", error);
+    } finally {
+      setIsGeneratingMilestones(false);
+    }
+  };
+
+  // AI Generate Budget
+  const generateBudget = async () => {
+    if (!proposalData.name) {
+      alert("Please enter a proposal name first");
+      return;
+    }
+    setIsGeneratingBudget(true);
+    try {
+      const response = await fetch("/api/ai/generate-budget", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposalName: proposalData.name,
+          proposalType: proposalData.type,
+          description: proposalData.description,
+          startDate: proposalData.startDate,
+          endDate: proposalData.endDate,
+          milestones: proposalData.projectMilestones,
+          entities: proposalData.collaboratingEntities,
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.totalBudget) {
+        setProposalData({ ...proposalData, totalBudget: result.totalBudget });
+      }
+    } catch (error) {
+      console.error("Error generating budget:", error);
+    } finally {
+      setIsGeneratingBudget(false);
+    }
+  };
 
   // File upload handler
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -424,7 +539,7 @@ export default function ProposalsPage() {
 
       {/* Wizard Dialog */}
       <Dialog open={showWizard} onOpenChange={setShowWizard}>
-        <DialogContent className="max-w-[90vw] w-[1200px] max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="!max-w-[90vw] !w-[1200px] max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -550,7 +665,23 @@ export default function ProposalsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Description</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Description</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={enhanceDescription}
+                        disabled={isEnhancingDescription}
+                      >
+                        {isEnhancingDescription ? (
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2 h-3 w-3" />
+                        )}
+                        Enhance with AI
+                      </Button>
+                    </div>
                     <Textarea
                       placeholder="Brief description of the proposal"
                       value={proposalData.description || ""}
@@ -606,7 +737,23 @@ export default function ProposalsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Total Budget ($)</Label>
+                      <div className="flex items-center justify-between">
+                        <Label>Total Budget ($)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={generateBudget}
+                          disabled={isGeneratingBudget}
+                        >
+                          {isGeneratingBudget ? (
+                            <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          ) : (
+                            <Sparkles className="mr-2 h-3 w-3" />
+                          )}
+                          AI Budget
+                        </Button>
+                      </div>
                       <Input
                         type="number"
                         placeholder="0"
@@ -843,9 +990,23 @@ export default function ProposalsPage() {
                       <h3 className="text-lg font-semibold">Project Milestones</h3>
                       <p className="text-sm text-muted-foreground">Define key project milestones and timeline</p>
                     </div>
-                    <Button onClick={addMilestone}>
-                      <Plus className="mr-2 h-4 w-4" />Add Milestone
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={generateMilestones}
+                        disabled={isGeneratingMilestones}
+                      >
+                        {isGeneratingMilestones ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Sparkles className="mr-2 h-4 w-4" />
+                        )}
+                        AI Generate Milestones
+                      </Button>
+                      <Button onClick={addMilestone}>
+                        <Plus className="mr-2 h-4 w-4" />Add Milestone
+                      </Button>
+                    </div>
                   </div>
 
                   {proposalData.projectMilestones?.map((milestone, index) => (

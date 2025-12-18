@@ -84,7 +84,11 @@ import {
   Todo,
   Meeting,
   TeamMember,
-} from "@/lib/hooks/use-traction-data";
+} from "@/lib/hooks/use-eos2-data";
+import { PlaybookGenerator } from "@/components/mattermost/playbook-generator";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { COLLECTIONS, type TeamMemberDoc } from "@/lib/schema";
 
 interface ChatMessage {
   id: string;
@@ -178,8 +182,44 @@ export default function TractionDashboardPage() {
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name: string } | null>(null);
 
-  // Team member names for dropdowns (only show members with category "team")
-  const teamMemberNames = team.filter(t => t.category === "team").map(t => t.name);
+  // Main team members from teamMembers collection (filtered for role "team")
+  const [mainTeamMembers, setMainTeamMembers] = useState<{ id: string; name: string }[]>([]);
+
+  // Load team members from main teamMembers collection
+  useEffect(() => {
+    const loadMainTeamMembers = async () => {
+      if (!db) return;
+      try {
+        const teamRef = collection(db, COLLECTIONS.TEAM_MEMBERS);
+        const teamQuery = query(teamRef, orderBy("firstName"));
+        const snapshot = await getDocs(teamQuery);
+        
+        const members: { id: string; name: string }[] = [];
+        snapshot.docs.forEach((doc) => {
+          const data = doc.data() as TeamMemberDoc;
+          // Only include members with role "team"
+          if (data.role === "team") {
+            const firstName = data.firstName || "";
+            const lastName = data.lastName || "";
+            members.push({
+              id: doc.id,
+              name: `${firstName} ${lastName}`.trim() || "Unknown",
+            });
+          }
+        });
+        setMainTeamMembers(members);
+      } catch (error) {
+        console.error("Error loading main team members:", error);
+      }
+    };
+    
+    loadMainTeamMembers();
+  }, []);
+
+  // Team member names for dropdowns - use main team members if available, fallback to traction team
+  const teamMemberNames = mainTeamMembers.length > 0 
+    ? mainTeamMembers.map(t => t.name)
+    : team.filter(t => t.category === "team").map(t => t.name);
 
   const calculateOverallHealth = () => {
     if (rocks.length === 0 || metrics.length === 0) return 0;
@@ -583,6 +623,7 @@ export default function TractionDashboardPage() {
               <TabsTrigger value="meetings" className="gap-2"><Calendar className="h-4 w-4" />Meetings</TabsTrigger>
               <TabsTrigger value="todos" className="gap-2"><ListTodo className="h-4 w-4" />To-Dos ({todos.filter(t => t.status !== "complete").length})</TabsTrigger>
               <TabsTrigger value="people" className="gap-2"><Users className="h-4 w-4" />People</TabsTrigger>
+              <TabsTrigger value="playbooks" className="gap-2"><Play className="h-4 w-4" />Playbooks</TabsTrigger>
             </TabsList>
           </div>
 
@@ -917,10 +958,327 @@ export default function TractionDashboardPage() {
 
           <TabsContent value="vto" className="flex-1 m-0 min-h-0 overflow-hidden">
             <ScrollArea className="h-full">
-              <div className="p-6 space-y-6 max-w-4xl mx-auto">
-                <Card><CardHeader><CardTitle>Core Values</CardTitle><CardDescription>The defining characteristics of your company culture</CardDescription></CardHeader><CardContent><div className="flex flex-wrap gap-2">{["Integrity in Everything", "Relentless Improvement", "Client Success First", "Collaborative Excellence", "Innovation with Purpose"].map((value, i) => <Badge key={i} variant="secondary" className="text-sm py-1 px-3">{value}</Badge>)}</div></CardContent></Card>
-                <Card><CardHeader><CardTitle>Core Focus</CardTitle></CardHeader><CardContent className="space-y-4"><div><Label className="text-muted-foreground">Purpose</Label><p className="text-lg font-medium mt-1">Transforming American manufacturers into world-class OEM suppliers</p></div><div><Label className="text-muted-foreground">Niche</Label><p className="text-lg font-medium mt-1">Mid-market manufacturing companies seeking OEM supplier qualification</p></div></CardContent></Card>
-                <Card><CardHeader><CardTitle>10-Year Target (BHAG)</CardTitle></CardHeader><CardContent><p className="text-lg font-medium italic">"By December 2034, Strategic Value Plus will have transformed 2,000 U.S. manufacturers into world-class OEM suppliers, creating 50,000+ American manufacturing jobs."</p></CardContent></Card>
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h1 className="text-2xl font-bold">VISION/TRACTION ORGANIZER®</h1>
+                    <p className="text-muted-foreground">V+ VTO Dec25</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">Draft</Badge>
+                    <Button variant="outline" size="sm">Make Final</Button>
+                    <Button size="sm"><Edit className="h-4 w-4 mr-2" />Edit</Button>
+                  </div>
+                </div>
+
+                {/* Vision / Traction Tabs */}
+                <Tabs defaultValue="vision" className="w-full">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="vision" className="px-8">Vision</TabsTrigger>
+                    <TabsTrigger value="traction" className="px-8">Traction®</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="vision">
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* Left Column - Main Vision Content */}
+                      <div className="col-span-2 space-y-4">
+                        {/* Core Values */}
+                        <Card className="border-l-4 border-l-orange-500">
+                          <CardContent className="pt-4">
+                            <div className="flex gap-4">
+                              <div className="bg-orange-500 text-white px-3 py-2 text-center min-w-[100px]">
+                                <div className="font-bold text-sm">CORE</div>
+                                <div className="font-bold text-sm">VALUES</div>
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="font-semibold mb-2">Core Values</h3>
+                                <ol className="list-decimal list-inside space-y-1 text-sm">
+                                  <li>Excellence</li>
+                                  <li>Commitment</li>
+                                  <li>Teamwork</li>
+                                  <li>Innovative</li>
+                                </ol>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Core Focus */}
+                        <Card className="border-l-4 border-l-orange-500">
+                          <CardContent className="pt-4">
+                            <div className="flex gap-4">
+                              <div className="bg-orange-500 text-white px-3 py-2 text-center min-w-[100px]">
+                                <div className="font-bold text-sm">CORE</div>
+                                <div className="font-bold text-sm">FOCUS™</div>
+                              </div>
+                              <div className="flex-1 space-y-3">
+                                <div>
+                                  <h4 className="font-semibold text-sm">Purpose:</h4>
+                                  <p className="text-sm">Enriching Lives. Enhancing Security. Serving Manufacturers.</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm">Our Niche:</h4>
+                                  <p className="text-sm">Supply Chain Ecosystem Development</p>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* 10-Year Target */}
+                        <Card className="border-l-4 border-l-teal-600">
+                          <CardContent className="pt-4">
+                            <div className="flex gap-4">
+                              <div className="bg-teal-600 text-white px-3 py-2 text-center min-w-[100px]">
+                                <div className="font-bold text-sm">10-YEAR</div>
+                                <div className="font-bold text-sm">TARGET™</div>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm">10-Year Target:</h4>
+                                <p className="text-sm">1000 Customers served annually. $50M annual revenue.</p>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Marketing Strategy */}
+                        <Card className="border-l-4 border-l-blue-600">
+                          <CardContent className="pt-4">
+                            <div className="flex gap-4">
+                              <div className="bg-blue-600 text-white px-3 py-2 text-center min-w-[100px]">
+                                <div className="font-bold text-sm">MARKETING</div>
+                                <div className="font-bold text-sm">STRATEGY</div>
+                              </div>
+                              <div className="flex-1 space-y-3">
+                                <div>
+                                  <h4 className="font-semibold text-sm">Target Market/&quot;The List&quot;:</h4>
+                                  <p className="text-sm">OEMs</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-sm">3 Uniques™:</h4>
+                                  <ol className="list-decimal list-inside space-y-1 text-sm">
+                                    <li>We implement <span className="text-blue-600 underline">our data-driven business-coupled solutions</span></li>
+                                    <li>We are Question Architects TM</li>
+                                    <li></li>
+                                  </ol>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Right Column - 3-Year Picture */}
+                      <div className="col-span-1">
+                        <Card className="border-t-4 border-t-teal-600">
+                          <CardHeader className="bg-teal-600 text-white py-2">
+                            <CardTitle className="text-center text-sm font-bold">3-YEAR PICTURE™</CardTitle>
+                          </CardHeader>
+                          <CardContent className="pt-4 space-y-4">
+                            <div className="space-y-3">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">Future Date:</span>
+                                <span className="text-sm">December 16, 2028</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">Revenue:</span>
+                                <span className="text-sm font-semibold">$7M</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-medium">Profit:</span>
+                                <span className="text-sm font-semibold">$1.75M</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-orange-600">100 customers</span>
+                              </div>
+                            </div>
+
+                            <div className="pt-4 border-t">
+                              <h4 className="font-semibold text-sm mb-2">What does it look like?</h4>
+                              <ul className="text-xs space-y-1 text-muted-foreground">
+                                <li>• 25% Margin, CFO, HR, Legal Counsel, IT Leader, CMO, Salesforce, Automation, AI</li>
+                                <li>• employees</li>
+                                <li>•</li>
+                                <li>•</li>
+                                <li>•</li>
+                                <li>•</li>
+                              </ul>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="traction">
+                    <div className="grid grid-cols-3 gap-6">
+                      {/* 1-Year Plan */}
+                      <Card className="border-t-4 border-t-orange-500">
+                        <CardHeader className="bg-orange-500 text-white py-2">
+                          <CardTitle className="text-center text-sm font-bold">1-YEAR PLAN</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4 space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Future Date:</span>
+                              <span className="text-sm text-blue-600">December 12, 2026</span>
+                            </div>
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Revenue:</span>
+                              <span className="text-sm font-semibold">$1M</span>
+                            </div>
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Profit:</span>
+                              <span className="text-sm font-semibold">$250K</span>
+                            </div>
+                          </div>
+                          <div className="pt-2">
+                            <h4 className="font-semibold text-sm mb-3">Goals for the Year:</h4>
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-2 text-sm border-b pb-2">
+                                <span className="font-medium">1.</span>
+                                <span className="text-blue-600 underline cursor-pointer">20 customers</span>
+                              </div>
+                              <div className="flex items-start gap-2 text-sm border-b pb-2">
+                                <span className="font-medium">2.</span>
+                                <span className="text-blue-600 underline cursor-pointer">10 customer journeys</span>
+                              </div>
+                              <div className="flex items-start gap-2 text-sm border-b pb-2">
+                                <span className="font-medium">3.</span>
+                                <span className="text-blue-600 underline cursor-pointer">$1M revenue</span>
+                              </div>
+                              <div className="flex items-start gap-2 text-sm border-b pb-2">
+                                <span className="font-medium">4.</span>
+                                <span className="text-blue-600 underline cursor-pointer">150 qualified leads</span>
+                              </div>
+                              <div className="flex items-start gap-2 text-sm border-b pb-2">
+                                <span className="font-medium">5.</span>
+                                <span className="text-blue-600 underline cursor-pointer">10 Biz Dev Toolbox sales</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Rocks */}
+                      <Card className="border-t-4 border-t-teal-600">
+                        <CardHeader className="bg-teal-600 text-white py-2">
+                          <CardTitle className="text-center text-sm font-bold">ROCKS</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4 space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Future Date:</span>
+                              <span className="text-sm text-blue-600">March 27, 2026</span>
+                            </div>
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Revenue:</span>
+                              <span className="text-sm font-semibold text-blue-600">$100K</span>
+                            </div>
+                            <div className="flex justify-between items-center border-b pb-2">
+                              <span className="text-sm font-medium">Profit:</span>
+                              <span className="text-sm font-semibold">$25K</span>
+                            </div>
+                          </div>
+                          <div className="pt-2">
+                            <h4 className="font-semibold text-sm mb-3">Rocks for the Quarter:</h4>
+                            <div className="space-y-3">
+                              <div className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">1.</span>
+                                  <span className="text-blue-600 underline cursor-pointer">100K Revenue</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 ml-4">
+                                  <span className="text-xs text-muted-foreground">Who:</span>
+                                  <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">NV</Badge>
+                                </div>
+                              </div>
+                              <div className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">2.</span>
+                                  <span>3 new customers</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 ml-4">
+                                  <span className="text-xs text-muted-foreground">Who:</span>
+                                  <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">NV</Badge>
+                                </div>
+                              </div>
+                              <div className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">3.</span>
+                                  <span className="text-blue-600 underline cursor-pointer">3 customer journeys</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 ml-4">
+                                  <span className="text-xs text-muted-foreground">Who:</span>
+                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">BS</Badge>
+                                </div>
+                              </div>
+                              <div className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">4.</span>
+                                  <span>36 qualified leads</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 ml-4">
+                                  <span className="text-xs text-muted-foreground">Who:</span>
+                                  <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">NV</Badge>
+                                </div>
+                              </div>
+                              <div className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">5.</span>
+                                  <span className="text-blue-600 underline cursor-pointer">2 Biz Dev Toolbox Sales</span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 ml-4">
+                                  <span className="text-xs text-muted-foreground">Who:</span>
+                                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">BS</Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Issues List */}
+                      <Card className="border-t-4 border-t-gray-400">
+                        <CardHeader className="bg-gray-500 text-white py-2">
+                          <CardTitle className="text-center text-sm font-bold">ISSUES LIST</CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                          <h4 className="font-semibold text-sm mb-3">Issues:</h4>
+                          <div className="space-y-3">
+                            <div className="border-b pb-2">
+                              <div className="flex items-start gap-2 text-sm">
+                                <span className="font-medium">1.</span>
+                                <span>Lack of process clarity</span>
+                              </div>
+                            </div>
+                            <div className="border-b pb-2">
+                              <div className="flex items-start gap-2 text-sm">
+                                <span className="font-medium">2.</span>
+                                <span>Affiliates aren&apos;t producing sufficient referrals/leads</span>
+                              </div>
+                            </div>
+                            {issues.filter(i => i.status !== "solved").slice(0, 3).map((issue, i) => (
+                              <div key={issue.id} className="border-b pb-2">
+                                <div className="flex items-start gap-2 text-sm">
+                                  <span className="font-medium">{i + 3}.</span>
+                                  <span>{issue.description}</span>
+                                </div>
+                                {issue.owner && (
+                                  <div className="flex items-center gap-2 mt-1 ml-4">
+                                    <span className="text-xs text-muted-foreground">Who:</span>
+                                    <Badge variant="secondary" className="text-xs">{issue.owner.split(' ').map(n => n[0]).join('')}</Badge>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
             </ScrollArea>
           </TabsContent>
@@ -991,6 +1349,14 @@ export default function TractionDashboardPage() {
               <div className="p-6 space-y-6">
                 <div className="flex justify-between items-center"><div><h2 className="text-lg font-semibold">People Analyzer (GWC)</h2><p className="text-sm text-muted-foreground">Right people in the right seats</p></div><Button onClick={openAddTeamMember}><Plus className="h-4 w-4 mr-2" />Add Team Member</Button></div>
                 <Card><CardContent className="pt-6"><Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Role</TableHead><TableHead>Category</TableHead><TableHead className="text-center">Gets It</TableHead><TableHead className="text-center">Wants It</TableHead><TableHead className="text-center">Capacity</TableHead><TableHead className="text-center">Right Seat</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>{team.map(member => (<TableRow key={member.id}><TableCell className="font-medium">{member.name}</TableCell><TableCell>{member.role}</TableCell><TableCell><Badge variant={member.category === "team" ? "default" : "secondary"} className="capitalize">{member.category}</Badge></TableCell><TableCell className="text-center">{member.getsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.getsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.wantsIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.wantsIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.capacityToDoIt === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.capacityToDoIt === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-center">{member.rightSeat === true ? <CheckCircle className="h-5 w-5 text-green-600 mx-auto" /> : member.rightSeat === false ? <XCircle className="h-5 w-5 text-red-600 mx-auto" /> : <Minus className="h-5 w-5 text-gray-400 mx-auto" />}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => openEditTeamMember(member)}><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => confirmDelete("team", member.id, member.name)}><Trash2 className="h-4 w-4 text-red-500" /></Button></TableCell></TableRow>))}</TableBody></Table></CardContent></Card>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent value="playbooks" className="flex-1 m-0 min-h-0 overflow-hidden">
+            <ScrollArea className="h-full">
+              <div className="p-6">
+                <PlaybookGenerator />
               </div>
             </ScrollArea>
           </TabsContent>
@@ -1112,10 +1478,10 @@ export default function TractionDashboardPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="metric-unit">Unit (optional)</Label>
-                <Select value={metricForm.unit || ""} onValueChange={(v) => setMetricForm({ ...metricForm, unit: v })}>
+                <Select value={metricForm.unit || "none"} onValueChange={(v) => setMetricForm({ ...metricForm, unit: v === "none" ? "" : v })}>
                   <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     <SelectItem value="$">$ (Dollar)</SelectItem>
                     <SelectItem value="%">% (Percent)</SelectItem>
                     <SelectItem value="#"># (Count)</SelectItem>

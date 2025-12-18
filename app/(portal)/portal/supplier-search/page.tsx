@@ -235,6 +235,7 @@ export default function SupplierSearchPage() {
       };
 
       setMessages((prev) => [...prev, responseMessage]);
+      setActiveTab("results"); // Switch to results tab to show results
       if (data.results?.length > 0) {
         setAllResults((prev) => {
           const existingIds = new Set(prev.map((r) => r.id));
@@ -248,6 +249,60 @@ export default function SupplierSearchPage() {
         id: generateMessageId(),
         role: "assistant",
         content: "❌ **Search failed**. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle direct search with query parameter (for All Suppliers tab)
+  const handleDirectSearch = async (query: string) => {
+    if (!query.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: generateMessageId(),
+      role: "user",
+      content: query,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setDirectSearchQuery("");
+    setIsLoading(true);
+
+    try {
+      const { results, message } = await searchSuppliers(query);
+
+      const responseMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: "assistant",
+        content: results.length > 0
+          ? `✅ ${message}\n\nI found **${results.length} suppliers** matching your criteria. You can save them to a list or click on any supplier to view details.`
+          : `🔍 ${message}\n\nTry adjusting your search terms or browse by category.`,
+        timestamp: new Date(),
+        results: results.length > 0 ? results : undefined,
+        suggestions: results.length === 0 ? searchSuggestions : undefined,
+      };
+
+      setMessages((prev) => [...prev, responseMessage]);
+      setActiveTab("results"); // Switch to results tab
+
+      // Add to all results
+      if (results.length > 0) {
+        setAllResults((prev) => {
+          const existingIds = new Set(prev.map((r) => r.id));
+          const newResults = results.filter((r) => !existingIds.has(r.id));
+          return [...prev, ...newResults];
+        });
+      }
+    } catch (error) {
+      console.error("Direct search error:", error);
+      const errorMessage: ChatMessage = {
+        id: generateMessageId(),
+        role: "assistant",
+        content: "❌ **Something went wrong**. Please try again.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -760,8 +815,7 @@ export default function SupplierSearchPage() {
                       onChange={(e) => setDirectSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && directSearchQuery.trim()) {
-                          setInputValue(directSearchQuery);
-                          handleSendMessage();
+                          handleDirectSearch(directSearchQuery);
                         }
                       }}
                     />
@@ -783,12 +837,7 @@ export default function SupplierSearchPage() {
                     </Select>
                   </div>
                   <Button
-                    onClick={() => {
-                      if (directSearchQuery.trim()) {
-                        setInputValue(directSearchQuery);
-                        handleSendMessage();
-                      }
-                    }}
+                    onClick={() => handleDirectSearch(directSearchQuery)}
                     disabled={!directSearchQuery.trim() || isLoading}
                     className="w-full"
                   >
@@ -822,19 +871,13 @@ export default function SupplierSearchPage() {
                       onChange={(e) => setDirectSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && directSearchQuery.trim()) {
-                          setInputValue(directSearchQuery);
-                          handleSendMessage();
+                          handleDirectSearch(directSearchQuery);
                         }
                       }}
                     />
                   </div>
                   <Button
-                    onClick={() => {
-                      if (directSearchQuery.trim()) {
-                        setInputValue(directSearchQuery);
-                        handleSendMessage();
-                      }
-                    }}
+                    onClick={() => handleDirectSearch(directSearchQuery)}
                     disabled={!directSearchQuery.trim() || isLoading}
                     className="w-full"
                   >
@@ -868,19 +911,13 @@ export default function SupplierSearchPage() {
                       onChange={(e) => setDirectSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && directSearchQuery.trim()) {
-                          setInputValue(`${directSearchQuery} brand suppliers`);
-                          handleSendMessage();
+                          handleDirectSearch(`${directSearchQuery} brand suppliers`);
                         }
                       }}
                     />
                   </div>
                   <Button
-                    onClick={() => {
-                      if (directSearchQuery.trim()) {
-                        setInputValue(`${directSearchQuery} brand suppliers`);
-                        handleSendMessage();
-                      }
-                    }}
+                    onClick={() => handleDirectSearch(`${directSearchQuery} brand suppliers`)}
                     disabled={!directSearchQuery.trim() || isLoading}
                     className="w-full"
                   >
@@ -953,9 +990,23 @@ export default function SupplierSearchPage() {
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <h3 className="font-medium">
-                        {allResults.length} Supplier{allResults.length !== 1 ? "s" : ""} Found
-                      </h3>
+                      <div>
+                        <h3 className="font-medium">
+                          {allResults.length} Supplier{allResults.length !== 1 ? "s" : ""} Found
+                        </h3>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          Data sourced from{" "}
+                          <a 
+                            href="https://www.thomasnet.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                          >
+                            ThomasNet.com
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </p>
+                      </div>
                       <div className="flex gap-2">
                         {selectedSuppliers.size > 0 && (
                           <Button variant="outline" size="sm" onClick={() => setShowAddToListDialog(true)}>
@@ -1045,6 +1096,18 @@ export default function SupplierSearchPage() {
                                     </Badge>
                                   ))}
                                 </div>
+                              )}
+                              {supplier.thomasnetUrl && (
+                                <a
+                                  href={supplier.thomasnetUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-orange-600 hover:underline flex items-center gap-1 mt-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  View on ThomasNet
+                                </a>
                               )}
                             </div>
                             <Button

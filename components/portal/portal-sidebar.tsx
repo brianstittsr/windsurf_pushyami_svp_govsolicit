@@ -66,6 +66,7 @@ import {
   Bot,
   Plug,
   Bug,
+  Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -154,8 +155,8 @@ const workItems = [
     badge: "AI",
   },
   {
-    title: "Traction Dashboard",
-    href: "/portal/traction",
+    title: "EOS2 Dashboard",
+    href: "/portal/eos2",
     icon: Target,
     badge: "EOS",
   },
@@ -186,6 +187,12 @@ const workItems = [
     title: "Bug Tracker",
     href: "/portal/bug-tracker",
     icon: Bug,
+  },
+  {
+    title: "SVP Tools",
+    href: "/portal/svp-tools",
+    icon: Sparkles,
+    badge: "AI",
   },
 ];
 

@@ -32,7 +32,7 @@ import {
   notifyTodoCompleted,
   notifyMeetingLogged,
   notifyTeamMemberAdded,
-} from "@/lib/traction-webhooks";
+} from "@/lib/eos2-webhooks";
 
 // Client-side types (with Date instead of Timestamp)
 export interface Rock {

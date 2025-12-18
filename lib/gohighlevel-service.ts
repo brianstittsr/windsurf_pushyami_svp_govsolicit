@@ -457,11 +457,20 @@ export class GoHighLevelService {
   }
 
   async getCalendarEvents(calendarId: string, startTime: string, endTime: string): Promise<GHLResponse<{ events: GHLCalendarEvent[] }>> {
-    return this.request('GET', `/calendars/${calendarId}/events`, undefined, {
+    // GHL API v2 uses /calendars/events endpoint
+    return this.request('GET', `/calendars/events`, undefined, {
       locationId: this.locationId,
+      calendarId,
       startTime,
       endTime,
     });
+  }
+
+  /**
+   * Get appointments for a specific contact
+   */
+  async getContactAppointments(contactId: string): Promise<GHLResponse<{ events: GHLCalendarEvent[] }>> {
+    return this.request('GET', `/contacts/${contactId}/appointments`);
   }
 
   async createCalendarEvent(event: GHLCalendarEvent): Promise<GHLResponse<{ event: GHLCalendarEvent }>> {

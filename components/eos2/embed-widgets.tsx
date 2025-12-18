@@ -52,7 +52,7 @@ function useWidgetData<T>(widget: string, refreshInterval?: number) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/traction/embed?widget=${widget}`);
+        const response = await fetch(`/api/eos2/embed?widget=${widget}`);
         const result = await response.json();
         if (result.success) {
           setData(result.data);

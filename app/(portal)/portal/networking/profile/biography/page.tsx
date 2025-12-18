@@ -25,6 +25,7 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/schema";
+import { logAffiliateProfileUpdated } from "@/lib/activity-logger";
 
 interface BiographyForm {
   // Business Information
@@ -164,6 +165,8 @@ export default function BiographyPage() {
         setDocId(documentId);
       }
       
+      // Log activity
+      await logAffiliateProfileUpdated(TEMP_USER_ID, form.businessName || "Affiliate", "Biography");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {

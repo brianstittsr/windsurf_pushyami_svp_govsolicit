@@ -47,6 +47,12 @@ import {
   UserX,
   LayoutGrid,
   List,
+  Globe,
+  ExternalLink,
+  Calendar,
+  X,
+  CalendarPlus,
+  Clock,
 } from "lucide-react";
 import { 
   collection, 
@@ -59,7 +65,9 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { COLLECTIONS, type TeamMemberDoc } from "@/lib/schema";
+import { COLLECTIONS, type TeamMemberDoc, type OneToOneQueueItemDoc } from "@/lib/schema";
+import { logTeamMemberAdded, logActivity } from "@/lib/activity-logger";
+import Link from "next/link";
 
 // Seed data for Team Members
 const seedTeamMembers: Omit<TeamMemberDoc, "id" | "createdAt" | "updatedAt">[] = [
@@ -117,6 +125,9 @@ export default function TeamMembersPage() {
   const [seeding, setSeeding] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"card" | "list">("list");
+  const [schedulingList, setSchedulingList] = useState<OneToOneQueueItemDoc[]>([]);
+  const [showSchedulingPanel, setShowSchedulingPanel] = useState(false);
+  const [loadingQueue, setLoadingQueue] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -160,7 +171,34 @@ export default function TeamMembersPage() {
 
   useEffect(() => {
     fetchMembers();
+    fetchSchedulingQueue();
   }, []);
+
+  // Fetch 1-to-1 scheduling queue from Firebase
+  const fetchSchedulingQueue = async () => {
+    if (!db) return;
+    setLoadingQueue(true);
+    try {
+      const querySnapshot = await getDocs(collection(db, COLLECTIONS.ONE_TO_ONE_QUEUE));
+      const queueData: OneToOneQueueItemDoc[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.status === 'queued') {
+          queueData.push({ id: docSnap.id, ...data } as OneToOneQueueItemDoc);
+        }
+      });
+      // Sort by priority
+      queueData.sort((a, b) => a.priority - b.priority);
+      setSchedulingList(queueData);
+      if (queueData.length > 0) {
+        setShowSchedulingPanel(true);
+      }
+    } catch (error) {
+      console.error("Error fetching scheduling queue:", error);
+    } finally {
+      setLoadingQueue(false);
+    }
+  };
 
   // Seed initial data
   const handleSeedData = async () => {
@@ -208,12 +246,22 @@ export default function TeamMembersPage() {
           ...formData,
           updatedAt: Timestamp.now(),
         });
+        // Log activity
+        await logActivity({
+          type: "update",
+          entityType: "team-member",
+          entityId: editingMember.id,
+          entityName: `${formData.firstName} ${formData.lastName}`,
+          description: `Team member updated: ${formData.firstName} ${formData.lastName}`,
+        });
       } else {
-        await addDoc(collection(db, COLLECTIONS.TEAM_MEMBERS), {
+        const docRef = await addDoc(collection(db, COLLECTIONS.TEAM_MEMBERS), {
           ...formData,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
         });
+        // Log activity
+        await logTeamMemberAdded(docRef.id, `${formData.firstName} ${formData.lastName}`);
       }
       setDialogOpen(false);
       resetForm();
@@ -224,12 +272,77 @@ export default function TeamMembersPage() {
     }
   };
 
+  // Update all members' website from email domain
+  const updateWebsitesFromEmail = async () => {
+    if (!db) return;
+    if (!confirm("This will update the website field for all team members (without existing websites) based on their email domain. Continue?")) return;
+    
+    // Personal email domains to exclude
+    const personalDomains = [
+      "gmail.com", "yahoo.com", "hotmail.com", "outlook.com", 
+      "aol.com", "live.com", "icloud.com", "msn.com", "me.com",
+      "mail.com", "protonmail.com", "zoho.com"
+    ];
+    
+    try {
+      const batch = writeBatch(db);
+      let updateCount = 0;
+      let skippedPersonal = 0;
+      let skippedExisting = 0;
+      
+      for (const member of members) {
+        // Check if member has an email and no website (or empty website)
+        const hasEmail = member.emailPrimary && member.emailPrimary.includes("@");
+        const hasWebsite = member.website && member.website.trim().length > 0;
+        
+        if (hasEmail && !hasWebsite) {
+          const emailDomain = member.emailPrimary.split("@")[1]?.toLowerCase();
+          
+          // Check if it's a personal email domain
+          const isPersonalDomain = personalDomains.some(pd => emailDomain === pd || emailDomain?.endsWith(`.${pd}`));
+          
+          if (emailDomain && !isPersonalDomain) {
+            const website = `https://www.${emailDomain}`;
+            const docRef = doc(db, COLLECTIONS.TEAM_MEMBERS, member.id);
+            batch.update(docRef, { website, updatedAt: Timestamp.now() });
+            updateCount++;
+            console.log(`Updating ${member.firstName} ${member.lastName}: ${website}`);
+          } else if (isPersonalDomain) {
+            skippedPersonal++;
+            console.log(`Skipped personal email: ${member.firstName} ${member.lastName} (${emailDomain})`);
+          }
+        } else if (hasWebsite) {
+          skippedExisting++;
+        }
+      }
+      
+      if (updateCount > 0) {
+        await batch.commit();
+        alert(`Updated ${updateCount} team members with website URLs.\nSkipped: ${skippedExisting} with existing websites, ${skippedPersonal} with personal emails.`);
+        await fetchMembers();
+      } else {
+        alert(`No members needed website updates.\nSkipped: ${skippedExisting} with existing websites, ${skippedPersonal} with personal emails.`);
+      }
+    } catch (error) {
+      console.error("Error updating websites:", error);
+      alert("Error updating websites. Check console for details.");
+    }
+  };
+
   // Delete member
-  const handleDeleteMember = async (id: string) => {
+  const handleDeleteMember = async (id: string, memberName: string) => {
     if (!db) return;
     if (!confirm("Are you sure you want to delete this team member?")) return;
     try {
       await deleteDoc(doc(db, COLLECTIONS.TEAM_MEMBERS, id));
+      // Log activity
+      await logActivity({
+        type: "delete",
+        entityType: "team-member",
+        entityId: id,
+        entityName: memberName,
+        description: `Team member removed: ${memberName}`,
+      });
       await fetchMembers();
     } catch (error) {
       console.error("Error deleting member:", error);
@@ -276,6 +389,69 @@ export default function TeamMembersPage() {
       role: "affiliate",
       status: "active",
     });
+  };
+
+  // 1-to-1 Scheduling functions
+  const addToSchedulingList = async (member: TeamMemberDoc) => {
+    if (!db) return;
+    // Check if already in queue
+    if (schedulingList.find(m => m.teamMemberId === member.id)) return;
+    
+    try {
+      const queueItem: Omit<OneToOneQueueItemDoc, 'id'> = {
+        teamMemberId: member.id,
+        teamMemberName: `${member.firstName} ${member.lastName}`,
+        teamMemberEmail: member.emailPrimary,
+        teamMemberExpertise: member.expertise || '',
+        teamMemberAvatar: member.avatar || '',
+        status: 'queued',
+        priority: schedulingList.length + 1,
+        addedBy: 'current-user', // TODO: Get actual user ID
+        addedByName: 'Current User',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+      
+      const docRef = await addDoc(collection(db, COLLECTIONS.ONE_TO_ONE_QUEUE), queueItem);
+      const newItem: OneToOneQueueItemDoc = { id: docRef.id, ...queueItem } as OneToOneQueueItemDoc;
+      setSchedulingList([...schedulingList, newItem]);
+      setShowSchedulingPanel(true);
+    } catch (error) {
+      console.error("Error adding to scheduling queue:", error);
+    }
+  };
+
+  const removeFromSchedulingList = async (queueItemId: string) => {
+    if (!db) return;
+    try {
+      await deleteDoc(doc(db, COLLECTIONS.ONE_TO_ONE_QUEUE, queueItemId));
+      setSchedulingList(schedulingList.filter(m => m.id !== queueItemId));
+    } catch (error) {
+      console.error("Error removing from scheduling queue:", error);
+    }
+  };
+
+  const isInSchedulingList = (memberId: string) => {
+    return schedulingList.some(m => m.teamMemberId === memberId);
+  };
+
+  const getQueueItemId = (memberId: string) => {
+    const item = schedulingList.find(m => m.teamMemberId === memberId);
+    return item?.id;
+  };
+
+  const clearSchedulingList = async () => {
+    if (!db) return;
+    try {
+      const batch = writeBatch(db);
+      for (const item of schedulingList) {
+        batch.delete(doc(db, COLLECTIONS.ONE_TO_ONE_QUEUE, item.id));
+      }
+      await batch.commit();
+      setSchedulingList([]);
+    } catch (error) {
+      console.error("Error clearing scheduling queue:", error);
+    }
   };
 
   // Filter members
@@ -327,6 +503,12 @@ export default function TeamMembersPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          {members.length > 0 && (
+            <Button variant="outline" onClick={updateWebsitesFromEmail}>
+              <Globe className="mr-2 h-4 w-4" />
+              Update Websites
+            </Button>
+          )}
           {members.length === 0 && (
             <Button variant="outline" onClick={handleSeedData} disabled={seeding}>
               {seeding ? (
@@ -687,6 +869,7 @@ export default function TeamMembersPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead className="hidden lg:table-cell">Expertise</TableHead>
+                    <TableHead className="hidden md:table-cell">Website</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -704,9 +887,12 @@ export default function TeamMembersPage() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">
+                            <button
+                              onClick={() => handleEditMember(member)}
+                              className="font-medium hover:underline text-left text-primary"
+                            >
                               {member.firstName} {member.lastName}
-                            </p>
+                            </button>
                             {member.title && (
                               <p className="text-xs text-muted-foreground">{member.title}</p>
                             )}
@@ -734,6 +920,24 @@ export default function TeamMembersPage() {
                           {member.expertise}
                         </p>
                       </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {member.website ? (
+                          <a
+                            href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-sm text-primary hover:underline"
+                          >
+                            <Globe className="h-3 w-3" />
+                            <span className="truncate max-w-[120px]">
+                              {member.website.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                            </span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">—</span>
+                        )}
+                      </TableCell>
                       <TableCell>{getRoleBadge(member.role)}</TableCell>
                       <TableCell>
                         {member.status === "active" ? (
@@ -755,6 +959,21 @@ export default function TeamMembersPage() {
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button
+                            variant={isInSchedulingList(member.id) ? "secondary" : "ghost"}
+                            size="icon"
+                            onClick={() => {
+                              const queueItemId = getQueueItemId(member.id);
+                              if (queueItemId) {
+                                removeFromSchedulingList(queueItemId);
+                              } else {
+                                addToSchedulingList(member);
+                              }
+                            }}
+                            title={isInSchedulingList(member.id) ? "Remove from 1-to-1 list" : "Add to 1-to-1 list"}
+                          >
+                            <CalendarPlus className={`h-4 w-4 ${isInSchedulingList(member.id) ? "text-primary" : ""}`} />
+                          </Button>
+                          <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEditMember(member)}
@@ -764,7 +983,7 @@ export default function TeamMembersPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteMember(member.id)}
+                            onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`)}
                           >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
@@ -840,6 +1059,21 @@ export default function TeamMembersPage() {
                   )}
                   <div className="flex gap-1">
                     <Button
+                      variant={isInSchedulingList(member.id) ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        const queueItemId = getQueueItemId(member.id);
+                        if (queueItemId) {
+                          removeFromSchedulingList(queueItemId);
+                        } else {
+                          addToSchedulingList(member);
+                        }
+                      }}
+                      title={isInSchedulingList(member.id) ? "Remove from 1-to-1 list" : "Add to 1-to-1 list"}
+                    >
+                      <CalendarPlus className={`h-4 w-4 ${isInSchedulingList(member.id) ? "text-primary" : ""}`} />
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditMember(member)}
@@ -849,7 +1083,7 @@ export default function TeamMembersPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteMember(member.id)}
+                      onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`)}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -859,6 +1093,96 @@ export default function TeamMembersPage() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* 1-to-1 Scheduling Panel */}
+      {showSchedulingPanel && (
+        <div className="fixed bottom-4 right-4 w-96 bg-background border rounded-lg shadow-lg z-50">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              <h3 className="font-semibold">1-to-1 Scheduling List</h3>
+              <Badge variant="secondary">{schedulingList.length}</Badge>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowSchedulingPanel(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="p-4 max-h-80 overflow-y-auto">
+            {schedulingList.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <CalendarPlus className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No members added yet</p>
+                <p className="text-xs">Click the calendar icon on any member to add them</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {schedulingList.map((queueItem) => (
+                  <div
+                    key={queueItem.id}
+                    className="flex items-center justify-between p-2 bg-muted rounded-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={queueItem.teamMemberAvatar} />
+                        <AvatarFallback className="text-xs">
+                          {queueItem.teamMemberName.split(' ').map(n => n[0]).join('')}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="text-sm font-medium">
+                          {queueItem.teamMemberName}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate max-w-[180px]">
+                          {queueItem.teamMemberExpertise}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeFromSchedulingList(queueItem.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {schedulingList.length > 0 && (
+            <div className="p-4 border-t space-y-2">
+              <Button className="w-full" asChild>
+                <a href={`/portal/calendar?schedule=${schedulingList.map(m => m.id).join(',')}`}>
+                  <Clock className="mr-2 h-4 w-4" />
+                  Schedule 1-to-1 Meetings
+                </a>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={clearSchedulingList}
+              >
+                Clear List
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Floating button to show scheduling panel when hidden but has items */}
+      {!showSchedulingPanel && schedulingList.length > 0 && (
+        <Button
+          className="fixed bottom-4 right-4 z-50 shadow-lg"
+          onClick={() => setShowSchedulingPanel(true)}
+        >
+          <Calendar className="mr-2 h-4 w-4" />
+          1-to-1 List ({schedulingList.length})
+        </Button>
       )}
     </div>
   );

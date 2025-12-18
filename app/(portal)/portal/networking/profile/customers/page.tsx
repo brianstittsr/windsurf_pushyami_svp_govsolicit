@@ -22,6 +22,7 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/schema";
+import { logAffiliateProfileUpdated } from "@/lib/activity-logger";
 
 interface Customer {
   name: string;
@@ -138,6 +139,8 @@ export default function CustomersPage() {
         setDocId(documentId);
       }
       
+      // Log activity
+      await logAffiliateProfileUpdated(TEMP_USER_ID, "Affiliate", "Previous Customers");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {

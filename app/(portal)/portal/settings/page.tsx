@@ -57,6 +57,7 @@ import { WEBHOOK_EVENTS, testWebhookConnection, sendToBrianStitt, type WebhookEv
 import { doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS, type PlatformSettingsDoc } from "@/lib/schema";
+import { logSettingsUpdated } from "@/lib/activity-logger";
 import { 
   showInAppNotification, 
   requestNotificationPermission, 
@@ -146,6 +147,15 @@ const apiConfigs: ApiKeyConfig[] = [
     additionalFields: [
       { name: "webhookSecret", label: "Webhook Secret (optional)", placeholder: "your-webhook-secret" },
     ],
+    status: "disconnected",
+  },
+  {
+    id: "mercury",
+    name: "Mercury Bank",
+    description: "Business banking with API access for accounts and transactions",
+    icon: Server,
+    keyField: "API Token",
+    additionalFields: [],
     status: "disconnected",
   },
 ];
@@ -342,6 +352,8 @@ function SettingsPageContent() {
       
       await setDoc(docRef, settingsData, { merge: true });
       setHasChanges(false);
+      // Log activity
+      await logSettingsUpdated("Platform Settings");
       alert("Settings saved successfully!");
     } catch (error) {
       console.error("Error saving settings:", error);

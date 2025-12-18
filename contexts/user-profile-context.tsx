@@ -1,6 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { getTeamMemberByAuthUid, findAndLinkTeamMember } from "@/lib/auth-team-member-link";
+import type { TeamMemberDoc } from "@/lib/schema";
 
 // User profile fields
 export interface UserProfile {
@@ -124,6 +128,26 @@ export function needsAffiliateOnboarding(profile: UserProfile): boolean {
   return profile.isAffiliate && !profile.affiliateOnboardingComplete;
 }
 
+// Map TeamMemberDoc to UserProfile
+function mapTeamMemberToProfile(teamMember: TeamMemberDoc): Partial<UserProfile> {
+  return {
+    id: teamMember.id,
+    email: teamMember.emailPrimary || "",
+    firstName: teamMember.firstName || "",
+    lastName: teamMember.lastName || "",
+    phone: teamMember.mobile || "",
+    company: teamMember.company || "",
+    jobTitle: teamMember.title || "",
+    location: teamMember.location || "",
+    bio: teamMember.bio || "",
+    avatarUrl: teamMember.avatar || "",
+    role: teamMember.role === "admin" ? "admin" : 
+          teamMember.role === "affiliate" ? "affiliate" : 
+          teamMember.role === "consultant" ? "affiliate" : "team_member",
+    isAffiliate: teamMember.role === "affiliate" || teamMember.role === "consultant",
+  };
+}
+
 // Context type
 interface UserProfileContextType {
   profile: UserProfile;
@@ -139,44 +163,104 @@ interface UserProfileContextType {
   setShowAffiliateOnboarding: (show: boolean) => void;
   getDisplayName: () => string;
   getInitials: () => string;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+  linkedTeamMember: TeamMemberDoc | null;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
 
-// Mock user data - in production this would come from auth/database
-const mockUserData: UserProfile = {
-  ...defaultProfile,
-  id: "user-1",
-  email: "brian@strategicvalueplus.com",
-  firstName: "Brian",
-  lastName: "Stitt",
-  role: "admin",
-  isAffiliate: true,
-  affiliateAgreementSigned: true,
-  affiliateAgreementDate: "2024-01-15",
-  affiliateOnboardingComplete: false, // Set to false to show onboarding
-  createdAt: "2024-01-01T00:00:00Z",
-  updatedAt: new Date().toISOString(),
-};
-
 export function UserProfileProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfile] = useState<UserProfile>(mockUserData);
+  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [showProfileWizard, setShowProfileWizard] = useState(false);
   const [showAffiliateOnboarding, setShowAffiliateOnboarding] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [linkedTeamMember, setLinkedTeamMember] = useState<TeamMemberDoc | null>(null);
 
   const profileCompletion = calculateProfileCompletion(profile);
   const networkingCompletion = calculateNetworkingCompletion(profile);
   const isComplete = isProfileComplete(profile);
   const needsOnboarding = needsAffiliateOnboarding(profile);
 
-  // Check if wizards should be shown on mount
+  // Listen to Firebase Auth state and fetch linked Team Member
   useEffect(() => {
+    if (!auth) {
+      console.warn("Firebase Auth not initialized");
+      setIsLoading(false);
+      return;
+    }
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      setIsLoading(true);
+      
+      if (firebaseUser) {
+        setIsAuthenticated(true);
+        console.log("User authenticated:", firebaseUser.uid, firebaseUser.email);
+        
+        try {
+          // Try to find and link Team Member by UID first, then by email
+          let teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
+          
+          if (!teamMember && firebaseUser.email) {
+            // Try to find and link by email
+            teamMember = await findAndLinkTeamMember(firebaseUser.email, firebaseUser.uid);
+          }
+          
+          if (teamMember) {
+            console.log("Linked Team Member found:", teamMember.id, teamMember.firstName, teamMember.lastName);
+            setLinkedTeamMember(teamMember);
+            
+            // Map Team Member data to profile
+            const mappedProfile = mapTeamMemberToProfile(teamMember);
+            setProfile((prev) => ({
+              ...prev,
+              ...mappedProfile,
+              updatedAt: new Date().toISOString(),
+            }));
+          } else {
+            console.log("No linked Team Member found for user:", firebaseUser.email);
+            setLinkedTeamMember(null);
+            // Set basic profile from Firebase Auth
+            setProfile((prev) => ({
+              ...prev,
+              id: firebaseUser.uid,
+              email: firebaseUser.email || "",
+              firstName: firebaseUser.displayName?.split(" ")[0] || "",
+              lastName: firebaseUser.displayName?.split(" ").slice(1).join(" ") || "",
+              avatarUrl: firebaseUser.photoURL || "",
+              updatedAt: new Date().toISOString(),
+            }));
+          }
+        } catch (error) {
+          console.error("Error fetching Team Member:", error);
+        }
+      } else {
+        setIsAuthenticated(false);
+        setLinkedTeamMember(null);
+        setProfile(defaultProfile);
+      }
+      
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Check if wizards should be shown after profile is loaded
+  useEffect(() => {
+    // Don't show wizard while loading or if not authenticated
+    if (isLoading || !isAuthenticated) {
+      return;
+    }
+    
+    // Only show profile wizard if profile is incomplete
     if (!isComplete) {
       setShowProfileWizard(true);
     } else if (needsOnboarding) {
       setShowAffiliateOnboarding(true);
     }
-  }, [isComplete, needsOnboarding]);
+  }, [isLoading, isAuthenticated, isComplete, needsOnboarding]);
 
   const updateProfile = (updates: Partial<UserProfile>) => {
     setProfile((prev) => ({
@@ -220,6 +304,9 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         setShowAffiliateOnboarding,
         getDisplayName,
         getInitials,
+        isLoading,
+        isAuthenticated,
+        linkedTeamMember,
       }}
     >
       {children}

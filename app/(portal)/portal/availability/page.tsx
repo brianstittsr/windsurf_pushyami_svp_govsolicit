@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,14 @@ import {
   CheckCircle,
   XCircle,
   Pencil,
+  QrCode,
+  Download,
+  RefreshCw,
+  Share2,
 } from "lucide-react";
+import { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc, Timestamp, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { COLLECTIONS, type TeamMemberAvailabilityDoc, type BookingDoc, type TeamMemberDoc, type CalendarEventDoc } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import {
   type WeeklySchedule,
@@ -154,6 +162,200 @@ export default function AvailabilityPage() {
     type: "unavailable",
     reason: "",
   });
+
+  // Firebase & Team Member state
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [currentTeamMember, setCurrentTeamMember] = useState<TeamMemberDoc | null>(null);
+  const [availabilityDoc, setAvailabilityDoc] = useState<TeamMemberAvailabilityDoc | null>(null);
+  const [bookingSlug, setBookingSlug] = useState("");
+  const [bookingTitle, setBookingTitle] = useState("");
+  const [bookingDescription, setBookingDescription] = useState("");
+  const [isQrDialogOpen, setIsQrDialogOpen] = useState(false);
+  const [teamMembers, setTeamMembers] = useState<TeamMemberDoc[]>([]);
+  const [selectedTeamMemberId, setSelectedTeamMemberId] = useState<string>("");
+
+  // Get booking URL
+  const getBookingUrl = (slug?: string) => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}/book/${slug || bookingSlug}`;
+  };
+
+  // Fetch team members with role "team"
+  const fetchTeamMembers = async () => {
+    if (!db) return;
+    try {
+      const querySnapshot = await getDocs(collection(db, COLLECTIONS.TEAM_MEMBERS));
+      const members: TeamMemberDoc[] = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data() as TeamMemberDoc;
+        if (data.role === 'team' || data.role === 'admin') {
+          members.push({ ...data, id: docSnap.id });
+        }
+      });
+      setTeamMembers(members);
+      // Auto-select first team member if available
+      if (members.length > 0 && !selectedTeamMemberId) {
+        setSelectedTeamMemberId(members[0].id);
+      }
+    } catch (error) {
+      console.error("Error fetching team members:", error);
+    }
+  };
+
+  // Fetch availability for selected team member
+  const fetchAvailability = async (teamMemberId: string) => {
+    if (!db || !teamMemberId) return;
+    setLoading(true);
+    try {
+      const docRef = doc(db, COLLECTIONS.TEAM_MEMBER_AVAILABILITY, teamMemberId);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data() as TeamMemberAvailabilityDoc;
+        setAvailabilityDoc(data);
+        setBookingSlug(data.bookingSlug || '');
+        setBookingTitle(data.bookingTitle || '');
+        setBookingDescription(data.bookingDescription || '');
+        setTimezone(data.timezone || 'America/New_York');
+      } else {
+        // Create default availability for this team member
+        const member = teamMembers.find(m => m.id === teamMemberId);
+        if (member) {
+          const slug = `${member.firstName.toLowerCase()}-${member.lastName.toLowerCase()}`.replace(/\s+/g, '-');
+          setBookingSlug(slug);
+          setBookingTitle(`Book a meeting with ${member.firstName} ${member.lastName}`);
+          setBookingDescription(member.expertise || '');
+        }
+        setAvailabilityDoc(null);
+      }
+
+      // Fetch bookings for this team member
+      const bookingsQuery = query(
+        collection(db, COLLECTIONS.BOOKINGS),
+        where('teamMemberId', '==', teamMemberId)
+      );
+      const bookingsSnapshot = await getDocs(bookingsQuery);
+      const bookingsData: Booking[] = [];
+      bookingsSnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        bookingsData.push({
+          id: docSnap.id,
+          meetingTypeId: data.meetingTypeId,
+          meetingTypeName: data.meetingTypeName,
+          ownerId: data.teamMemberId,
+          ownerName: data.teamMemberName,
+          guestName: data.clientName,
+          guestEmail: data.clientEmail,
+          date: data.date,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          timezone: data.timezone,
+          status: data.status,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        });
+      });
+      setBookings(bookingsData);
+
+      // Set current team member
+      const member = teamMembers.find(m => m.id === teamMemberId);
+      setCurrentTeamMember(member || null);
+    } catch (error) {
+      console.error("Error fetching availability:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save availability to Firebase
+  const saveAvailability = async () => {
+    if (!db || !selectedTeamMemberId || !currentTeamMember) {
+      alert("Please select a team member first");
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const availabilityData: TeamMemberAvailabilityDoc = {
+        id: selectedTeamMemberId,
+        teamMemberId: selectedTeamMemberId,
+        teamMemberName: `${currentTeamMember.firstName} ${currentTeamMember.lastName}`,
+        teamMemberEmail: currentTeamMember.emailPrimary,
+        bookingSlug: bookingSlug,
+        bookingTitle: bookingTitle,
+        bookingDescription: bookingDescription,
+        timezone: timezone,
+        weeklyAvailability: Object.entries(weeklySchedule).map(([day, schedule], index) => ({
+          dayOfWeek: index as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+          startTime: schedule.slots[0]?.start || '09:00',
+          endTime: schedule.slots[0]?.end || '17:00',
+          isEnabled: schedule.enabled,
+        })),
+        defaultMeetingDuration: 60,
+        allowedDurations: [30, 45, 60, 90],
+        bufferBetweenMeetings: 15,
+        maxAdvanceBookingDays: 60,
+        minAdvanceBookingHours: 24,
+        meetingTypes: meetingTypes.map(mt => ({
+          id: mt.id,
+          name: mt.name,
+          duration: mt.duration,
+          description: mt.description,
+          isVirtual: true,
+        })),
+        blockedDates: dateOverrides.filter(o => o.type === 'unavailable').map(o => ({
+          date: o.date,
+          reason: o.reason,
+        })),
+        isActive: true,
+        createdAt: availabilityDoc?.createdAt || Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+
+      await setDoc(doc(db, COLLECTIONS.TEAM_MEMBER_AVAILABILITY, selectedTeamMemberId), availabilityData);
+      setAvailabilityDoc(availabilityData);
+      alert("Availability saved successfully!");
+    } catch (error) {
+      console.error("Error saving availability:", error);
+      alert("Error saving availability. Check console for details.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Download QR code
+  const downloadQrCode = () => {
+    const svg = document.getElementById('booking-qr-code');
+    if (!svg) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx?.drawImage(img, 0, 0);
+      const pngFile = canvas.toDataURL('image/png');
+      const downloadLink = document.createElement('a');
+      downloadLink.download = `booking-qr-${bookingSlug}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
+
+  useEffect(() => {
+    if (selectedTeamMemberId && teamMembers.length > 0) {
+      fetchAvailability(selectedTeamMemberId);
+    }
+  }, [selectedTeamMemberId, teamMembers]);
 
   const toggleDayEnabled = (day: keyof WeeklySchedule) => {
     setWeeklySchedule((prev) => ({
@@ -279,12 +481,32 @@ export default function AvailabilityPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
-            <Eye className="mr-2 h-4 w-4" />
-            Preview
+          {teamMembers.length > 0 && (
+            <Select value={selectedTeamMemberId} onValueChange={setSelectedTeamMemberId}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select team member" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.firstName} {member.lastName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button variant="outline" onClick={() => setIsQrDialogOpen(true)} disabled={!bookingSlug}>
+            <QrCode className="mr-2 h-4 w-4" />
+            QR Code
           </Button>
-          <Button>
-            <Save className="mr-2 h-4 w-4" />
+          <Button variant="outline" asChild>
+            <a href={getBookingUrl()} target="_blank" rel="noopener noreferrer">
+              <Eye className="mr-2 h-4 w-4" />
+              Preview
+            </a>
+          </Button>
+          <Button onClick={saveAvailability} disabled={saving || !selectedTeamMemberId}>
+            {saving ? <RefreshCw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
             Save Changes
           </Button>
         </div>
@@ -344,6 +566,7 @@ export default function AvailabilityPage() {
           <TabsTrigger value="meeting-types">Meeting Types</TabsTrigger>
           <TabsTrigger value="overrides">Date Overrides</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
+          <TabsTrigger value="share">Share & QR Code</TabsTrigger>
         </TabsList>
 
         {/* Weekly Schedule Tab */}
@@ -710,7 +933,222 @@ export default function AvailabilityPage() {
             </Card>
           )}
         </TabsContent>
+
+        {/* Share & QR Code Tab */}
+        <TabsContent value="share" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Booking Page Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LinkIcon className="h-5 w-5" />
+                  Booking Page Settings
+                </CardTitle>
+                <CardDescription>
+                  Customize your public booking page
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Booking URL Slug</Label>
+                  <div className="flex gap-2">
+                    <span className="flex items-center px-3 bg-muted rounded-l-md border border-r-0 text-sm text-muted-foreground">
+                      {typeof window !== 'undefined' ? window.location.origin : ''}/book/
+                    </span>
+                    <Input
+                      value={bookingSlug}
+                      onChange={(e) => setBookingSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                      placeholder="your-name"
+                      className="rounded-l-none"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Page Title</Label>
+                  <Input
+                    value={bookingTitle}
+                    onChange={(e) => setBookingTitle(e.target.value)}
+                    placeholder="Book a meeting with..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={bookingDescription}
+                    onChange={(e) => setBookingDescription(e.target.value)}
+                    placeholder="Describe what you do and what meetings are about..."
+                    rows={3}
+                  />
+                </div>
+                <div className="pt-4 space-y-2">
+                  <Label>Your Booking Link</Label>
+                  <div className="flex gap-2">
+                    <Input value={getBookingUrl()} readOnly className="bg-muted" />
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(getBookingUrl());
+                        alert("Link copied to clipboard!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <a href={getBookingUrl()} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* QR Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5" />
+                  QR Code
+                </CardTitle>
+                <CardDescription>
+                  Scan to open your booking page
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                {bookingSlug ? (
+                  <>
+                    <div className="p-4 bg-white rounded-lg shadow-sm">
+                      <QRCodeSVG
+                        id="booking-qr-code-main"
+                        value={getBookingUrl()}
+                        size={200}
+                        level="H"
+                        includeMargin={true}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground text-center">
+                      {currentTeamMember ? `${currentTeamMember.firstName} ${currentTeamMember.lastName}` : 'Team Member'}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={downloadQrCode}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Download PNG
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getBookingUrl());
+                          alert("Link copied!");
+                        }}
+                      >
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Link
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <QrCode className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>Set a booking slug to generate QR code</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Team Members with Booking Pages */}
+          {teamMembers.length > 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  All Team Booking Pages
+                </CardTitle>
+                <CardDescription>
+                  Quick access to all team member booking pages
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {teamMembers.map((member) => {
+                    const memberSlug = `${member.firstName.toLowerCase()}-${member.lastName.toLowerCase()}`.replace(/\s+/g, '-');
+                    const memberUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/book/${memberSlug}`;
+                    return (
+                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="font-medium">{member.firstName} {member.lastName}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[150px]">{member.expertise}</p>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              navigator.clipboard.writeText(memberUrl);
+                              alert(`Link copied for ${member.firstName}!`);
+                            }}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" asChild>
+                            <a href={memberUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* QR Code Dialog */}
+      <Dialog open={isQrDialogOpen} onOpenChange={setIsQrDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Booking QR Code</DialogTitle>
+            <DialogDescription>
+              Scan this QR code to open the booking page
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center space-y-4 py-4">
+            <div className="p-4 bg-white rounded-lg shadow-sm">
+              <QRCodeSVG
+                id="booking-qr-code"
+                value={getBookingUrl()}
+                size={250}
+                level="H"
+                includeMargin={true}
+              />
+            </div>
+            <p className="text-sm font-medium">
+              {currentTeamMember ? `${currentTeamMember.firstName} ${currentTeamMember.lastName}` : 'Team Member'}
+            </p>
+            <p className="text-xs text-muted-foreground break-all text-center">
+              {getBookingUrl()}
+            </p>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={downloadQrCode}>
+              <Download className="mr-2 h-4 w-4" />
+              Download PNG
+            </Button>
+            <Button
+              onClick={() => {
+                navigator.clipboard.writeText(getBookingUrl());
+                alert("Link copied to clipboard!");
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add/Edit Meeting Type Dialog */}
       <Dialog open={isAddMeetingTypeOpen} onOpenChange={setIsAddMeetingTypeOpen}>

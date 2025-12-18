@@ -7,7 +7,7 @@
 // PROPOSAL TYPES
 // ============================================
 
-export type ProposalType = 'grant' | 'rfp_response' | 'rfi_response' | 'contract' | 'agreement' | 'mou';
+export type ProposalType = 'grant' | 'nda' | 'rfp_response' | 'rfi_response' | 'contract' | 'agreement' | 'mou';
 export type ProposalStatus = 'draft' | 'pending_signature' | 'active' | 'inactive' | 'completed';
 export type SignatureStatus = 'not_sent' | 'pending' | 'partially_signed' | 'completed' | 'declined';
 
@@ -378,6 +378,7 @@ export interface AgreementWizardState {
 
 export const PROPOSAL_TYPES: { value: ProposalType; label: string }[] = [
   { value: 'grant', label: 'Grant Application' },
+  { value: 'nda', label: 'Non-Disclosure Agreement (NDA)' },
   { value: 'rfp_response', label: 'RFP Response' },
   { value: 'rfi_response', label: 'RFI Response' },
   { value: 'contract', label: 'Contract' },

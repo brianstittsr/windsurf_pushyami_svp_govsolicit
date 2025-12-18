@@ -22,6 +22,7 @@ import {
 import { db } from "@/lib/firebase";
 import { collection, doc, getDocs, setDoc, query, where, Timestamp } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/schema";
+import { logAffiliateProfileUpdated } from "@/lib/activity-logger";
 
 interface ContactSphereMember {
   name: string;
@@ -182,6 +183,8 @@ export default function ContactSpherePage() {
         setDocId(documentId);
       }
       
+      // Log activity
+      await logAffiliateProfileUpdated(TEMP_USER_ID, form.sphereName || "Affiliate", "Contact Sphere");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {

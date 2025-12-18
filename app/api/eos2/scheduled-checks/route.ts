@@ -24,7 +24,7 @@ import {
   TractionTodoData,
   TractionRockData,
   TractionMetricData,
-} from "@/lib/traction-webhooks";
+} from "@/lib/eos2-webhooks";
 
 // Verify cron secret for security
 const CRON_SECRET = process.env.CRON_SECRET;

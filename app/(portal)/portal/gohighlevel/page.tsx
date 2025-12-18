@@ -61,6 +61,8 @@ import {
   Target,
   ArrowRight,
 } from "lucide-react";
+import { showSuccess, showError, showInfo } from "@/lib/toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // Types
 interface GHLIntegration {
@@ -233,6 +235,10 @@ export default function GoHighLevelPage() {
   const [importing, setImporting] = useState(false);
   const [converting, setConverting] = useState<string | null>(null);
   const [deploying, setDeploying] = useState(false);
+  
+  // Delete confirmation dialog state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   // Fetch integrations
   const fetchIntegrations = useCallback(async () => {
@@ -295,12 +301,12 @@ export default function GoHighLevelPage() {
       });
       const data = await response.json();
       if (data.success) {
-        alert(`✅ Connection successful!\nLocation: ${data.locationName}`);
+        showSuccess("Connection successful!", { description: `Location: ${data.locationName}` });
       } else {
-        alert(`❌ Connection failed: ${data.error}`);
+        showError("Connection failed", { description: data.error });
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Connection error", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setTestingConnection(null);
     }
@@ -317,13 +323,13 @@ export default function GoHighLevelPage() {
       });
       const data = await response.json();
       if (data.success) {
-        alert(`✅ Sync completed!\nRecords processed: ${data.summary?.recordsProcessed || 0}\nSuccessful: ${data.summary?.recordsSuccessful || 0}`);
+        showSuccess("Sync completed!", { description: `Records processed: ${data.summary?.recordsProcessed || 0}, Successful: ${data.summary?.recordsSuccessful || 0}` });
         fetchIntegrations();
       } else {
-        alert(`❌ Sync failed: ${data.error}`);
+        showError("Sync failed", { description: data.error });
       }
     } catch (error) {
-      alert(`❌ Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Sync error", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setSyncing(null);
     }
@@ -342,11 +348,12 @@ export default function GoHighLevelPage() {
         setShowAddDialog(false);
         resetForm();
         fetchIntegrations();
+        showSuccess("Integration created successfully");
       } else {
-        alert(`Error: ${data.error}`);
+        showError("Failed to create integration", { description: data.error });
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Error creating integration", { description: error instanceof Error ? error.message : "Unknown error" });
     }
   };
 
@@ -365,29 +372,39 @@ export default function GoHighLevelPage() {
         setSelectedIntegration(null);
         resetForm();
         fetchIntegrations();
+        showSuccess("Integration updated successfully");
       } else {
-        alert(`Error: ${data.error}`);
+        showError("Failed to update integration", { description: data.error });
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Error updating integration", { description: error instanceof Error ? error.message : "Unknown error" });
     }
   };
 
   // Delete integration
   const deleteIntegration = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this integration?")) return;
+    setPendingDeleteId(id);
+    setShowDeleteConfirm(true);
+  };
+
+  // Confirm delete integration
+  const confirmDeleteIntegration = async () => {
+    if (!pendingDeleteId) return;
     try {
-      const response = await fetch(`/api/gohighlevel/integrations/${id}`, {
+      const response = await fetch(`/api/gohighlevel/integrations/${pendingDeleteId}`, {
         method: "DELETE",
       });
       const data = await response.json();
       if (data.success) {
         fetchIntegrations();
+        showSuccess("Integration deleted");
       } else {
-        alert(`Error: ${data.error}`);
+        showError("Failed to delete integration", { description: data.error });
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Error deleting integration", { description: error instanceof Error ? error.message : "Unknown error" });
+    } finally {
+      setPendingDeleteId(null);
     }
   };
 
@@ -445,10 +462,10 @@ export default function GoHighLevelPage() {
         setGeneratedWorkflow(data.workflow);
         setShowWorkflowPreview(true);
       } else {
-        alert(`Error generating workflow: ${data.error || "Unknown error"}`);
+        showError("Error generating workflow", { description: data.error || "Unknown error" });
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Workflow generation failed", { description: error instanceof Error ? error.message : "Unknown error" });
     } finally {
       setIsGenerating(false);
     }
@@ -470,16 +487,16 @@ export default function GoHighLevelPage() {
       });
       const data = await response.json();
       if (data.success) {
-        alert("✅ Workflow saved successfully!");
+        showSuccess("Workflow saved successfully!");
         fetchWorkflows();
         setShowWorkflowPreview(false);
         setGeneratedWorkflow(null);
         setWorkflowPrompt("");
       } else {
-        alert(`Error: ${data.error}`);
+        showError("Failed to save workflow", { description: data.error });
       }
     } catch (error) {
-      alert(`Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+      showError("Error saving workflow", { description: error instanceof Error ? error.message : "Unknown error" });
     }
   };
 
@@ -1404,6 +1421,18 @@ export default function GoHighLevelPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete Integration"
+        description="Are you sure you want to delete this integration? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={confirmDeleteIntegration}
+      />
     </div>
   );
 }

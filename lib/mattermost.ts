@@ -608,3 +608,611 @@ export async function sendToBrianStitt(
     attachments: !!details,
   });
 }
+
+// =========================================================================
+// MATTERMOST PLAYBOOKS API
+// =========================================================================
+
+export interface PlaybookChecklistItem {
+  title: string;
+  command?: string;
+  description?: string;
+  assignee_id?: string;
+  due_date?: number; // Unix timestamp in milliseconds
+}
+
+export interface PlaybookChecklist {
+  title: string;
+  items: PlaybookChecklistItem[];
+}
+
+export interface PlaybookConfig {
+  title: string;
+  description?: string;
+  team_id: string;
+  create_public_playbook_run?: boolean;
+  public?: boolean;
+  checklists: PlaybookChecklist[];
+  member_ids: string[];
+  invited_user_ids?: string[];
+  invite_users_enabled?: boolean;
+  default_owner_id?: string;
+  default_owner_enabled?: boolean;
+  reminder_timer_default_seconds?: number;
+  broadcast_channel_ids?: string[];
+  announcement_channel_id?: string;
+  announcement_channel_enabled?: boolean;
+}
+
+export interface PlaybookRunConfig {
+  name: string;
+  description?: string;
+  owner_user_id: string;
+  team_id: string;
+  playbook_id: string;
+}
+
+export interface MattermostPlaybookResponse {
+  id: string;
+  title: string;
+  description: string;
+  team_id: string;
+  create_at: number;
+  delete_at: number;
+  num_stages: number;
+  num_steps: number;
+  checklists: PlaybookChecklist[];
+  member_ids: string[];
+}
+
+export interface MattermostPlaybookRunResponse {
+  id: string;
+  name: string;
+  description: string;
+  owner_user_id: string;
+  team_id: string;
+  channel_id: string;
+  create_at: number;
+  end_at: number;
+  playbook_id: string;
+  checklists: PlaybookChecklist[];
+  current_status: string;
+}
+
+/**
+ * Create a new Mattermost Playbook
+ */
+export async function createPlaybook(
+  serverUrl: string,
+  token: string,
+  config: PlaybookConfig
+): Promise<{ success: boolean; playbook?: MattermostPlaybookResponse; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "create_playbook",
+        serverUrl, 
+        token, 
+        config 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * List all playbooks for a team
+ */
+export async function listPlaybooks(
+  serverUrl: string,
+  token: string,
+  teamId: string
+): Promise<{ success: boolean; playbooks?: MattermostPlaybookResponse[]; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "list_playbooks",
+        serverUrl, 
+        token, 
+        teamId 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Start a playbook run
+ */
+export async function startPlaybookRun(
+  serverUrl: string,
+  token: string,
+  config: PlaybookRunConfig
+): Promise<{ success: boolean; run?: MattermostPlaybookRunResponse; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "start_run",
+        serverUrl, 
+        token, 
+        config 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Get Mattermost users for a team
+ */
+export async function getMattermostUsers(
+  serverUrl: string,
+  token: string,
+  teamId: string
+): Promise<{ success: boolean; users?: { id: string; username: string; email: string; first_name: string; last_name: string }[]; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "get_users",
+        serverUrl, 
+        token, 
+        teamId 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Get Mattermost teams
+ */
+export async function getMattermostTeams(
+  serverUrl: string,
+  token: string
+): Promise<{ success: boolean; teams?: { id: string; name: string; display_name: string }[]; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "get_teams",
+        serverUrl, 
+        token 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Generate a reminder playbook for team members
+ */
+export function generateReminderPlaybook(
+  title: string,
+  description: string,
+  teamId: string,
+  memberIds: string[],
+  tasks: { title: string; description?: string; assigneeId?: string }[],
+  reminderSeconds: number = 86400 // Default 24 hours
+): PlaybookConfig {
+  const checklist: PlaybookChecklist = {
+    title: "Reminder Tasks",
+    items: tasks.map(task => ({
+      title: task.title,
+      description: task.description,
+      assignee_id: task.assigneeId,
+    })),
+  };
+
+  return {
+    title,
+    description,
+    team_id: teamId,
+    create_public_playbook_run: false,
+    public: true,
+    checklists: [checklist],
+    member_ids: memberIds,
+    invited_user_ids: memberIds,
+    invite_users_enabled: true,
+    default_owner_id: memberIds[0],
+    default_owner_enabled: true,
+    reminder_timer_default_seconds: reminderSeconds,
+  };
+}
+
+/**
+ * Generate a Rock tracking playbook
+ */
+export function generateRockPlaybook(
+  rockTitle: string,
+  rockDescription: string,
+  teamId: string,
+  ownerId: string,
+  memberIds: string[],
+  milestones: { title: string; description?: string }[]
+): PlaybookConfig {
+  const checklist: PlaybookChecklist = {
+    title: "Rock Milestones",
+    items: milestones.map(m => ({
+      title: m.title,
+      description: m.description,
+      assignee_id: ownerId,
+    })),
+  };
+
+  return {
+    title: `Rock: ${rockTitle}`,
+    description: rockDescription,
+    team_id: teamId,
+    create_public_playbook_run: false,
+    public: true,
+    checklists: [checklist],
+    member_ids: memberIds,
+    invited_user_ids: [ownerId],
+    invite_users_enabled: true,
+    default_owner_id: ownerId,
+    default_owner_enabled: true,
+    reminder_timer_default_seconds: 604800, // Weekly reminder
+  };
+}
+
+/**
+ * Generate a Level 10 Meeting playbook
+ */
+export function generateLevel10Playbook(
+  teamId: string,
+  memberIds: string[],
+  facilitatorId: string
+): PlaybookConfig {
+  const checklists: PlaybookChecklist[] = [
+    {
+      title: "Segue (5 min)",
+      items: [
+        { title: "Share personal and professional good news", description: "Each team member shares one personal and one professional good news item" },
+      ],
+    },
+    {
+      title: "Scorecard Review (5 min)",
+      items: [
+        { title: "Review weekly metrics", description: "Review all scorecard metrics and identify any that are off track" },
+        { title: "Note any metrics below goal", description: "Add metrics below goal to the Issues List" },
+      ],
+    },
+    {
+      title: "Rock Review (5 min)",
+      items: [
+        { title: "Review quarterly Rocks", description: "Each Rock owner provides a quick on-track/off-track status" },
+        { title: "Note any Rocks at risk", description: "Add at-risk Rocks to the Issues List" },
+      ],
+    },
+    {
+      title: "Customer/Employee Headlines (5 min)",
+      items: [
+        { title: "Share customer headlines", description: "Any notable customer news, wins, or concerns" },
+        { title: "Share employee headlines", description: "Any notable employee news or concerns" },
+      ],
+    },
+    {
+      title: "To-Do List (5 min)",
+      items: [
+        { title: "Review last week's To-Dos", description: "Mark each To-Do as done or not done" },
+        { title: "Calculate completion rate", description: "Target: 90% completion rate" },
+      ],
+    },
+    {
+      title: "IDS - Issues (60 min)",
+      items: [
+        { title: "Identify issues", description: "Add new issues to the list" },
+        { title: "Prioritize top 3 issues", description: "Vote on the most important issues to solve" },
+        { title: "Discuss and solve issues", description: "Work through each priority issue using IDS" },
+        { title: "Create To-Dos from solutions", description: "Assign action items with owners and due dates" },
+      ],
+    },
+    {
+      title: "Conclude (5 min)",
+      items: [
+        { title: "Recap To-Dos", description: "Review all new To-Dos created during the meeting" },
+        { title: "Cascading messages", description: "Identify any messages to communicate to the organization" },
+        { title: "Rate the meeting", description: "Each member rates the meeting 1-10" },
+      ],
+    },
+  ];
+
+  return {
+    title: "Level 10 Meeting",
+    description: "Weekly Level 10 Meeting following the EOS format. 90 minutes of focused team alignment.",
+    team_id: teamId,
+    create_public_playbook_run: false,
+    public: true,
+    checklists,
+    member_ids: memberIds,
+    invited_user_ids: memberIds,
+    invite_users_enabled: true,
+    default_owner_id: facilitatorId,
+    default_owner_enabled: true,
+    reminder_timer_default_seconds: 604800, // Weekly reminder
+  };
+}
+
+/**
+ * Update an existing Mattermost Playbook
+ */
+export async function updatePlaybook(
+  serverUrl: string,
+  token: string,
+  playbookId: string,
+  config: Partial<PlaybookConfig>
+): Promise<{ success: boolean; playbook?: MattermostPlaybookResponse; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "update_playbook",
+        serverUrl, 
+        token,
+        playbookId,
+        config 
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Get a specific playbook by ID
+ */
+export async function getPlaybook(
+  serverUrl: string,
+  token: string,
+  playbookId: string
+): Promise<{ success: boolean; playbook?: MattermostPlaybookResponse; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "get_playbook",
+        serverUrl, 
+        token,
+        playbookId
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * List all playbook runs for a team
+ */
+export async function listPlaybookRuns(
+  serverUrl: string,
+  token: string,
+  teamId: string
+): Promise<{ success: boolean; runs?: MattermostPlaybookRunResponse[]; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "list_runs",
+        serverUrl, 
+        token,
+        teamId
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Get a specific playbook run by ID
+ */
+export async function getPlaybookRun(
+  serverUrl: string,
+  token: string,
+  runId: string
+): Promise<{ success: boolean; run?: MattermostPlaybookRunResponse; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "get_run",
+        serverUrl, 
+        token,
+        runId
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Update a playbook run status
+ */
+export async function updatePlaybookRunStatus(
+  serverUrl: string,
+  token: string,
+  runId: string,
+  status: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "update_run_status",
+        serverUrl, 
+        token,
+        runId,
+        status
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Check/complete a checklist item in a run
+ */
+export async function checkPlaybookItem(
+  serverUrl: string,
+  token: string,
+  runId: string,
+  checklistIndex: number,
+  itemIndex: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await fetch("/api/mattermost/playbooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ 
+        action: "check_checklist_item",
+        serverUrl, 
+        token,
+        runId,
+        checklistIndex,
+        itemIndex
+      }),
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    };
+  }
+}
+
+/**
+ * Generate a recurring playbook configuration with status notifications
+ */
+export function generateRecurringPlaybook(
+  title: string,
+  description: string,
+  teamId: string,
+  memberIds: string[],
+  tasks: { title: string; description?: string; assigneeId?: string }[],
+  recurrence: "daily" | "weekly" | "biweekly" | "monthly",
+  broadcastChannelId?: string
+): PlaybookConfig {
+  const reminderSeconds = {
+    daily: 86400,
+    weekly: 604800,
+    biweekly: 1209600,
+    monthly: 2592000,
+  }[recurrence];
+
+  const checklist: PlaybookChecklist = {
+    title: "Recurring Tasks",
+    items: tasks.map(task => ({
+      title: task.title,
+      description: task.description,
+      assignee_id: task.assigneeId,
+    })),
+  };
+
+  const config: PlaybookConfig = {
+    title: `[${recurrence.toUpperCase()}] ${title}`,
+    description: `${description}\n\nRecurrence: ${recurrence}`,
+    team_id: teamId,
+    create_public_playbook_run: false,
+    public: true,
+    checklists: [checklist],
+    member_ids: memberIds,
+    invited_user_ids: memberIds,
+    invite_users_enabled: true,
+    default_owner_id: memberIds[0],
+    default_owner_enabled: true,
+    reminder_timer_default_seconds: reminderSeconds,
+  };
+
+  if (broadcastChannelId) {
+    config.broadcast_channel_ids = [broadcastChannelId];
+    config.announcement_channel_id = broadcastChannelId;
+    config.announcement_channel_enabled = true;
+  }
+
+  return config;
+}

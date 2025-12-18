@@ -47,14 +47,28 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug: Log Firebase status
+    console.log("Firebase db status:", db ? "initialized" : "null");
+    
     if (!db) {
+      console.error("Firebase db is null. Check NEXT_PUBLIC_FIREBASE_* environment variables.");
       return NextResponse.json(
-        { success: false, error: "Database not configured" },
+        { success: false, error: "Database not configured. Check Firebase environment variables (NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_PROJECT_ID)." },
         { status: 503 }
       );
     }
 
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+      console.log("Received body:", { ...body, apiToken: body.apiToken ? "****" : undefined });
+    } catch (parseError) {
+      console.error("JSON parse error:", parseError);
+      return NextResponse.json(
+        { success: false, error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
     const {
       name,
       apiToken,
@@ -81,21 +95,19 @@ export async function POST(request: NextRequest) {
     }
 
     const now = Timestamp.now();
-    const integration: Omit<GHLIntegrationDoc, "id"> = {
+    
+    // Build integration object, excluding undefined values (Firestore doesn't allow undefined)
+    const integration: Record<string, any> = {
       name,
       apiToken,
       locationId,
-      agencyId,
-      description,
       isActive: true,
       syncContacts,
       syncOpportunities,
       syncCalendars,
       syncPipelines,
       syncCampaigns,
-      contactMapping,
-      defaultPipelineId,
-      defaultStageId,
+      contactMapping: contactMapping || {},
       enableWebhooks,
       lastSyncStatus: "never",
       totalContactsSynced: 0,
@@ -105,6 +117,12 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       updatedAt: now,
     };
+    
+    // Only add optional fields if they have values
+    if (agencyId) integration.agencyId = agencyId;
+    if (description) integration.description = description;
+    if (defaultPipelineId) integration.defaultPipelineId = defaultPipelineId;
+    if (defaultStageId) integration.defaultStageId = defaultStageId;
 
     const docRef = await addDoc(collection(db, COLLECTIONS.GHL_INTEGRATIONS), integration);
 
@@ -120,8 +138,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Error creating GHL integration:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error stack:", errorStack);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : "Unknown error" },
+      { success: false, error: errorMessage, details: process.env.NODE_ENV === "development" ? errorStack : undefined },
       { status: 500 }
     );
   }

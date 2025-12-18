@@ -62,6 +62,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { COLLECTIONS, type StrategicPartnerDoc, type ZoomRecording } from "@/lib/schema";
+import { logActivity } from "@/lib/activity-logger";
 
 // Initial seed data for Strategic Partners
 const seedPartners: Omit<StrategicPartnerDoc, "id" | "createdAt" | "updatedAt">[] = [
@@ -210,6 +211,7 @@ export default function StrategicPartnersPage() {
       return;
     }
     try {
+      const partnerName = `${formData.firstName} ${formData.lastName}`;
       if (editingPartner) {
         // Update existing
         const docRef = doc(db, COLLECTIONS.STRATEGIC_PARTNERS, editingPartner.id);
@@ -217,12 +219,26 @@ export default function StrategicPartnersPage() {
           ...formData,
           updatedAt: Timestamp.now(),
         });
+        await logActivity({
+          type: "update",
+          entityType: "organization",
+          entityId: editingPartner.id,
+          entityName: partnerName,
+          description: `Strategic partner updated: ${partnerName}`,
+        });
       } else {
         // Add new
-        await addDoc(collection(db, COLLECTIONS.STRATEGIC_PARTNERS), {
+        const docRef = await addDoc(collection(db, COLLECTIONS.STRATEGIC_PARTNERS), {
           ...formData,
           createdAt: Timestamp.now(),
           updatedAt: Timestamp.now(),
+        });
+        await logActivity({
+          type: "create",
+          entityType: "organization",
+          entityId: docRef.id,
+          entityName: partnerName,
+          description: `Strategic partner added: ${partnerName}`,
         });
       }
       setDialogOpen(false);
@@ -235,11 +251,18 @@ export default function StrategicPartnersPage() {
   };
 
   // Delete partner
-  const handleDeletePartner = async (id: string) => {
+  const handleDeletePartner = async (id: string, partnerName: string) => {
     if (!db) return;
     if (!confirm("Are you sure you want to delete this partner?")) return;
     try {
       await deleteDoc(doc(db, COLLECTIONS.STRATEGIC_PARTNERS, id));
+      await logActivity({
+        type: "delete",
+        entityType: "organization",
+        entityId: id,
+        entityName: partnerName,
+        description: `Strategic partner removed: ${partnerName}`,
+      });
       await fetchPartners();
     } catch (error) {
       console.error("Error deleting partner:", error);
@@ -745,7 +768,7 @@ export default function StrategicPartnersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeletePartner(partner.id)}
+                          onClick={() => handleDeletePartner(partner.id, `${partner.firstName} ${partner.lastName}`)}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
@@ -828,7 +851,7 @@ export default function StrategicPartnersPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDeletePartner(partner.id)}
+                    onClick={() => handleDeletePartner(partner.id, `${partner.firstName} ${partner.lastName}`)}
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
