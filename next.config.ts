@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "strategicvalueplus.com",
       },
+      {
+        protocol: "https",
+        hostname: "images.squarespace-cdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "itmcsolutions.com",
+      },
+      {
+        protocol: "https",
+        hostname: "www.itmcsolutions.com",
+      },
     ],
   },
 
