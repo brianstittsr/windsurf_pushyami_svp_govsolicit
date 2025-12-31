@@ -71,10 +71,10 @@ export function StatsSection() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat) => (
             <div key={stat.label} className="text-center">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/20 mb-4">
-                <stat.icon className="h-6 w-6 text-primary" />
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-yellow-400/20 mb-4">
+                <stat.icon className="h-6 w-6 text-yellow-400" />
               </div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+              <div className="text-4xl md:text-5xl font-bold text-yellow-400 mb-2">
                 <AnimatedCounter value={stat.value} suffix={stat.suffix} />
               </div>
               <div className="font-semibold mb-1">{stat.label}</div>

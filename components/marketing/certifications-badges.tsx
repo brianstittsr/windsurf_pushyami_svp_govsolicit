@@ -45,11 +45,11 @@ const naicsCodes = [
 
 export function CertificationsBadges() {
   return (
-    <section className="py-16 bg-gradient-to-r from-purple-900 to-purple-800 text-white">
+    <section className="py-16 bg-gradient-to-r from-purple-950 via-purple-900/80 to-purple-950 text-white">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold mb-4">Certifications & Contract Vehicles</h2>
-          <p className="text-gray-400">
+          <p className="text-gray-300">
             Proudly serving federal agencies with certified small business status
           </p>
         </div>
@@ -59,13 +59,13 @@ export function CertificationsBadges() {
           {certifications.map((cert) => (
             <div
               key={cert.title}
-              className="flex flex-col items-center text-center p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              className="flex flex-col items-center text-center p-4 rounded-lg bg-white/10 hover:bg-white/15 transition-colors border border-white/10"
             >
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-3">
-                <cert.icon className="h-6 w-6 text-primary" />
+              <div className="w-12 h-12 rounded-full bg-yellow-400/20 flex items-center justify-center mb-3">
+                <cert.icon className="h-6 w-6 text-yellow-400" />
               </div>
-              <h3 className="font-semibold text-sm">{cert.title}</h3>
-              <p className="text-xs text-gray-400 mt-1">{cert.description}</p>
+              <h3 className="font-semibold text-sm text-white">{cert.title}</h3>
+              <p className="text-xs text-gray-300 mt-1">{cert.description}</p>
             </div>
           ))}
         </div>
@@ -73,13 +73,13 @@ export function CertificationsBadges() {
         {/* Contract Information */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Contract Vehicles */}
-          <div className="bg-white/5 rounded-lg p-6">
-            <h3 className="font-semibold mb-4 text-primary">Contract Vehicles</h3>
+          <div className="bg-white/10 rounded-lg p-6 border border-white/10">
+            <h3 className="font-semibold mb-4 text-yellow-400">Contract Vehicles</h3>
             <div className="space-y-3">
               {contracts.map((contract) => (
                 <div key={contract.label} className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">{contract.label}</span>
-                  <Badge variant="outline" className="font-mono text-xs">
+                  <span className="text-gray-200 text-sm">{contract.label}</span>
+                  <Badge variant="outline" className="font-mono text-xs text-yellow-400 border-yellow-400/50">
                     {contract.value}
                   </Badge>
                 </div>
@@ -88,13 +88,13 @@ export function CertificationsBadges() {
           </div>
 
           {/* NAICS Codes */}
-          <div className="bg-white/5 rounded-lg p-6">
-            <h3 className="font-semibold mb-4 text-primary">NAICS Codes</h3>
+          <div className="bg-white/10 rounded-lg p-6 border border-white/10">
+            <h3 className="font-semibold mb-4 text-yellow-400">NAICS Codes</h3>
             <div className="grid grid-cols-2 gap-2">
               {naicsCodes.map((naics) => (
                 <div key={naics.code} className="text-sm">
-                  <span className="font-mono text-primary">{naics.code}</span>
-                  <span className="text-gray-400 text-xs block">{naics.description}</span>
+                  <span className="font-mono text-yellow-400">{naics.code}</span>
+                  <span className="text-gray-200 text-xs block">{naics.description}</span>
                 </div>
               ))}
             </div>

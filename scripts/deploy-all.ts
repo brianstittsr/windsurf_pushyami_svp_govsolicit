@@ -12,6 +12,27 @@
 import { initializeApp, cert, getApps } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env.local
+dotenv.config({ path: '.env.local' });
+
+// Check for required environment variables
+const requiredEnvVars = ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'];
+const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+
+if (missingVars.length > 0) {
+  console.error('\n❌ Missing required Firebase Admin credentials in .env.local:\n');
+  missingVars.forEach(v => console.error(`   - ${v}`));
+  console.error('\n📋 To fix this:');
+  console.error('   1. Go to Firebase Console → Project Settings → Service Accounts');
+  console.error('   2. Click "Generate new private key"');
+  console.error('   3. Add these to your .env.local file:\n');
+  console.error('   FIREBASE_PROJECT_ID=your-project-id');
+  console.error('   FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com');
+  console.error('   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"\n');
+  process.exit(1);
+}
 
 // Initialize Firebase Admin (only if not already initialized)
 if (!getApps().length) {

@@ -114,14 +114,14 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
           {/* Slide Content with Fade Animation */}
           <div key={currentSlide.id} className="animate-in fade-in duration-500">
             {/* Badge */}
-            <Badge variant="outline" className="mb-6 border-primary/50 text-primary">
+            <Badge variant="outline" className="mb-6 border-yellow-400/50 text-yellow-400 bg-yellow-400/10">
               {currentSlide.badge}
             </Badge>
 
             {/* Headline */}
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               {currentSlide.headline}{" "}
-              <span className="text-primary">{currentSlide.highlightedText}</span>
+              <span className="text-yellow-400">{currentSlide.highlightedText}</span>
             </h1>
 
             {/* Subheadline */}
@@ -133,7 +133,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
             <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
               {currentSlide.benefits.map((benefit) => (
                 <div key={benefit} className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <CheckCircle className="h-5 w-5 text-yellow-400" />
                   <span>{benefit}</span>
                 </div>
               ))}
@@ -171,7 +171,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
                     className={cn(
                       "w-3 h-3 rounded-full transition-all duration-300",
                       index === currentIndex
-                        ? "bg-primary w-8"
+                        ? "bg-yellow-400 w-8"
                         : "bg-white/30 hover:bg-white/50"
                     )}
                     aria-label={`Go to slide ${index + 1}`}
