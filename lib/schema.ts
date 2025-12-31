@@ -568,6 +568,62 @@ export interface StrategicPartnerDoc {
   updatedAt: Timestamp;
 }
 
+/** Role-based permissions for team members */
+export interface TeamMemberPermissions {
+  // Feature visibility control (SuperAdmin only)
+  canHideShowFeatures: boolean;
+  canManagePlatformSettings: boolean;
+  // User management
+  canAddUsers: boolean;
+  canEditUsers: boolean;
+  canDeleteUsers: boolean;
+  // Data access
+  canViewAllData: boolean;
+  canExportData: boolean;
+  canDeleteData: boolean;
+  // Job management
+  canManageJobs: boolean;
+  canViewApplications: boolean;
+  canManageApplications: boolean;
+  // Content management
+  canManageContent: boolean;
+  canPublishContent: boolean;
+  // System
+  canAccessAdminPortal: boolean;
+  canManageIntegrations: boolean;
+  canViewAuditLogs: boolean;
+}
+
+/** Feature access flags for team members */
+export interface TeamMemberFeatureAccess {
+  commandCenter: boolean;
+  opportunities: boolean;
+  projects: boolean;
+  affiliates: boolean;
+  customers: boolean;
+  govSolicitations: boolean;
+  fpdsSearch: boolean;
+  apolloSearch: boolean;
+  supplierSearch: boolean;
+  documents: boolean;
+  calendar: boolean;
+  availability: boolean;
+  meetings: boolean;
+  rocks: boolean;
+  networking: boolean;
+  deals: boolean;
+  linkedinContent: boolean;
+  eos2Dashboard: boolean;
+  docuseal: boolean;
+  aiWorkforce: boolean;
+  proposalCreator: boolean;
+  goHighLevel: boolean;
+  bugTracker: boolean;
+  xprotegeTools: boolean;
+  careers: boolean;
+  adminPanel: boolean;
+}
+
 /** Team Member document in Firestore */
 export interface TeamMemberDoc {
   id: string;
@@ -587,6 +643,10 @@ export interface TeamMemberDoc {
   website?: string;
   role: "superadmin" | "admin" | "team" | "affiliate" | "consultant" | "viewer";
   status: "active" | "inactive" | "pending";
+  // Role-based permissions
+  permissions?: TeamMemberPermissions;
+  // Feature access control
+  featureAccess?: TeamMemberFeatureAccess;
   // Leadership role flags for About/Leadership pages
   isCEO?: boolean;
   isCOO?: boolean;
@@ -769,6 +829,115 @@ export interface MarketingPageDoc {
   primaryCta?: MarketingCta;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// ============================================================================
+// Job Listings & Applications
+// ============================================================================
+
+/** Job Listing document in Firestore */
+export interface JobListingDoc {
+  id: string;
+  title: string;
+  department: string;
+  location: string;
+  type: "full-time" | "part-time" | "contract" | "remote";
+  experience: string;
+  salary?: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  preferredQualifications?: string[];
+  benefits?: string[];
+  status: "active" | "paused" | "closed";
+  postedDate: Timestamp;
+  closingDate?: Timestamp;
+  createdBy?: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** Parsed resume data from AI analysis */
+export interface ResumeParsedData {
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  summary?: string;
+  skills: string[];
+  experience: Array<{
+    company: string;
+    title: string;
+    startDate?: string;
+    endDate?: string;
+    current?: boolean;
+    description?: string;
+    highlights?: string[];
+  }>;
+  education: Array<{
+    institution: string;
+    degree: string;
+    field?: string;
+    graduationDate?: string;
+    gpa?: string;
+  }>;
+  certifications?: string[];
+  totalYearsExperience?: number;
+}
+
+/** AI Analysis result for job application */
+export interface AIAnalysisResult {
+  overallScore: number;
+  matchPercentage: number;
+  strengths: string[];
+  gaps: string[];
+  recommendation: "strong_match" | "good_match" | "potential_match" | "weak_match";
+  skillsMatch: {
+    matched: string[];
+    missing: string[];
+    additional: string[];
+  };
+  experienceMatch: {
+    yearsRequired: string;
+    yearsCandidate: number;
+    meetsRequirement: boolean;
+  };
+  summary: string;
+}
+
+/** Job Application document in Firestore */
+export interface JobApplicationDoc {
+  id: string;
+  jobId: string;
+  jobTitle: string;
+  // Applicant info
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  coverLetter?: string;
+  // Resume
+  resumeUrl: string;
+  resumeFileName: string;
+  resumeStoragePath?: string;
+  // AI Analysis
+  resumeParsedData?: ResumeParsedData;
+  aiScore?: number;
+  aiAnalysis?: AIAnalysisResult;
+  // Status tracking
+  status: "new" | "reviewing" | "shortlisted" | "interviewed" | "offered" | "hired" | "rejected";
+  notes?: string;
+  // Timestamps
+  appliedAt: Timestamp;
+  updatedAt: Timestamp;
+  reviewedBy?: string;
+  reviewedAt?: Timestamp;
 }
 
 // ============================================================================
@@ -1504,6 +1673,9 @@ export const COLLECTIONS = {
   MARKETING_PAGES: "marketingPages",
   // Government Solicitations
   GOVERNMENT_SOLICITATIONS: "governmentSolicitations",
+  // Job Listings & Applications
+  JOB_LISTINGS: "jobListings",
+  JOB_APPLICATIONS: "jobApplications",
 } as const;
 
 // ============================================================================
@@ -1560,6 +1732,10 @@ export const marketingPagesCollection = () => getCollection<MarketingPageDoc>(CO
 // Government Solicitations collection reference
 export const governmentSolicitationsCollection = () =>
   getCollection<GovernmentSolicitationDoc>(COLLECTIONS.GOVERNMENT_SOLICITATIONS);
+
+// Job Listings & Applications collection references
+export const jobListingsCollection = () => getCollection<JobListingDoc>(COLLECTIONS.JOB_LISTINGS);
+export const jobApplicationsCollection = () => getCollection<JobApplicationDoc>(COLLECTIONS.JOB_APPLICATIONS);
 
 // Traction/EOS collection references
 export const tractionRocksCollection = () => getCollection<TractionRockDoc>(COLLECTIONS.TRACTION_ROCKS);
