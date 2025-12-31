@@ -217,12 +217,31 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
           let teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
           
           if (!teamMember && firebaseUser.email) {
-            // Try to find and link by email
+            // Try to find and link by email using client-side
             teamMember = await findAndLinkTeamMember(firebaseUser.email, firebaseUser.uid);
           }
           
+          // If still no team member, try server-side auto-link API (bypasses Firestore rules)
+          if (!teamMember && firebaseUser.email) {
+            try {
+              const response = await fetch("/api/auto-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: firebaseUser.email, uid: firebaseUser.uid }),
+              });
+              const result = await response.json();
+              if (result.linked && result.teamMember) {
+                console.log("Auto-linked via API:", result.teamMember);
+                // Re-fetch the team member after linking
+                teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
+              }
+            } catch (apiError) {
+              console.error("Auto-link API error:", apiError);
+            }
+          }
+          
           if (teamMember) {
-            console.log("Linked Team Member found:", teamMember.id, teamMember.firstName, teamMember.lastName);
+            console.log("Linked Team Member found:", teamMember.id, teamMember.firstName, teamMember.lastName, "Role:", teamMember.role);
             setLinkedTeamMember(teamMember);
             
             // Map Team Member data to profile
