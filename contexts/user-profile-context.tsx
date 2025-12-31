@@ -346,8 +346,13 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         setIsAuthenticated(false);
         setLinkedTeamMember(null);
         setProfile(defaultProfile);
-        // Redirect to sign-in page
-        window.location.href = "/sign-in";
+        setViewAsRole(null);
+        // Clear any session storage
+        if (typeof window !== "undefined") {
+          sessionStorage.clear();
+        }
+        // Redirect to home page
+        window.location.href = "/";
       } catch (error) {
         console.error("Error signing out:", error);
       }
