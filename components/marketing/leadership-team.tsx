@@ -27,30 +27,30 @@ const fallbackTeam: LeadershipMember[] = [
     id: "1",
     name: "Sheyla Blackman",
     role: "Chief Executive Officer",
-    bio: "For more than 35 years, Sheyla has provided principled partnership to hundreds of clients at HUD, DHS, DOD, Lockheed Martin, Disney, and beyond. Trusted to manage budgets of more than $3B and years-long engagements of more than $100M, she's a well-known expert in program management, a Certified Scrum Master, and Certified TBM Executive.",
+    bio: "For more than 35 years, Sheyla has provided principled partnership to hundreds of clients and partners at HUD, DHS, DOD, Lockheed Martin, Disney, and beyond. Trusted to manage budgets of more than $3B and years-long engagements of more than $100M, she's become a well-known expert in program and project management, a Certified Scrum Master, and a Certified Technology Business Management Executive since beginning her career in 1986. She holds a Bachelor's Degree in Computer Science from NC A&T State University.",
     avatar: "/team/sheyla-blackman.jpg",
     linkedIn: "https://www.linkedin.com/in/sheylablackman/",
-    email: "sblackman@itmcsolutions.com",
+    email: "contact@itmcsolutions.com",
     leadershipRole: "CEO",
   },
   {
     id: "2",
     name: "Tiffany Byers",
     role: "Chief Operating Officer",
-    bio: "Tiffany leverages her diverse background in engineering and project management to deliver innovative solutions to federal CIO organizations. With a B.S. in Electrical Engineering and M.S. in Systems Engineering, she excels at navigating difficult situations and driving operational excellence from strategy to execution.",
+    bio: "Tiffany leverages her diverse background in engineering and project management to deliver innovative solutions to leaders at federal CIO organizations like HUD, DHS, and beyond. She brings a B.S. in Electrical Engineering Technology from Old Dominion University, an M.S. in Systems Engineering from George Washington University, and a Six Sigma certification. Her career journey has taken her from process engineering at Raytheon to managing a $2.8B contract as Deputy Program Manager at Newport News Shipbuilding.",
     avatar: "/team/tiffany-byers.jpg",
     linkedIn: "https://www.linkedin.com/in/tiffany-byers-8688a842/",
-    email: "tbyers@itmcsolutions.com",
+    email: "contact@itmcsolutions.com",
     leadershipRole: "COO",
   },
   {
     id: "3",
     name: "Stacye Williams",
     role: "HR Manager",
-    bio: "A resilient problem-solver with nearly 30 years of experience in administrative training, organization, and compliance. Stacye has assisted hundreds of clients across various professional fields and brings a unique blend of practical skills and professional expertise.",
+    bio: "A resilient problem-solver, Stacye Williams brings a wealth of organizational expertise to ITMC. With nearly 30 years of experience in administrative training, organization, and compliance, Stacye has assisted hundreds of clients across various professional fields. Having run multiple businesses, led a Boy Scout troop, and served in church leadership, Stacye brings a unique blend of practical skills and professional expertise to her work.",
     avatar: "/team/stacye-williams.jpg",
     linkedIn: "https://www.linkedin.com/in/stacye-williams-0172542a4/",
-    email: "swilliams@itmcsolutions.com",
+    email: "contact@itmcsolutions.com",
     leadershipRole: "CRO",
   },
 ];
@@ -138,7 +138,7 @@ export function LeadershipTeam() {
   }
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
       {team.map((member) => (
         <Card key={member.id} className="overflow-hidden">
           <CardContent className="p-6 text-center">
