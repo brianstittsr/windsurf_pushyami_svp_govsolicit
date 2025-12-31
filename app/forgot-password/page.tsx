@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, ArrowLeft, CheckCircle, Mail } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle, Mail, AlertCircle } from "lucide-react";
+import { auth } from "@/lib/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -22,15 +23,34 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In production, this would call your password reset API
-      if (email) {
-        setIsSubmitted(true);
+      if (!email) {
+        setError("Please enter your email address");
+        setIsLoading(false);
+        return;
       }
-    } catch (err) {
-      setError("An error occurred. Please try again.");
+
+      if (!auth) {
+        setError("Authentication service not available. Please try again later.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Send password reset email via Firebase
+      await sendPasswordResetEmail(auth, email);
+      setIsSubmitted(true);
+    } catch (err: any) {
+      console.error("Password reset error:", err);
+      
+      // Handle specific Firebase errors
+      if (err.code === "auth/user-not-found") {
+        setError("No account found with this email address.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (err.code === "auth/too-many-requests") {
+        setError("Too many requests. Please try again later.");
+      } else {
+        setError("An error occurred. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -45,20 +65,9 @@ export default function ForgotPasswordPage() {
         {/* Logo and Branding */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex flex-col items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#C8A951] to-[#a08840] rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
-              <Image
-                src="/VPlus_logo.webp"
-                alt="Strategic Value+ Logo"
-                width={80}
-                height={80}
-                className="relative h-20 w-auto"
-                priority
-              />
-            </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-foreground">Strategic Value+</h1>
-              <p className="text-sm text-muted-foreground">Transforming U.S. Manufacturing</p>
+              <h1 className="text-3xl font-bold text-primary">ITMC Solutions</h1>
+              <p className="text-sm text-muted-foreground">IT & Management Consulting</p>
             </div>
           </Link>
         </div>
@@ -77,6 +86,7 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
                     <Alert variant="destructive" className="py-2">
+                      <AlertCircle className="h-4 w-4" />
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
@@ -97,7 +107,7 @@ export default function ForgotPasswordPage() {
 
                   <Button 
                     type="submit" 
-                    className="w-full h-11 bg-gradient-to-r from-[#C8A951] to-[#a08840] hover:from-[#b89841] hover:to-[#907830] text-white font-semibold"
+                    className="w-full h-11"
                     disabled={isLoading}
                   >
                     {isLoading ? (
