@@ -5,6 +5,7 @@ import { StatsSection } from "@/components/marketing/stats-section";
 import { HowItWorks } from "@/components/marketing/how-it-works";
 import { CertificationsBadges } from "@/components/marketing/certifications-badges";
 import { Testimonials } from "@/components/marketing/testimonials";
+import { CareersSection } from "@/components/marketing/careers-section";
 import { CTASection } from "@/components/marketing/cta-section";
 
 export default function HomePage() {
@@ -17,6 +18,7 @@ export default function HomePage() {
       <HowItWorks />
       <CertificationsBadges />
       <Testimonials />
+      <CareersSection />
       <CTASection />
     </>
   );

@@ -30,44 +30,44 @@ import { cn } from "@/lib/utils";
 
 const services = [
   {
-    title: "Strategic Planning",
-    href: "/company",
-    description: "CPIC and IT portfolio management for federal agencies",
-    icon: Wrench,
-    items: [
-      { title: "CPIC/Portfolio Management", href: "/company" },
-      { title: "Technology Business Management", href: "/company" },
-      { title: "Cost Optimization", href: "/company" },
-    ],
-  },
-  {
-    title: "Data & Architecture",
-    href: "/company",
-    description: "Analytics and solution architecture services",
-    icon: Cpu,
-    items: [
-      { title: "Data Analytics & Reporting", href: "/company" },
-      { title: "Solution Architecture", href: "/company" },
-      { title: "Digital Transformation", href: "/company" },
-    ],
-  },
-  {
-    title: "Program Management",
-    href: "/company",
-    description: "Expert program and project management",
+    title: "AI & Cloud",
+    href: "/services/artificial-intelligence",
+    description: "Artificial Intelligence and Cloud Services",
     icon: Brain,
     items: [
-      { title: "Program/Project Management", href: "/company" },
-      { title: "Intelligent Automation", href: "/company" },
-      { title: "Low-Code Development", href: "/company" },
+      { title: "Artificial Intelligence", href: "/services/artificial-intelligence" },
+      { title: "Cloud Services", href: "/services/cloud-services" },
+      { title: "Cybersecurity", href: "/services/cybersecurity" },
+    ],
+  },
+  {
+    title: "Data & Modernization",
+    href: "/services/data-analytics",
+    description: "Analytics and digital transformation",
+    icon: Cpu,
+    items: [
+      { title: "Data Analytics & Engineering", href: "/services/data-analytics" },
+      { title: "Digital Modernization", href: "/services/digital-modernization" },
+      { title: "Enterprise IT", href: "/services/enterprise-it" },
+    ],
+  },
+  {
+    title: "ERP & Training",
+    href: "/services/erp",
+    description: "Enterprise solutions and professional development",
+    icon: Wrench,
+    items: [
+      { title: "ERP Implementations", href: "/services/erp" },
+      { title: "SAP & Dynamics 365", href: "/services/erp" },
+      { title: "Training Services", href: "/services/training" },
     ],
   },
 ];
 
 const resources = [
+  { title: "IT Calculator", href: "/calculator", icon: BarChart3 },
   { title: "Case Studies", href: "/case-studies", icon: FileCheck },
-  { title: "Resources", href: "/resources", icon: BarChart3 },
-  { title: "Events", href: "/events", icon: Globe },
+  { title: "Resources", href: "/resources", icon: Globe },
   { title: "FAQ", href: "/faq", icon: Zap },
 ];
 
@@ -86,8 +86,8 @@ export function Navbar() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none text-primary">ITMC Solutions</span>
-            <span className="text-xs text-muted-foreground">IT & Management Consulting</span>
+            <span className="text-lg font-bold leading-none text-primary">XProtege</span>
+            <span className="text-xs text-muted-foreground">Unfold the Power of Excellence</span>
           </div>
         </Link>
 

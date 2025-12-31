@@ -8,51 +8,51 @@ import { ArrowRight, Wrench, Cpu, Brain, CheckCircle } from "lucide-react";
 
 const services = [
   {
-    title: "Strategic Planning & CPIC",
-    tagline: "Navigate Change with Confidence",
+    title: "AI & Cloud Services",
+    tagline: "Intelligent Solutions for the Future",
     description:
-      "Our seasoned experts help Senior Executives identify improvement areas, manage risks, and optimize IT services to meet new legislative and organizational demands.",
-    icon: Wrench,
+      "XProtege leverages AI to drive smart automation and enhance decision-making. Experience seamless cloud transition with GovCloud IL6 support.",
+    icon: Brain,
     color: "text-primary",
     bgColor: "bg-primary/10",
     href: "/company",
     features: [
-      "IT Portfolio Management",
-      "Technology Business Management (TBM)",
-      "Cost optimization strategies",
-      "Risk management and compliance",
+      "Generative AI & Machine Learning",
+      "Cloud Migration & Security",
+      "GovCloud IL6 Environments",
+      "Robotic Process Automation",
     ],
   },
   {
-    title: "Data Analytics & Architecture",
-    tagline: "Transform Data into Insights",
+    title: "Cybersecurity & Data",
+    tagline: "Protect and Analyze",
     description:
-      "Turn complex information into clear, actionable recommendations. Future-proof your technology infrastructure with our enterprise architecture expertise.",
+      "Cutting-edge security solutions with DISA STIG compliance. Transform raw data into actionable insights with our analytics capabilities.",
     icon: Cpu,
     color: "text-secondary",
     bgColor: "bg-secondary/10",
     href: "/company",
     features: [
-      "Data analytics and reporting",
-      "Solution and data architecture",
-      "Business outcome delivery",
-      "Scalable infrastructure design",
+      "Cybersecurity & Compliance",
+      "Data Analytics & Engineering",
+      "Executive Dashboards & KPIs",
+      "DISA STIG Automation",
     ],
   },
   {
-    title: "Program Management",
-    tagline: "From Strategy to Execution",
+    title: "Digital & Enterprise",
+    tagline: "Modernize and Transform",
     description:
-      "From $100M+ engagements to $3B+ budgets, we've mastered complex project delivery. Our team brings precision and care to every project.",
-    icon: Brain,
+      "Transform legacy systems into agile solutions. Comprehensive ERP implementations with SAP and Microsoft Dynamics 365.",
+    icon: Wrench,
     color: "text-accent",
     bgColor: "bg-accent/10",
     href: "/company",
     features: [
-      "Program and project management",
-      "Intelligent automation and low-code",
-      "Digital transformation",
-      "Operational excellence",
+      "Digital Modernization",
+      "Enterprise IT Services",
+      "ERP Implementations",
+      "Training & Development",
     ],
   },
 ];
@@ -64,15 +64,15 @@ export function ServicesOverview() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <Badge variant="outline" className="mb-4">
-            Comprehensive IT & Management Consulting
+            Unfold the Power of Excellence
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             What We Do
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            As a veteran-, woman-, and minority-owned small business, we specialize in CPIC/portfolio management, 
-            Business and Solution architecture, Technology Business Management (TBM), Data Analytics, and a wide 
-            range of program/project management capabilities.
+            As a woman- and minority-owned technology company, we specialize in AI, Cloud Services, 
+            Cybersecurity, Data Analytics, Digital Modernization, Enterprise IT, ERP Implementations, 
+            and comprehensive Training services.
           </p>
         </div>
 
@@ -114,11 +114,11 @@ export function ServicesOverview() {
         {/* CTA */}
         <div className="mt-16 text-center">
           <p className="text-muted-foreground mb-4">
-            Ready for a team you can count on?
+            Ready to transform your digital journey?
           </p>
           <Button size="lg" asChild>
             <Link href="/contact">
-              Connect with Us
+              Contact Us
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

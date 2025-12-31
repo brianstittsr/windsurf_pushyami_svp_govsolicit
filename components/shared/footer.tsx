@@ -5,28 +5,28 @@ import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
   services: [
-    { title: "Strategic Planning", href: "/company" },
-    { title: "CPIC/Portfolio Management", href: "/company" },
-    { title: "Technology Business Management", href: "/company" },
-    { title: "Data Analytics", href: "/company" },
-    { title: "Solution Architecture", href: "/company" },
-    { title: "Program Management", href: "/company" },
+    { title: "Artificial Intelligence", href: "/services/artificial-intelligence" },
+    { title: "Cloud Services", href: "/services/cloud-services" },
+    { title: "Cybersecurity", href: "/services/cybersecurity" },
+    { title: "Data Analytics", href: "/services/data-analytics" },
+    { title: "Digital Modernization", href: "/services/digital-modernization" },
+    { title: "Enterprise IT", href: "/services/enterprise-it" },
   ],
   company: [
     { title: "About Us", href: "/about" },
-    { title: "Leadership Team", href: "/company" },
+    { title: "Leadership Team", href: "/leadership" },
     { title: "Our Approach", href: "/about" },
-    { title: "Certifications", href: "/about" },
-    { title: "Careers", href: "/careers" },
+    { title: "Case Studies", href: "/case-studies" },
+    { title: "Careers", href: "/contact" },
     { title: "Contact", href: "/contact" },
   ],
   resources: [
-    { title: "Blog", href: "/resources/blog" },
-    { title: "Guides & Playbooks", href: "/resources/guides" },
-    { title: "Webinars", href: "/resources/webinars" },
-    { title: "Events", href: "/events" },
+    { title: "IT Calculator", href: "/calculator" },
+    { title: "Resources", href: "/resources" },
+    { title: "Case Studies", href: "/case-studies" },
     { title: "FAQ", href: "/faq" },
-    { title: "News", href: "/news" },
+    { title: "Training", href: "/services/training" },
+    { title: "ERP Solutions", href: "/services/erp" },
   ],
   legal: [
     { title: "Privacy Policy", href: "/privacy" },
@@ -38,28 +38,27 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-r from-purple-950 to-purple-900 text-white">
+    <footer className="bg-gradient-to-r from-slate-100 to-slate-50 text-slate-800 border-t border-slate-200">
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1 space-y-4">
             <Link href="/" className="flex items-center gap-2">
               <div className="flex flex-col">
-                <span className="text-lg font-bold leading-none">ITMC Solutions</span>
-                <span className="text-xs text-gray-400">IT & Management Consulting</span>
+                <span className="text-lg font-bold leading-none">XProtege</span>
+                <span className="text-xs text-slate-500">Unfold the Power of Excellence</span>
               </div>
             </Link>
-            <p className="text-sm text-gray-400 max-w-xs">
-              Trusted by Federal CIO organizations for decades. We're your partners from strategy to execution.
+            <p className="text-sm text-slate-600 max-w-xs">
+              Where innovation meets execution. We transform your ideas into impactful, market-ready solutions.
             </p>
-            <div className="text-xs text-gray-500 space-y-1">
-              <p>SBA 8(a) Certified</p>
-              <p>Veteran, Woman & Minority-Owned</p>
-              <p>GSA MAS: 47QTCA23D004X</p>
-              <p>SWAM: #69476</p>
+            <div className="text-xs text-slate-500 space-y-1">
+              <p>Woman & Minority-Owned</p>
+              <p>State of Maryland Contractor</p>
+              <p>GovCloud IL6 Certified</p>
             </div>
             <div className="flex gap-4">
-              <Link href="https://www.linkedin.com/company/itmc-solutions" target="_blank" className="text-gray-400 hover:text-primary transition-colors">
+              <Link href="https://www.linkedin.com/company/xprotege-institute-of-management-and-technology/" target="_blank" className="text-slate-500 hover:text-sky-500 transition-colors">
                 <Linkedin className="h-5 w-5" />
               </Link>
             </div>
@@ -67,11 +66,11 @@ export function Footer() {
 
           {/* Services */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-accent">Services</h3>
+            <h3 className="font-semibold text-sky-600">Services</h3>
             <ul className="space-y-2">
               {footerLinks.services.map((link) => (
                 <li key={link.title}>
-                  <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-600 hover:text-sky-500 transition-colors">
                     {link.title}
                   </Link>
                 </li>
@@ -81,11 +80,11 @@ export function Footer() {
 
           {/* Company */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-accent">Company</h3>
+            <h3 className="font-semibold text-sky-600">Company</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.title}>
-                  <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-600 hover:text-sky-500 transition-colors">
                     {link.title}
                   </Link>
                 </li>
@@ -95,11 +94,11 @@ export function Footer() {
 
           {/* Resources */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-accent">Resources</h3>
+            <h3 className="font-semibold text-sky-600">Resources</h3>
             <ul className="space-y-2">
               {footerLinks.resources.map((link) => (
                 <li key={link.title}>
-                  <Link href={link.href} className="text-sm text-gray-400 hover:text-white transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-600 hover:text-sky-500 transition-colors">
                     {link.title}
                   </Link>
                 </li>
@@ -109,41 +108,41 @@ export function Footer() {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-accent">Contact</h3>
+            <h3 className="font-semibold text-sky-600">Contact</h3>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-gray-400">
+              <li className="flex items-start gap-2 text-sm text-slate-600">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>100 7th St., Suite 104<br/>Portsmouth, VA 23704</span>
+                <span>Ellicott City, MD 21042 USA</span>
               </li>
               <li>
-                <Link href="mailto:contact@itmcsolutions.com" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="mailto:contact@xprotege.com" className="flex items-center gap-2 text-sm text-slate-600 hover:text-sky-500 transition-colors">
                   <Mail className="h-4 w-4" />
-                  contact@itmcsolutions.com
+                  contact@xprotege.com
                 </Link>
               </li>
               <li>
-                <Link href="tel:+1-757-284-3986" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="tel:+1-510-435-7930" className="flex items-center gap-2 text-sm text-slate-600 hover:text-sky-500 transition-colors">
                   <Phone className="h-4 w-4" />
-                  (757) 284-3986
+                  +1-510-435-7930
                 </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        <Separator className="my-8 bg-gray-800" />
+        <Separator className="my-8 bg-slate-200" />
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-400">
-            © 2010-{new Date().getFullYear()} ITMC Solutions, LLC. All rights reserved.
+          <p className="text-sm text-slate-500">
+            © {new Date().getFullYear()} XProtege. All rights reserved.
           </p>
           <div className="flex gap-6">
             {footerLinks.legal.map((link) => (
               <Link
                 key={link.title}
                 href={link.href}
-                className="text-sm text-gray-400 hover:text-white transition-colors"
+                className="text-sm text-slate-500 hover:text-sky-500 transition-colors"
               >
                 {link.title}
               </Link>

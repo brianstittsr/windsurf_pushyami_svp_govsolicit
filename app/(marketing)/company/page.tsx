@@ -18,68 +18,68 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Meet Our Team | ITMC Solutions Leadership",
+  title: "Meet Our Team | XProtege Leadership",
   description:
-    "Meet the ITMC Solutions team - a mother-daughter led team of expert consultants with decades of experience serving federal CIO organizations including HUD, DHS, and DOD.",
+    "Meet the XProtege team - innovative technology professionals delivering AI, cloud services, cybersecurity, and digital modernization solutions to federal agencies and commercial clients.",
 };
 
 const expertiseAreas = [
   {
-    icon: Target,
-    title: "Strategic Planning",
+    icon: Bot,
+    title: "Artificial Intelligence",
     description:
-      "Our seasoned experts help Senior Executives identify improvement areas, manage risks, and optimize IT services to meet new legislative and organizational demands with confidence.",
-  },
-  {
-    icon: DollarSign,
-    title: "IT Portfolio Management & TBM",
-    description:
-      "Drawing on decades of experience, we help CIOs and CFOs minimize risks and successfully implement IT initiatives. We help you understand where your technology dollars are going and how to make every investment count.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Data Analytics & Reporting",
-    description:
-      "Transform raw data into powerful insights with our veteran team. We turn complex information into clear, actionable recommendations that support your strategic goals.",
+      "XProtege leverages AI to drive smart automation, enhance decision-making, and optimize business processes with Generative AI, MLOps, NLP, and Robotic Process Automation.",
   },
   {
     icon: Globe,
-    title: "Solution & Data Architecture",
+    title: "Cloud Services",
     description:
-      "Future-proof your technology infrastructure with our enterprise architecture expertise. We focus on delivering tangible business outcomes, reducing redundancy, and accelerating value.",
+      "Experience seamless cloud transition with ATO support for GovCloud environments up to IL6, cloud migration, security, enterprise architecture, and governance.",
   },
   {
-    icon: Bot,
-    title: "Intelligent Automation & Low-Code",
+    icon: Target,
+    title: "Cybersecurity",
     description:
-      "Quality software is the backbone of efficient operations. Our comprehensive approach accelerates delivery and reduces operational burden through smart automation.",
+      "Cutting-edge security solutions to protect businesses from cyber threats, ensuring data integrity and compliance with DISA STIG practices and industry certifications.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Data Analytics & Engineering",
+    description:
+      "Unleash insights with KPIs, executive dashboards, and dynamic reporting tools using Python, PySpark, R, PowerBI, and cloud computing ETL tools.",
+  },
+  {
+    icon: DollarSign,
+    title: "ERP Implementations",
+    description:
+      "Robust ERP implementation services including SAP and Microsoft Dynamics 365 & Power Platform with strategic consulting, system integration, and managed services.",
   },
   {
     icon: Award,
-    title: "Program / Project Management",
+    title: "Enterprise IT & Training",
     description:
-      "From $100M+ engagements to $3B+ budgets, we've mastered the art of complex project delivery. Our mother-daughter led team brings a personal touch to every project.",
+      "Comprehensive IT sustainment, RMF support, accreditation assistance, and professional training programs in Project Management, IT, and Business Development.",
   },
 ];
 
 const values = [
   {
     icon: Users,
-    title: "35+ Years of Federal Experience",
+    title: "Superior Agile Methodology",
     description:
-      "Our team has provided principled partnership to hundreds of clients at HUD, DHS, DOD, Lockheed Martin, Disney, and beyond. We've managed $3B+ budgets and years-long engagements exceeding $100M.",
+      "XProtege's use of agile methodology delivers efficient and reliable capabilities, providing highest ROI through a highly flexible, adaptive, and interactive process with experienced consultants.",
   },
   {
     icon: Handshake,
-    title: "Reachable, Reliable Partners",
+    title: "Extraordinary Customer Service",
     description:
-      "We're well-known for being accessible and dependable. Our mother-daughter led team brings a personal touch to every project, ensuring your objectives are met with precision and care—every step of the way.",
+      "Project progress is transparent and measurable, making it a key factor in client satisfaction. We empower our clients to remain competitive and embrace a rapid pace of digital disruption.",
   },
   {
     icon: Target,
-    title: "Strategy to Execution",
+    title: "Modern Innovative Solutions",
     description:
-      "We don't just plan—we deliver. From strategic planning through implementation, we guide federal IT leaders to optimize processes, ensure compliance, and consistently reach targets.",
+      "Maximize your service impact by transitioning to modern innovative solutions. We design tailored solutions that meet your mission requirements and eliminate project bottlenecks.",
   },
 ];
 
@@ -94,16 +94,16 @@ export default function CompanyPage() {
               Our Leadership Team
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              A Mother-Daughter Led Team{" "}
-              <span className="text-primary">of Expert Consultants</span>
+              Innovation Meets{" "}
+              <span className="text-primary">Excellence</span>
             </h1>
             <p className="mt-6 text-xl text-gray-300 font-medium">
-              Providing 70+ years of combined experience for Federal CIO organizations
+              Technology agnostic experts delivering cutting-edge solutions
             </p>
             <p className="mt-4 text-lg text-gray-400 max-w-3xl mx-auto">
-              We've helped IT leaders successfully manage $3B+ budgets, thousands of processes, 
-              and hundreds of thousands of employees—and we've done it as reachable, reliable 
-              partners every step of the way.
+              XProtege is a technology agnostic company that helps clients deploy Cloud Solutions, 
+              Big Data and Data Science solutions by incorporating full automation. We have the 
+              industry experience and technical expertise to guide you along every step of your journey.
             </p>
           </div>
         </div>
@@ -115,11 +115,15 @@ export default function CompanyPage() {
           <div className="flex flex-wrap justify-center gap-6 text-center">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">CPIC/Portfolio Management</span>
+              <span className="font-medium">Artificial Intelligence</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">Technology Business Management</span>
+              <span className="font-medium">Cloud Services</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-primary" />
+              <span className="font-medium">Cybersecurity</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
@@ -127,23 +131,19 @@ export default function CompanyPage() {
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">Solution Architecture</span>
+              <span className="font-medium">Digital Modernization</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">Digital Transformation</span>
+              <span className="font-medium">Enterprise IT</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">FinOps & Cost Optimization</span>
+              <span className="font-medium">ERP Implementations</span>
             </div>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">Low-Code Development</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-primary" />
-              <span className="font-medium">Program/Project Management</span>
+              <span className="font-medium">Training Services</span>
             </div>
           </div>
         </div>
@@ -154,13 +154,13 @@ export default function CompanyPage() {
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Comprehensive IT & Management Consulting
+              What We Do
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-3xl mx-auto">
-              As experts in CPIC/portfolio management, Business and Solution architecture, Technology 
-              Business Management (TBM), Data Analytics, and a wide range of program/project management 
-              capabilities, we guide government IT leaders to optimize processes, ensure compliance, and 
-              consistently reach targets.
+              We enable our customers to accelerate the benefits of cloud, reduce maintenance cost, 
+              and achieve high availability. Our team of experienced professionals combines creativity, 
+              technical expertise, and market insight to help you navigate the complex journey of 
+              bringing your technology vision to life.
             </p>
           </div>
 
@@ -203,11 +203,11 @@ export default function CompanyPage() {
       <section className="py-20 md:py-28 bg-primary text-primary-foreground">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Let's Meet Your Milestones Together
+            Ready to Transform Your Digital Journey?
           </h2>
           <p className="mt-4 text-lg opacity-90 max-w-2xl mx-auto">
-            If you're ready for a team you can count on, we're here to serve. Connect with us to 
-            discuss how we can help you optimize processes, ensure compliance, and reach your IT goals.
+            Let's build innovative solutions together. Reach out to us for a consultation 
+            or project estimate. We're here to help you unfold the power of excellence.
           </p>
           <Button
             size="lg"
@@ -216,11 +216,11 @@ export default function CompanyPage() {
             asChild
           >
             <Link href="/contact">
-              Connect with Us
+              Contact Us
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-          <p className="mt-4 text-sm opacity-80">Strategy | Partnership | Peace of Mind</p>
+          <p className="mt-4 text-sm opacity-80">Unfold the Power of Excellence</p>
         </div>
       </section>
     </>

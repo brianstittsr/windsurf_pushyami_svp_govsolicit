@@ -141,14 +141,14 @@ interface ImportedWorkflow {
   importedAt: string;
 }
 
-// Workflow Templates for Strategic Value Plus
+// Workflow Templates for XProtege
 const WORKFLOW_TEMPLATES = [
   {
     id: 'supplier_onboarding',
-    name: 'Supplier Onboarding',
-    description: 'Welcome new suppliers to the V+ network with a comprehensive onboarding sequence',
+    name: 'Client Onboarding',
+    description: 'Welcome new clients to the XProtege network with a comprehensive onboarding sequence',
     category: 'onboarding',
-    defaultPrompt: 'Create a supplier onboarding sequence for Strategic Value Plus that welcomes new manufacturing suppliers, introduces our services, and guides them through the certification process over 7 days',
+    defaultPrompt: 'Create a client onboarding sequence for XProtege that welcomes new clients, introduces our AI, cloud, and cybersecurity services, and guides them through the engagement process over 7 days',
     suggestedType: 'email',
   },
   {

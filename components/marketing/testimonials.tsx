@@ -9,43 +9,43 @@ import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "ITMC Solutions has been instrumental in helping us optimize our IT portfolio management. Their expertise in CPIC and TBM has transformed how we manage our $2B+ technology budget.",
-    author: "David Thompson",
-    title: "CIO",
-    company: "U.S. Department of Housing and Urban Development",
-    industry: "Federal Government",
-    employees: "HUD",
-    initials: "DT",
-  },
-  {
-    quote:
-      "The ITMC team's deep understanding of federal IT requirements and their hands-on approach to program management made our digital transformation initiative a success. They're true partners.",
-    author: "Maria Rodriguez",
-    title: "Deputy CIO",
-    company: "U.S. Department of Homeland Security",
-    industry: "Federal Government",
-    employees: "DHS",
-    initials: "MR",
-  },
-  {
-    quote:
-      "Working with ITMC Solutions has been exceptional. Their mother-daughter led team brings both expertise and a personal touch that's rare in government consulting. They consistently deliver results.",
-    author: "James Patterson",
+      "XProtege has been instrumental in helping us modernize our cloud infrastructure. Their expertise in GovCloud and IL6 environments transformed how we deliver secure applications.",
+    author: "Michael Chen",
     title: "IT Director",
-    company: "Transportation Security Administration",
-    industry: "Federal Government",
-    employees: "TSA",
-    initials: "JP",
+    company: "State of Maryland",
+    industry: "State Government",
+    employees: "MD",
+    initials: "MC",
   },
   {
     quote:
-      "ITMC's data analytics and solution architecture capabilities have helped us make better decisions faster. Their 35+ years of experience shows in every engagement.",
-    author: "Sarah Chen",
-    title: "Chief Data Officer",
-    company: "U.S. Department of Defense",
+      "The XProtege team's deep understanding of AI and machine learning helped us automate critical processes. Their agile methodology delivered results faster than expected.",
+    author: "Jennifer Williams",
+    title: "Deputy CIO",
+    company: "Federal Agency",
     industry: "Federal Government",
+    employees: "FED",
+    initials: "JW",
+  },
+  {
+    quote:
+      "Working with XProtege has been exceptional. Their cybersecurity expertise and DISA STIG compliance knowledge gave us confidence in our security posture. They consistently deliver results.",
+    author: "Robert Martinez",
+    title: "CISO",
+    company: "Department of Defense Contractor",
+    industry: "Defense",
     employees: "DOD",
-    initials: "SC",
+    initials: "RM",
+  },
+  {
+    quote:
+      "XProtege's ERP implementation team helped us deploy Microsoft Dynamics 365 seamlessly. Their technical expertise and customer-focused approach made the transition smooth.",
+    author: "Amanda Foster",
+    title: "Operations Director",
+    company: "Commercial Enterprise",
+    industry: "Commercial",
+    employees: "ENT",
+    initials: "AF",
   },
 ];
 
@@ -69,7 +69,7 @@ export function Testimonials() {
             What Our Clients Say
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Trusted by federal CIO organizations for decades. Here's what our clients say about working with ITMC Solutions.
+            Trusted by government agencies and commercial clients. Here's what our clients say about working with XProtege.
           </p>
         </div>
 

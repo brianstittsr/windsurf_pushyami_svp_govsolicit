@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Platform Demo | ITMC Solutions",
+  title: "Platform Demo | XProtege",
   description:
-    "Explore the ITMC Solutions platform capabilities. See how we help federal CIO organizations manage IT portfolios, track programs, and optimize technology investments.",
+    "Explore the XProtege platform capabilities. See how we help organizations with AI, cloud services, cybersecurity, and digital modernization solutions.",
 };
 
 const features = [
@@ -109,7 +109,7 @@ export default function DemoPage() {
               Platform Demo
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              See the ITMC Solutions{" "}
+              See the XProtege{" "}
               <span className="text-primary">Platform in Action</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -253,27 +253,27 @@ export default function DemoPage() {
         <div className="container">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl mb-6">
-              Trusted by Federal CIO Organizations
+              Trusted by Government Agencies and Commercial Clients
             </h2>
             <p className="text-lg text-muted-foreground mb-8">
-              With 35+ years of experience serving federal agencies, we understand the unique
-              challenges of government IT portfolio management.
+              With deep industry knowledge and technical expertise, we understand the unique
+              challenges of digital transformation and technology modernization.
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
-              <Badge variant="outline" className="px-4 py-2">
-                SBA 8(a) Certified
-              </Badge>
-              <Badge variant="outline" className="px-4 py-2">
-                Veteran-Owned
-              </Badge>
               <Badge variant="outline" className="px-4 py-2">
                 Woman-Owned
               </Badge>
               <Badge variant="outline" className="px-4 py-2">
-                GSA MAS Contract
+                Minority-Owned
               </Badge>
               <Badge variant="outline" className="px-4 py-2">
-                SWAM #69476
+                GovCloud IL6
+              </Badge>
+              <Badge variant="outline" className="px-4 py-2">
+                Maryland Contractor
+              </Badge>
+              <Badge variant="outline" className="px-4 py-2">
+                Agile Certified
               </Badge>
             </div>
           </div>
@@ -284,11 +284,11 @@ export default function DemoPage() {
       <section className="py-20 md:py-28 bg-primary text-primary-foreground">
         <div className="container text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to Transform Your IT Portfolio Management?
+            Ready to Transform Your Digital Journey?
           </h2>
           <p className="mt-4 text-lg opacity-90 max-w-2xl mx-auto">
-            Join the federal agencies that trust ITMC Solutions for their IT portfolio
-            management and program execution needs.
+            Join the organizations that trust XProtege for their AI, cloud services,
+            cybersecurity, and digital modernization needs.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button

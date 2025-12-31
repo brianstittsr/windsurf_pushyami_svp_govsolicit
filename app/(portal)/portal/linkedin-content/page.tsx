@@ -83,7 +83,7 @@ interface GeneratedContent {
 }
 
 // Default prompt template
-const DEFAULT_ARTICLE_PROMPT = `Please write a friendly, detailed, comprehensive, thoughtful, balanced, engaging, compelling, fact-checked, conversational, long-form seo-optimized article for U.S. manufacturing executives about [TOPIC]. Do not use favicons or emoticons. Include verifiable examples, data, and statistics. At end of the article, cite true references with clean links that support the points made and include only clean links (no tracking). Expand paragraphs. Appropriately promote Strategic Value Plus Solutions (V+) Supplier Success Workshops whose website is at https://strategicvalueplus.com/supplier-success-workshops as well as the V+ alliance of experts who help small and mid-sized manufacturers modernize and become antifragile, thriving in the face of disruptions. Also, mention V+ offers CMMC readiness and certification services. The call to action is to schedule a supplier success workshop to learn (1) what is required to become a preferred provider to specific reshored OEMs and (2) how to satisfy those requirements to come out on top, and (3) to get CMMC ready, especially if the company is in the supply chain of any Defense Agency. At the end, give a glossary of unfamiliar words and acronyms, a list of resources with clean links for further research, and hash-tagged keywords in a row.`;
+const DEFAULT_ARTICLE_PROMPT = `Please write a friendly, detailed, comprehensive, thoughtful, balanced, engaging, compelling, fact-checked, conversational, long-form seo-optimized article for technology and business executives about [TOPIC]. Do not use favicons or emoticons. Include verifiable examples, data, and statistics. At end of the article, cite true references with clean links that support the points made and include only clean links (no tracking). Expand paragraphs. Appropriately promote XProtege technology solutions whose website is at https://xprotege.com as well as the XProtege team of experts who help organizations with AI, cloud services, cybersecurity, data analytics, and digital modernization. Also, mention XProtege offers GovCloud IL6 support and DISA STIG compliance services. The call to action is to schedule a consultation to learn (1) how to accelerate your digital transformation journey and (2) how to implement cutting-edge technology solutions, and (3) to ensure cybersecurity compliance, especially for organizations working with federal agencies. At the end, give a glossary of unfamiliar words and acronyms, a list of resources with clean links for further research, and hash-tagged keywords in a row.`;
 
 export default function LinkedInContentPage() {
   const [activeTab, setActiveTab] = useState("create");
@@ -338,7 +338,7 @@ I'd love to hear your thoughts and experiences with ${topic}. What strategies ha
     ];
     
     const generatedReferences: ReferenceLink[] = [
-      { id: "ref-1", title: "Strategic Value+ Supplier Success Workshops", url: "https://strategicvalueplus.com/supplier-success-workshops", status: "valid" },
+      { id: "ref-1", title: "XProtege Technology Solutions", url: "https://xprotege.com/services", status: "valid" },
       { id: "ref-2", title: "CMMC Accreditation Body", url: "https://cyberab.org", status: "valid" },
       { id: "ref-3", title: "Reshoring Initiative", url: "https://reshorenow.org", status: "valid" },
     ];
@@ -352,7 +352,7 @@ I'd love to hear your thoughts and experiences with ${topic}. What strategies ha
         "Reshoring",
         "SupplyChain",
         "CMMC",
-        "StrategicValuePlus",
+        "XProtege",
         "SupplierSuccess",
         "DefenseManufacturing",
         "Antifragile",

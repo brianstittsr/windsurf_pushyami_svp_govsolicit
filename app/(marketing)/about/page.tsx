@@ -15,35 +15,35 @@ import {
 import { LeadershipTeam } from "@/components/marketing/leadership-team";
 
 export const metadata: Metadata = {
-  title: "About ITMC Solutions | Trusted IT Consulting Partner",
+  title: "About XProtege | Unfold the Power of Excellence",
   description:
-    "Discover ITMC Solutions, a veteran-, woman-, and minority-owned small business providing top-tier IT consulting services to federal agencies. Learn about our commitment to excellence, our team, and our proven track record in program management, data analytics, and more.",
+    "Discover XProtege (XITM), a woman- and minority-owned technology company providing innovative IT solutions, AI, cloud services, cybersecurity, and digital modernization to federal agencies and commercial clients.",
 };
 
 const values = [
   {
     icon: Target,
-    title: "Ethical Leadership",
+    title: "Commitment to Excellence",
     description:
-      "We lead with integrity, honesty, and a commitment to doing what's right for our clients and their missions.",
+      "We pursue the highest standards in everything we do—striving for outstanding performance, quality, and continuous improvement.",
   },
   {
     icon: Users,
-    title: "Service & Stewardship",
+    title: "Integrity and Trust",
     description:
-      "We serve federal agencies with dedication and care, acting as responsible stewards of taxpayer resources.",
+      "We act with honesty, transparency, and strong moral principles, earning trust through every interaction.",
   },
   {
     icon: Heart,
-    title: "Partnership Mindset",
+    title: "Customer Focus",
     description:
-      "We believe in the power of partnership. Two are better than one—we're here to help you succeed every step of the way.",
+      "We put our clients at the center of everything—listening actively, delivering on our promises, and building lasting partnerships.",
   },
   {
     icon: Award,
-    title: "Excellence & Respect",
+    title: "Teamwork and Accountability",
     description:
-      "We deliver excellence in every engagement while treating everyone with dignity and respect.",
+      "We collaborate with respect and take full ownership of our actions, always supporting one another to achieve shared goals.",
   },
 ];
 
@@ -56,15 +56,15 @@ export default function AboutPage() {
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="outline" className="mb-6 border-primary/50 text-primary">
-              About ITMC Solutions
+              About XProtege
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
-              Trusted by Federal CIO Organizations{" "}
-              <span className="text-primary">for Decades</span>
+              Where Innovation Meets{" "}
+              <span className="text-primary">Execution</span>
             </h1>
             <p className="mt-6 text-lg text-gray-300 max-w-2xl mx-auto">
-              We're a proudly veteran-, woman-, and minority-owned small business delivering 
-              partnership and peace of mind through expert IT & management consulting.
+              We're a proudly woman- and minority-owned technology company delivering 
+              innovative IT solutions that transform ideas into market-ready solutions.
             </p>
           </div>
         </div>
@@ -81,10 +81,11 @@ export default function AboutPage() {
                 </div>
                 <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
                 <p className="text-muted-foreground">
-                  We empower federal, state, and local government agencies with strategic financial 
-                  and IT solutions and services that drive mission success. We help agencies achieve 
-                  smarter IT investments, optimize processes, ensure compliance, and consistently 
-                  reach targets—every step of the way.
+                  At XProtege, our mission is to be a leader in the IT industry by delivering top-tier 
+                  staffing solutions and expanding our footprint through bidding and securing contracts 
+                  with the State of Maryland, federal agencies, and the commercial sector. Through our 
+                  deep industry knowledge and results-driven approach, we connect exceptional IT talent 
+                  with organizations while taking on complex projects that drive technological advancements.
                 </p>
               </CardContent>
             </Card>
@@ -94,16 +95,13 @@ export default function AboutPage() {
                 <div className="w-12 h-12 rounded-lg bg-secondary/10 flex items-center justify-center mb-6">
                   <Eye className="h-6 w-6 text-secondary" />
                 </div>
-                <h2 className="text-2xl font-bold mb-4">Our Belief</h2>
-                <p className="text-muted-foreground italic mb-4">
-                  "Two are better than one, because they have a good return for their labor: 
-                  If either of them falls down, one can help the other up."
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  — Ecclesiastes 4:9-12
-                </p>
-                <p className="text-muted-foreground mt-4">
-                  The peace and power that comes from partnership guides our work with you.
+                <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
+                <p className="text-muted-foreground">
+                  Our vision is to become a premier technology partner, recognized for our excellence 
+                  in IT staffing, innovative solutions, and successful project execution across public 
+                  and private sectors. We aspire to establish a strong presence in government contracting 
+                  by continuing to secure and deliver high-impact projects as a prime contractor with 
+                  the State of Maryland, while expanding into federal and commercial markets.
                 </p>
               </CardContent>
             </Card>
@@ -120,22 +118,23 @@ export default function AboutPage() {
             </div>
             <div className="prose prose-lg max-w-none">
               <p className="text-muted-foreground text-lg leading-relaxed">
-                ITMC Solutions was founded in 2010 with a commitment to serve federal CIO 
-                organizations with integrity, expertise, and partnership. As a mother-daughter 
-                led team of experts, we lead in ways inspired by our personal faith and hope 
-                to give back to the country that's given us so much.
+                Welcome to XProtege, where innovation seamlessly integrates with execution. We are a 
+                team of highly skilled professionals committed to transforming your ideas into impactful, 
+                market-ready solutions. With expertise in comprehensive product development, we guide 
+                you through every phase of the lifecycle, from initial concept to successful launch.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed mt-6">
-                With over 35 years of government consulting expertise, we specialize in optimizing 
-                IT spend, improving operational efficiency, and automating manual processes to reduce 
-                rework and enhance service delivery. We've helped IT leaders successfully manage $3B+ 
-                budgets, thousands of processes, and hundreds of thousands of employees.
+                Our success is driven by a strong foundation of experience, industry knowledge, and a 
+                dedication to delivering measurable results. At XProtege, we don't just develop products—we 
+                build the future of your business. We combine deep industry knowledge, technology expertise, 
+                and a passion for innovation to deliver value-driven solutions tailored to your needs.
               </p>
               <p className="text-muted-foreground text-lg leading-relaxed mt-6">
-                We're well-known for multiple years-long engagements exceeding $100M for major clients 
-                including HUD, DHS, DOD, and global organizations like Lockheed Martin, Disney, Raytheon, 
-                Newport News Shipbuilding, LMI, and Singer Link. Today, this mission of principled 
-                partnership guides our future of helping leaders like you meet your goals with confidence.
+                As a company that has already bid on multiple contracts with the State of Maryland as a 
+                prime contractor, we are committed to leveraging our expertise to drive success in both 
+                workforce solutions and project execution. With a strong foundation built on integrity, 
+                innovation, and collaboration, XProtege is dedicated to becoming a trusted partner for 
+                public and private sector clients.
               </p>
             </div>
           </div>
@@ -187,11 +186,11 @@ export default function AboutPage() {
         <div className="container text-center">
           <Target className="h-16 w-16 mx-auto mb-6 opacity-80" />
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready for a Team You Can Count On?
+            Ready to Transform Your Digital Journey?
           </h2>
           <p className="mt-4 text-lg opacity-90 max-w-2xl mx-auto">
-            Let's meet your milestones together. We're here to serve as your reachable, 
-            reliable, expert partners from strategy to execution.
+            Let's build innovative solutions together. Reach out to us for a consultation 
+            or project estimate. We're here to help you unfold the power of excellence.
           </p>
           <Button
             size="lg"
@@ -200,7 +199,7 @@ export default function AboutPage() {
             asChild
           >
             <Link href="/contact">
-              Get Started Today
+              Contact Us Today
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

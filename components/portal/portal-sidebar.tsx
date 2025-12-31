@@ -72,6 +72,7 @@ import {
   Heart,
   Phone,
   CalendarClock,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -128,6 +129,12 @@ const workItems = [
         icon: Settings,
       },
     ],
+  },
+  {
+    title: "FPDS Search",
+    href: "/fpds-search",
+    icon: Search,
+    badge: "GOV",
   },
   {
     title: "Apollo Search",
@@ -222,10 +229,16 @@ const workItems = [
     icon: Bug,
   },
   {
-    title: "ITMC Tools",
+    title: "XProtege Tools",
     href: "/portal/svp-tools",
     icon: Sparkles,
     badge: "AI",
+  },
+  {
+    title: "Careers",
+    href: "/portal/careers",
+    icon: Briefcase,
+    badge: "HR",
   },
 ];
 
@@ -290,7 +303,7 @@ const aiItems = [
 
 export function PortalSidebar() {
   const pathname = usePathname();
-  const { getDisplayName, getInitials, profile, isAdmin, signOut } = useUserProfile();
+  const { getDisplayName, getInitials, profile, isAdmin, isSuperAdmin, signOut, getEffectiveRole, isViewingAsOtherRole } = useUserProfile();
   const [bookCallLeadsCount, setBookCallLeadsCount] = useState(0);
 
   // Subscribe to BookCallLeads count (new leads only)
@@ -327,7 +340,7 @@ export function PortalSidebar() {
       <SidebarHeader className="border-b border-sidebar-border">
         <Link href="/portal" className="flex items-center gap-2 px-2 py-4">
           <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none">ITMC Solutions</span>
+            <span className="text-lg font-bold leading-none">XProtege</span>
             <span className="text-xs text-sidebar-foreground/60">Business Portal</span>
           </div>
         </Link>
@@ -390,7 +403,12 @@ export function PortalSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {workItems
-                    .filter((item) => !item.adminOnly || isAdmin())
+                    .filter((item) => {
+                      // Use effective role for filtering when SuperAdmin is viewing as another role
+                      const effectiveRole = getEffectiveRole();
+                      const effectiveIsAdmin = effectiveRole === "admin" || effectiveRole === "superadmin";
+                      return !item.adminOnly || effectiveIsAdmin;
+                    })
                     .map((item) => (
                       <SidebarMenuItem key={item.href}>
                         <SidebarMenuButton
@@ -447,8 +465,12 @@ export function PortalSidebar() {
           </SidebarGroup>
         </Collapsible>
 
-        {/* Admin - Only show for admin users */}
-        {isAdmin() && (
+        {/* Admin - Only show for admin users (respects role switching) */}
+        {(() => {
+          const effectiveRole = getEffectiveRole();
+          const effectiveIsAdmin = effectiveRole === "admin" || effectiveRole === "superadmin";
+          return effectiveIsAdmin;
+        })() && (
         <Collapsible open={openSections.admin} onOpenChange={() => toggleSection("admin")}>
           <SidebarGroup>
             <CollapsibleTrigger asChild>

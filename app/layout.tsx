@@ -16,38 +16,38 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://itmcsolutions.com"),
+  metadataBase: new URL("https://xprotege.com"),
   title: {
-    default: "ITMC Solutions | IT & Management Consulting for Federal CIO Organizations",
-    template: "%s | ITMC Solutions",
+    default: "XProtege | Unfold the Power of Excellence",
+    template: "%s | XProtege",
   },
   description:
-    "ITMC Solutions is a leading program management and IT consulting firm specializing in federal government contracting. As a trusted veteran-, woman-, and minority-owned small business, we deliver comprehensive solutions for CPIC/portfolio management, business solution architecture, and TBM.",
+    "XProtege (XITM) is a premier technology company delivering AI, cloud services, cybersecurity, data analytics, digital modernization, and ERP implementations. Woman- and minority-owned, serving federal agencies and commercial clients.",
   keywords: [
-    "federal IT consulting",
-    "government IT consulting",
-    "CPIC portfolio management",
-    "Technology Business Management",
-    "TBM",
-    "federal CIO consulting",
+    "artificial intelligence",
+    "cloud services",
+    "cybersecurity",
     "data analytics",
-    "solution architecture",
-    "program management",
-    "digital transformation",
-    "SBA 8(a) certified",
-    "veteran owned business",
+    "digital modernization",
+    "enterprise IT",
+    "ERP implementations",
+    "SAP",
+    "Microsoft Dynamics 365",
+    "GovCloud",
+    "federal IT consulting",
     "woman owned business",
+    "minority owned business",
   ],
-  authors: [{ name: "ITMC Solutions, LLC", url: "https://itmcsolutions.com" }],
-  creator: "ITMC Solutions, LLC",
-  publisher: "ITMC Solutions, LLC",
+  authors: [{ name: "XProtege", url: "https://xprotege.com" }],
+  creator: "XProtege",
+  publisher: "XProtege",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   alternates: {
-    canonical: "https://itmcsolutions.com",
+    canonical: "https://xprotege.com",
   },
   robots: {
     index: true,
@@ -63,27 +63,27 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://itmcsolutions.com",
-    siteName: "ITMC Solutions",
-    title: "ITMC Solutions | IT & Management Consulting for Federal CIO Organizations",
+    url: "https://xprotege.com",
+    siteName: "XProtege",
+    title: "XProtege | Unfold the Power of Excellence",
     description:
-      "Trusted by Federal CIO organizations from HUD to DHS & beyond. We're your partners from strategy to execution for CPIC/portfolio management, TBM, data analytics, and program management.",
+      "Where innovation meets execution. XProtege delivers AI, cloud services, cybersecurity, and digital modernization solutions to federal agencies and commercial clients.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "ITMC Solutions - IT & Management Consulting for Federal Agencies",
+        alt: "XProtege - Unfold the Power of Excellence",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ITMC Solutions | IT & Management Consulting for Federal CIO Organizations",
+    title: "XProtege | Unfold the Power of Excellence",
     description:
-      "Trusted by Federal CIO organizations from HUD to DHS & beyond. We're your partners from strategy to execution.",
+      "Where innovation meets execution. XProtege delivers AI, cloud services, cybersecurity, and digital modernization solutions.",
     images: ["/og-image.png"],
-    creator: "@itmcsolutions",
+    creator: "@xprotege",
   },
   verification: {
     google: "your-google-verification-code",

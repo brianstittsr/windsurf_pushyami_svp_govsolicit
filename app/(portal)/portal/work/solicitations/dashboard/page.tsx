@@ -80,7 +80,7 @@ export default function SolicitationDashboardPage() {
       id: "4",
       title: "IT Portfolio Management Consulting",
       agency: "VA",
-      awardee: "ITMC Solutions",
+      awardee: "XProtege",
       amount: "$3,500,000",
       date: "2024-12-25",
       naics: "541618",

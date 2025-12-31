@@ -274,7 +274,7 @@ export default function SVPToolsPage() {
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="h-8 w-8 text-purple-500" />
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              ITMC Tools
+              XProtege Tools
             </h1>
           </div>
           <p className="text-muted-foreground">

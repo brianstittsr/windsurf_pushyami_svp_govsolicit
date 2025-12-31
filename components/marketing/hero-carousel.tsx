@@ -30,23 +30,23 @@ export interface HeroSlide {
 const defaultSlides: HeroSlide[] = [
   {
     id: "1",
-    badge: "SBA 8(a) Certified | Veteran, Woman & Minority-Owned",
-    headline: "Streamline, Stay Compliant &",
-    highlightedText: "Reach Your IT Goals",
-    subheadline: "Trusted by Federal CIO organizations from HUD to DHS & beyond, we're your partners from strategy to execution.",
-    benefits: ["CPIC/Portfolio Management", "Technology Business Management", "Data Analytics"],
-    primaryCta: { text: "Connect with Us", href: "/contact" },
+    badge: "Woman & Minority-Owned | GovCloud IL6 Certified",
+    headline: "Unfold the Power of",
+    highlightedText: "Excellence",
+    subheadline: "Where innovation meets execution. XProtege transforms your ideas into impactful, market-ready solutions with AI, Cloud, and Cybersecurity expertise.",
+    benefits: ["Artificial Intelligence", "Cloud Services", "Cybersecurity"],
+    primaryCta: { text: "Contact Us", href: "/contact" },
     secondaryCta: { text: "Learn More", href: "/about" },
     isPublished: true,
     order: 1,
   },
   {
     id: "2",
-    badge: "35+ Years of Federal Experience",
-    headline: "Optimize IT Spend.",
-    highlightedText: "Drive Mission Success",
-    subheadline: "We help federal agencies achieve smarter IT investments with clear budget insights, cost allocation strategies, and measurable IT value aligned with mission priorities.",
-    benefits: ["Cost Optimization", "Budget Insights", "Measurable ROI"],
+    badge: "State of Maryland Prime Contractor",
+    headline: "Transform Your",
+    highlightedText: "Digital Journey",
+    subheadline: "We enable customers to accelerate cloud benefits, reduce maintenance costs, and achieve high availability with our proven agile methodology.",
+    benefits: ["Digital Modernization", "Enterprise IT", "ERP Implementations"],
     primaryCta: { text: "View Our Services", href: "/company" },
     secondaryCta: { text: "Meet Our Team", href: "/about" },
     isPublished: true,
@@ -54,11 +54,11 @@ const defaultSlides: HeroSlide[] = [
   },
   {
     id: "3",
-    badge: "Strategy | Partnership | Peace of Mind",
-    headline: "From Strategy to",
-    highlightedText: "Execution",
-    subheadline: "As experts in solution architecture, digital transformation, and program management, we guide government IT leaders to optimize processes, ensure compliance, and consistently reach targets.",
-    benefits: ["Solution Architecture", "Digital Transformation", "Program Management"],
+    badge: "Innovation | Excellence | Results",
+    headline: "Where Ideas Transform Into",
+    highlightedText: "Market Leaders",
+    subheadline: "Our team combines creativity, technical expertise, and market insight to help you navigate the complex journey of bringing your technology vision to life.",
+    benefits: ["Data Analytics", "SAP & Dynamics 365", "Training Services"],
     primaryCta: { text: "Schedule a Call", href: "/contact" },
     secondaryCta: { text: "Our Approach", href: "/company" },
     isPublished: true,
@@ -105,27 +105,31 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
   const currentSlide = publishedSlides[currentIndex];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 text-white">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4c1d95_1px,transparent_1px),linear-gradient(to_bottom,#4c1d95_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-sky-50 text-slate-900">
+      {/* Background Pattern - AI/Cloud grid effect */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+      {/* Floating gradient orbs for AI/cloud feel */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-sky-400/20 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl" />
+      <div className="absolute top-40 right-1/4 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
       
       <div className="relative py-20 md:py-32 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           {/* Slide Content with Fade Animation */}
           <div key={currentSlide.id} className="animate-in fade-in duration-500">
             {/* Badge */}
-            <Badge variant="outline" className="mb-6 border-yellow-400/50 text-yellow-400 bg-yellow-400/10">
+            <Badge variant="outline" className="mb-6 border-sky-500/50 text-sky-600 bg-sky-500/10">
               {currentSlide.badge}
             </Badge>
 
             {/* Headline */}
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               {currentSlide.headline}{" "}
-              <span className="text-yellow-400">{currentSlide.highlightedText}</span>
+              <span className="text-sky-500">{currentSlide.highlightedText}</span>
             </h1>
 
             {/* Subheadline */}
-            <p className="mt-6 text-lg text-gray-300 md:text-xl max-w-2xl mx-auto">
+            <p className="mt-6 text-lg text-slate-600 md:text-xl max-w-2xl mx-auto">
               {currentSlide.subheadline}
             </p>
 
@@ -133,7 +137,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
             <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm">
               {currentSlide.benefits.map((benefit) => (
                 <div key={benefit} className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-yellow-400" />
+                  <CheckCircle className="h-5 w-5 text-sky-500" />
                   <span>{benefit}</span>
                 </div>
               ))}
@@ -156,7 +160,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
               {/* Prev Button */}
               <button
                 onClick={() => { goToPrev(); setIsAutoPlaying(false); }}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors"
                 aria-label="Previous slide"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -171,8 +175,8 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
                     className={cn(
                       "w-3 h-3 rounded-full transition-all duration-300",
                       index === currentIndex
-                        ? "bg-yellow-400 w-8"
-                        : "bg-white/30 hover:bg-white/50"
+                        ? "bg-sky-500 w-8"
+                        : "bg-slate-300 hover:bg-slate-400"
                     )}
                     aria-label={`Go to slide ${index + 1}`}
                   />
@@ -182,7 +186,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
               {/* Next Button */}
               <button
                 onClick={() => { goToNext(); setIsAutoPlaying(false); }}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full bg-slate-200 hover:bg-slate-300 transition-colors"
                 aria-label="Next slide"
               >
                 <ChevronRight className="h-5 w-5" />
@@ -191,28 +195,28 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
           )}
 
           {/* Trust Indicators */}
-          <div className="mt-16 pt-8 border-t border-white/10">
-            <p className="text-sm text-gray-400 mb-6">Trusted by Federal Agencies for Decades</p>
+          <div className="mt-16 pt-8 border-t border-slate-200">
+            <p className="text-sm text-slate-500 mb-6">Trusted by Government Agencies and Commercial Clients</p>
             <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">SBA 8(a)</span>
-                <span className="text-xs text-gray-400">Certified</span>
+                <span className="text-lg font-bold text-slate-800">Woman</span>
+                <span className="text-xs text-slate-500">Owned</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">Veteran</span>
-                <span className="text-xs text-gray-400">Owned</span>
+                <span className="text-lg font-bold text-slate-800">Minority</span>
+                <span className="text-xs text-slate-500">Owned</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">Woman</span>
-                <span className="text-xs text-gray-400">Owned</span>
+                <span className="text-lg font-bold text-slate-800">GovCloud</span>
+                <span className="text-xs text-slate-500">IL6 Certified</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">GSA MAS</span>
-                <span className="text-xs text-gray-400">Contract</span>
+                <span className="text-lg font-bold text-slate-800">Maryland</span>
+                <span className="text-xs text-slate-500">Contractor</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">SWAM</span>
-                <span className="text-xs text-gray-400">#69476</span>
+                <span className="text-lg font-bold text-slate-800">Agile</span>
+                <span className="text-xs text-slate-500">Methodology</span>
               </div>
             </div>
           </div>

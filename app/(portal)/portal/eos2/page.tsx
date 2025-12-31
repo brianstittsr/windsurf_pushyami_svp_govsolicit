@@ -597,7 +597,7 @@ function TractionDashboardPageContent() {
                   Traction Dashboard
                   <Badge variant="secondary" className="text-xs"><Sparkles className="h-3 w-3 mr-1" />EOS</Badge>
                 </h1>
-                <p className="text-sm text-muted-foreground">Strategic Value Plus • {currentQuarter}</p>
+                <p className="text-sm text-muted-foreground">XProtege • {currentQuarter}</p>
               </div>
             </div>
             <div className="flex items-center gap-4">

@@ -5,55 +5,56 @@ export function OrganizationJsonLd() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Strategic Value+ Solutions",
-    alternateName: "Strategic Value Plus",
-    url: "https://strategicvalueplus.com",
-    logo: "https://strategicvalueplus.com/logo.png",
+    name: "XProtege",
+    alternateName: "XProtégé Institute of Technology and Management",
+    url: "https://xprotege.com",
+    logo: "https://xprotege.com/logo.png",
     description:
-      "We help small- and mid-sized U.S. manufacturers win OEM contracts through supplier qualification, ISO certification, and operational readiness.",
-    foundingDate: "2020",
+      "XProtege delivers AI, Cloud Services, Cybersecurity, Data Analytics, Digital Modernization, and ERP Implementations to federal agencies and commercial clients.",
+    foundingDate: "2024",
     founders: [
       {
         "@type": "Person",
-        name: "Nel Varenas",
-        jobTitle: "CEO",
+        name: "Pushyami Duvvuri",
+        jobTitle: "President",
       },
     ],
     address: {
       "@type": "PostalAddress",
+      addressLocality: "Ellicott City",
+      addressRegion: "MD",
+      postalCode: "21042",
       addressCountry: "US",
     },
     contactPoint: [
       {
         "@type": "ContactPoint",
-        telephone: "+1-555-123-4567",
+        telephone: "+1-510-435-7930",
         contactType: "sales",
         availableLanguage: ["English"],
       },
       {
         "@type": "ContactPoint",
-        email: "info@strategicvalueplus.com",
+        email: "contact@xprotege.com",
         contactType: "customer service",
       },
     ],
     sameAs: [
-      "https://www.linkedin.com/company/strategicvalueplus",
-      "https://twitter.com/strategicvalueplus",
-      "https://www.youtube.com/@strategicvalueplus",
+      "https://www.linkedin.com/company/xprotege",
     ],
     areaServed: {
       "@type": "Country",
       name: "United States",
     },
     knowsAbout: [
-      "Manufacturing Consulting",
-      "ISO Certification",
-      "IATF 16949",
-      "Lean Manufacturing",
-      "Industry 4.0",
-      "Digital Transformation",
-      "Supply Chain Optimization",
-      "OEM Supplier Qualification",
+      "Artificial Intelligence",
+      "Cloud Services",
+      "Cybersecurity",
+      "Data Analytics",
+      "Digital Modernization",
+      "Enterprise IT",
+      "ERP Implementations",
+      "Training Services",
     ],
   };
 
@@ -71,20 +72,23 @@ export function LocalBusinessJsonLd() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
-    name: "Strategic Value+ Solutions",
-    image: "https://strategicvalueplus.com/logo.png",
-    url: "https://strategicvalueplus.com",
-    telephone: "+1-555-123-4567",
-    email: "info@strategicvalueplus.com",
+    name: "XProtege",
+    image: "https://xprotege.com/logo.png",
+    url: "https://xprotege.com",
+    telephone: "+1-510-435-7930",
+    email: "contact@xprotege.com",
     priceRange: "$$$$",
     address: {
       "@type": "PostalAddress",
+      addressLocality: "Ellicott City",
+      addressRegion: "MD",
+      postalCode: "21042",
       addressCountry: "US",
     },
     geo: {
       "@type": "GeoCoordinates",
-      latitude: 35.7796,
-      longitude: -78.6382,
+      latitude: 39.2673,
+      longitude: -76.7983,
     },
     openingHoursSpecification: [
       {
@@ -123,7 +127,7 @@ export function ServiceJsonLd({
   name,
   description,
   url,
-  provider = "Strategic Value+ Solutions",
+  provider = "XProtege",
   areaServed = "United States",
 }: ServiceJsonLdProps) {
   const serviceSchema = {
@@ -135,13 +139,13 @@ export function ServiceJsonLd({
     provider: {
       "@type": "Organization",
       name: provider,
-      url: "https://strategicvalueplus.com",
+      url: "https://xprotege.com",
     },
     areaServed: {
       "@type": "Country",
       name: areaServed,
     },
-    serviceType: "Manufacturing Consulting",
+    serviceType: "Technology Consulting",
   };
 
   return (
@@ -252,10 +256,10 @@ export function ArticleJsonLd({
     },
     publisher: {
       "@type": "Organization",
-      name: "Strategic Value+ Solutions",
+      name: "XProtege",
       logo: {
         "@type": "ImageObject",
-        url: "https://strategicvalueplus.com/logo.png",
+        url: "https://xprotege.com/logo.png",
       },
     },
     mainEntityOfPage: {
@@ -278,14 +282,14 @@ export function WebsiteJsonLd() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Strategic Value+",
-    alternateName: "Strategic Value Plus Solutions",
-    url: "https://strategicvalueplus.com",
+    name: "XProtege",
+    alternateName: "XProtégé Institute of Technology and Management",
+    url: "https://xprotege.com",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://strategicvalueplus.com/search?q={search_term_string}",
+        urlTemplate: "https://xprotege.com/search?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },

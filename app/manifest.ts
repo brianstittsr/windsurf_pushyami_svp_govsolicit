@@ -2,14 +2,14 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ITMC Solutions | IT & Management Consulting for Federal CIO Organizations",
-    short_name: "ITMC Solutions",
+    name: "XProtege | Unfold the Power of Excellence",
+    short_name: "XProtege",
     description:
-      "Trusted by Federal CIO organizations for decades. Expert IT consulting for CPIC/portfolio management, TBM, data analytics, and program management.",
+      "Where innovation meets execution. XProtege delivers AI, Cloud Services, Cybersecurity, Data Analytics, and Digital Modernization solutions.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",
-    theme_color: "#0066cc",
+    theme_color: "#1e40af",
     orientation: "portrait-primary",
     icons: [
       {

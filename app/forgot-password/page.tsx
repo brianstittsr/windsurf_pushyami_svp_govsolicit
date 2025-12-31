@@ -66,8 +66,8 @@ export default function ForgotPasswordPage() {
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex flex-col items-center gap-3 group">
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-primary">ITMC Solutions</h1>
-              <p className="text-sm text-muted-foreground">IT & Management Consulting</p>
+              <h1 className="text-3xl font-bold text-primary">XProtege</h1>
+              <p className="text-sm text-muted-foreground">Unfold the Power of Excellence</p>
             </div>
           </Link>
         </div>

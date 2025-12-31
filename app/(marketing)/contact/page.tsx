@@ -164,7 +164,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-2xl">Connect with ITMC Solutions</CardTitle>
+                  <CardTitle className="text-2xl">Connect with XProtege</CardTitle>
                   <CardDescription>
                     Fill out the form below and one of our experts will contact you within 24 hours.
                   </CardDescription>
@@ -286,10 +286,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium">Email</p>
                       <Link
-                        href="mailto:contact@itmcsolutions.com"
+                        href="mailto:contact@xprotege.com"
                         className="text-muted-foreground hover:text-primary"
                       >
-                        contact@itmcsolutions.com
+                        contact@xprotege.com
                       </Link>
                     </div>
                   </div>
@@ -298,10 +298,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium">Phone</p>
                       <Link
-                        href="tel:+1-757-284-3986"
+                        href="tel:+1-510-435-7930"
                         className="text-muted-foreground hover:text-primary"
                       >
-                        (757) 284-3986
+                        +1-510-435-7930
                       </Link>
                     </div>
                   </div>
@@ -309,7 +309,7 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Location</p>
-                      <p className="text-muted-foreground">100 7th St., Suite 104<br/>Portsmouth, VA 23704</p>
+                      <p className="text-muted-foreground">Ellicott City, MD 21042 USA</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -467,7 +467,7 @@ export default function ContactPage() {
                 <CardContent>
                   <div className="flex gap-3">
                     <Button variant="outline" size="icon" asChild>
-                      <Link href="https://www.linkedin.com/company/itmc-solutions" target="_blank">
+                      <Link href="https://www.linkedin.com/company/xprotege" target="_blank">
                         <Linkedin className="h-5 w-5" />
                       </Link>
                     </Button>
