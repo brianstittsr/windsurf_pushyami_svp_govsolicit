@@ -45,10 +45,10 @@ export interface PopupConfig {
 // Default configuration
 export const defaultPopupConfig: PopupConfig = {
   enabled: true,
-  title: "Strategic Value+ Solutions",
-  subtitle: "Take advantage of our complimentary 45-minute Impact Session to resolve your pressing pain points.",
-  description: "Our Value+ Team will develop quality-driven strategies to address your primary issues and transform your company.",
-  buttonText: "Request Free Session",
+  title: "ITMC Solutions",
+  subtitle: "Take advantage of our complimentary 45-minute Strategy Session to address your IT and management consulting needs.",
+  description: "Our expert team will develop tailored strategies to optimize your IT spend, improve efficiency, and drive mission success.",
+  buttonText: "Request Free Consultation",
   successMessage: "Thank you! We'll be in touch within 24 hours.",
   triggerDelay: 0,
   showOnPages: [],
@@ -59,17 +59,18 @@ export const defaultPopupConfig: PopupConfig = {
     { id: "phone", type: "phone", label: "Phone", placeholder: "Phone", required: true, enabled: true },
     { id: "email", type: "email", label: "Email", placeholder: "Email", required: true, enabled: true },
     { id: "website", type: "url", label: "Website", placeholder: "Web URL goes here", required: false, enabled: true },
-    { id: "company", type: "text", label: "Company", placeholder: "Company Name", required: false, enabled: false },
+    { id: "company", type: "text", label: "Company", placeholder: "Company/Agency Name", required: false, enabled: false },
     { id: "message", type: "textarea", label: "Message", placeholder: "How can we help you?", required: false, enabled: false },
   ],
   productOptions: [
-    "V+ EDGE Balanced Scorecard™",
-    "V+ EDGE™",
-    "V+ TwinEDGE™",
-    "V+ IntellEDGE™",
-    "EDGE-X™",
+    "Strategic Planning & CPIC",
+    "Technology Business Management (TBM)",
+    "Data Analytics & Reporting",
+    "Solution Architecture",
+    "Program/Project Management",
+    "Digital Transformation",
   ],
-  productLabel: "For a free demo, please select one of the EDGE products below:",
+  productLabel: "Please select the service you're interested in:",
   allowCustomProduct: true,
 };
 
@@ -138,8 +139,6 @@ export function ContactPopup({ config = defaultPopupConfig }: ContactPopupProps)
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader className="space-y-4">
             <div className="flex items-center gap-2">
-              <span className="text-4xl font-bold text-primary">V</span>
-              <sup className="text-primary text-xl">+</sup>
               <DialogTitle className="text-xl text-primary font-semibold">
                 {config.title}
               </DialogTitle>

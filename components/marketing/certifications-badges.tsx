@@ -45,7 +45,7 @@ const naicsCodes = [
 
 export function CertificationsBadges() {
   return (
-    <section className="py-16 bg-black text-white">
+    <section className="py-16 bg-gradient-to-r from-purple-900 to-purple-800 text-white">
       <div className="container">
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold mb-4">Certifications & Contract Vehicles</h2>

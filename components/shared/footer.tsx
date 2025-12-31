@@ -38,7 +38,7 @@ const footerLinks = {
 
 export function Footer() {
   return (
-    <footer className="bg-black text-white">
+    <footer className="bg-gradient-to-r from-purple-950 to-purple-900 text-white">
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
           {/* Brand Column */}

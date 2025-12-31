@@ -52,7 +52,7 @@ export default function AboutPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-20 md:py-28 bg-black text-white">
+      <section className="py-20 md:py-28 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-800 text-white">
         <div className="container">
           <div className="max-w-4xl mx-auto text-center">
             <Badge variant="outline" className="mb-6 border-primary/50 text-primary">

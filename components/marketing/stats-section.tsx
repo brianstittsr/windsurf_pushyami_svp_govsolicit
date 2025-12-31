@@ -66,7 +66,7 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 
 export function StatsSection() {
   return (
-    <section className="py-16 bg-black text-white">
+    <section className="py-16 bg-gradient-to-r from-purple-900 to-purple-800 text-white">
       <div className="container">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat) => (

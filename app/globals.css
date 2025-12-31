@@ -45,74 +45,74 @@
 
 :root {
   --radius: 0.625rem;
-  /* ITMC Solutions Brand Colors - Professional Federal IT Consulting */
+  /* ITMC Solutions Brand Colors - Purple & Gold/Yellow */
   --background: #ffffff;
   --foreground: #1a1a1a;
   --card: #ffffff;
   --card-foreground: #1a1a1a;
   --popover: #ffffff;
   --popover-foreground: #1a1a1a;
-  --primary: #0066cc;
+  --primary: #7c3aed;
   --primary-foreground: #ffffff;
-  --secondary: #003d7a;
-  --secondary-foreground: #ffffff;
-  --muted: #f5f7fa;
+  --secondary: #eab308;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f5f3ff;
   --muted-foreground: #64748b;
-  --accent: #0066cc;
-  --accent-foreground: #ffffff;
+  --accent: #eab308;
+  --accent-foreground: #1a1a1a;
   --destructive: #dc2626;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
   --input: #e2e8f0;
-  --ring: #0066cc;
-  --chart-1: #0066cc;
-  --chart-2: #003d7a;
-  --chart-3: #60a5fa;
-  --chart-4: #1e40af;
-  --chart-5: #dc2626;
-  --sidebar: #1e293b;
+  --ring: #7c3aed;
+  --chart-1: #7c3aed;
+  --chart-2: #eab308;
+  --chart-3: #a78bfa;
+  --chart-4: #5b21b6;
+  --chart-5: #fbbf24;
+  --sidebar: #2e1065;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #0066cc;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #334155;
+  --sidebar-primary: #eab308;
+  --sidebar-primary-foreground: #1a1a1a;
+  --sidebar-accent: #4c1d95;
   --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #475569;
-  --sidebar-ring: #0066cc;
+  --sidebar-border: #5b21b6;
+  --sidebar-ring: #eab308;
 }
 
 .dark {
-  --background: #0f172a;
+  --background: #1a0a2e;
   --foreground: #f8fafc;
-  --card: #1e293b;
+  --card: #2e1065;
   --card-foreground: #f8fafc;
-  --popover: #1e293b;
+  --popover: #2e1065;
   --popover-foreground: #f8fafc;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #60a5fa;
-  --secondary-foreground: #ffffff;
-  --muted: #334155;
+  --primary: #a78bfa;
+  --primary-foreground: #1a1a1a;
+  --secondary: #eab308;
+  --secondary-foreground: #1a1a1a;
+  --muted: #3b0764;
   --muted-foreground: #cbd5e1;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
+  --accent: #eab308;
+  --accent-foreground: #1a1a1a;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #334155;
-  --input: #334155;
-  --ring: #3b82f6;
-  --chart-1: #3b82f6;
-  --chart-2: #60a5fa;
-  --chart-3: #93c5fd;
-  --chart-4: #1e40af;
-  --chart-5: #ef4444;
-  --sidebar: #0f172a;
+  --border: #4c1d95;
+  --input: #4c1d95;
+  --ring: #a78bfa;
+  --chart-1: #a78bfa;
+  --chart-2: #eab308;
+  --chart-3: #c4b5fd;
+  --chart-4: #7c3aed;
+  --chart-5: #fbbf24;
+  --sidebar: #1a0a2e;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1e293b;
+  --sidebar-primary: #eab308;
+  --sidebar-primary-foreground: #1a1a1a;
+  --sidebar-accent: #2e1065;
   --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
+  --sidebar-border: #4c1d95;
+  --sidebar-ring: #eab308;
 }
 
 @layer base {
