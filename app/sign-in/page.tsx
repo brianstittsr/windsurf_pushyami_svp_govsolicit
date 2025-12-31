@@ -120,20 +120,9 @@ export default function SignInPage() {
         {/* Logo and Branding */}
         <div className="flex flex-col items-center mb-8">
           <Link href="/" className="flex flex-col items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#C8A951] to-[#a08840] rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity" />
-              <Image
-                src="/VPlus_logo.webp"
-                alt="Strategic Value+ Logo"
-                width={80}
-                height={80}
-                className="relative h-20 w-auto"
-                priority
-              />
-            </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-foreground">Strategic Value+</h1>
-              <p className="text-sm text-muted-foreground">Transforming U.S. Manufacturing</p>
+              <h1 className="text-3xl font-bold text-primary">ITMC Solutions</h1>
+              <p className="text-sm text-muted-foreground">IT & Management Consulting</p>
             </div>
           </Link>
         </div>
@@ -143,7 +132,7 @@ export default function SignInPage() {
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
-              Sign in to access your V+ Portal
+              Sign in to access your ITMC Portal
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -220,7 +209,7 @@ export default function SignInPage() {
 
               <Button 
                 type="submit" 
-                className="w-full h-11 bg-gradient-to-r from-[#C8A951] to-[#a08840] hover:from-[#b89841] hover:to-[#907830] text-white font-semibold"
+                className="w-full h-11"
                 disabled={isLoading}
               >
                 {isLoading ? (

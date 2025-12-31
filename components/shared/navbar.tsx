@@ -30,39 +30,36 @@ import { cn } from "@/lib/utils";
 
 const services = [
   {
-    title: "V+ EDGE™",
-    href: "/v-edge",
-    description: "Modular Industry 4.0 transformation platform",
+    title: "Strategic Planning",
+    href: "/company",
+    description: "CPIC and IT portfolio management for federal agencies",
     icon: Wrench,
     items: [
-      { title: "Lean Manufacturing", href: "/v-edge/lean" },
-      { title: "Automation", href: "/v-edge/automation" },
-      { title: "Quality & ISO", href: "/v-edge/quality" },
-      { title: "Digital Transformation", href: "/v-edge/digital" },
-      { title: "Workforce Development", href: "/v-edge/workforce" },
-      { title: "Reshoring", href: "/v-edge/reshore" },
+      { title: "CPIC/Portfolio Management", href: "/company" },
+      { title: "Technology Business Management", href: "/company" },
+      { title: "Cost Optimization", href: "/company" },
     ],
   },
   {
-    title: "TwinEDGE™",
-    href: "/twinedge",
-    description: "Digital twin technology for simulation and optimization",
+    title: "Data & Architecture",
+    href: "/company",
+    description: "Analytics and solution architecture services",
     icon: Cpu,
     items: [
-      { title: "Process Simulation", href: "/twinedge/process" },
-      { title: "Supply Chain Modeling", href: "/twinedge/supply-chain" },
-      { title: "Predictive Maintenance", href: "/twinedge/maintenance" },
+      { title: "Data Analytics & Reporting", href: "/company" },
+      { title: "Solution Architecture", href: "/company" },
+      { title: "Digital Transformation", href: "/company" },
     ],
   },
   {
-    title: "IntellEDGE™",
-    href: "/intelledge",
-    description: "Executive decision intelligence and AI-powered insights",
+    title: "Program Management",
+    href: "/company",
+    description: "Expert program and project management",
     icon: Brain,
     items: [
-      { title: "Command Center", href: "/intelledge/command" },
-      { title: "Analytics Dashboard", href: "/intelledge/analytics" },
-      { title: "Ask IntellEDGE", href: "/intelledge/ask" },
+      { title: "Program/Project Management", href: "/company" },
+      { title: "Intelligent Automation", href: "/company" },
+      { title: "Low-Code Development", href: "/company" },
     ],
   },
 ];
@@ -88,17 +85,9 @@ export function Navbar() {
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/VPlus_logo.webp"
-            alt="Strategic Value+ Logo"
-            width={48}
-            height={48}
-            className="h-12 w-auto"
-            priority
-          />
           <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none">Strategic Value+</span>
-            <span className="text-xs text-muted-foreground">Transforming U.S. Manufacturing</span>
+            <span className="text-lg font-bold leading-none text-primary">ITMC Solutions</span>
+            <span className="text-xs text-muted-foreground">IT & Management Consulting</span>
           </div>
         </Link>
 
@@ -189,14 +178,14 @@ export function Navbar() {
 
         {/* CTA Buttons */}
         <div className="hidden lg:flex items-center gap-3">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/demo">Platform Demo</Link>
+          </Button>
           <Button variant="ghost" asChild>
             <Link href="/sign-in">Sign In</Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/sign-up">Sign Up</Link>
-          </Button>
           <Button asChild>
-            <Link href="/contact">Get Assessment</Link>
+            <Link href="/contact">Connect with Us</Link>
           </Button>
         </div>
 
@@ -267,19 +256,19 @@ export function Navbar() {
               </div>
 
               <div className="border-t pt-4 space-y-2">
+                <Button variant="ghost" className="w-full" asChild>
+                  <Link href="/demo" onClick={() => setMobileOpen(false)}>
+                    Platform Demo
+                  </Link>
+                </Button>
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/sign-in" onClick={() => setMobileOpen(false)}>
                     Sign In
                   </Link>
                 </Button>
-                <Button variant="secondary" className="w-full" asChild>
-                  <Link href="/sign-up" onClick={() => setMobileOpen(false)}>
-                    Sign Up
-                  </Link>
-                </Button>
                 <Button className="w-full" asChild>
                   <Link href="/contact" onClick={() => setMobileOpen(false)}>
-                    Get Assessment
+                    Connect with Us
                   </Link>
                 </Button>
               </div>

@@ -2,14 +2,14 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Strategic Value+ | Transforming U.S. Manufacturing",
-    short_name: "Strategic Value+",
+    name: "ITMC Solutions | IT & Management Consulting for Federal CIO Organizations",
+    short_name: "ITMC Solutions",
     description:
-      "We help small- and mid-sized U.S. manufacturers win OEM contracts through supplier qualification, ISO certification, and operational readiness.",
+      "Trusted by Federal CIO organizations for decades. Expert IT consulting for CPIC/portfolio management, TBM, data analytics, and program management.",
     start_url: "/",
     display: "standalone",
-    background_color: "#000000",
-    theme_color: "#37ca37",
+    background_color: "#ffffff",
+    theme_color: "#0066cc",
     orientation: "portrait-primary",
     icons: [
       {

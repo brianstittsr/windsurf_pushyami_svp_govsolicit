@@ -166,6 +166,7 @@ interface UserProfileContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   linkedTeamMember: TeamMemberDoc | null;
+  isAdmin: () => boolean;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
@@ -288,6 +289,10 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
     return "U";
   };
 
+  const isAdmin = () => {
+    return profile.role === "admin";
+  };
+
   return (
     <UserProfileContext.Provider
       value={{
@@ -307,6 +312,7 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated,
         linkedTeamMember,
+        isAdmin,
       }}
     >
       {children}

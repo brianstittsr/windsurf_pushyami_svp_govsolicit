@@ -201,7 +201,7 @@ export default function ToolPage() {
         <Button asChild>
           <Link href="/portal/svp-tools">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to SVP Tools
+            Back to ITMC Tools
           </Link>
         </Button>
       </div>

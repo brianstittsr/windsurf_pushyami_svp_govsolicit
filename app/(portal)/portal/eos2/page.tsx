@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { AdminGuard } from "@/components/auth/admin-guard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -106,14 +107,14 @@ type TodoForm = Omit<Todo, "id" | "ownerId"> & { ownerId?: string };
 type MeetingForm = Omit<Meeting, "id">;
 type TeamMemberForm = Omit<TeamMember, "id">;
 
-const emptyRock: RockForm = { description: "", owner: "", dueDate: "", status: "on-track", progress: 0, quarter: "Q1 2025" };
+const emptyRock: RockForm = { title: "", description: "", owner: "", dueDate: "", status: "on-track", progress: 0, quarter: "Q1 2025" };
 const emptyMetric: MetricForm = { name: "", goal: 0, actual: 0, owner: "", trend: "flat", unit: "" };
-const emptyIssue: IssueForm = { description: "", priority: "medium", identifiedDate: new Date().toISOString().split("T")[0], owner: "", status: "open" };
-const emptyTodo: TodoForm = { description: "", owner: "", dueDate: "", status: "not-started", createdDate: new Date().toISOString().split("T")[0] };
+const emptyIssue: IssueForm = { title: "", description: "", priority: "medium", identifiedDate: new Date().toISOString().split("T")[0], owner: "", status: "open" };
+const emptyTodo: TodoForm = { title: "", description: "", owner: "", dueDate: "", status: "not-started", createdDate: new Date().toISOString().split("T")[0] };
 const emptyMeeting: MeetingForm = { date: new Date().toISOString().split("T")[0], startTime: "09:00", endTime: "10:30", attendees: [], rating: 8, issuesSolved: 0, rocksReviewed: false, scorecardReviewed: false, todoCompletionRate: 0 };
 const emptyTeamMember: TeamMemberForm = { name: "", role: "", category: "team", getsIt: null, wantsIt: null, capacityToDoIt: null, rightSeat: null };
 
-export default function TractionDashboardPage() {
+function TractionDashboardPageContent() {
   // Use Firestore data hook
   const {
     rocks,
@@ -271,7 +272,7 @@ export default function TractionDashboardPage() {
 
   const openEditRock = (rock: Rock) => {
     setEditingRock(rock);
-    setRockForm({ description: rock.description, owner: rock.owner, ownerId: rock.ownerId, dueDate: rock.dueDate, status: rock.status, progress: rock.progress, quarter: rock.quarter });
+    setRockForm({ title: rock.title, description: rock.description, owner: rock.owner, ownerId: rock.ownerId, dueDate: rock.dueDate, status: rock.status, progress: rock.progress, quarter: rock.quarter });
     setShowRockForm(true);
   };
 
@@ -327,7 +328,7 @@ export default function TractionDashboardPage() {
 
   const openEditIssue = (issue: Issue) => {
     setEditingIssue(issue);
-    setIssueForm({ description: issue.description, priority: issue.priority, identifiedDate: issue.identifiedDate, owner: issue.owner, ownerId: issue.ownerId, status: issue.status });
+    setIssueForm({ title: issue.title, description: issue.description, priority: issue.priority, identifiedDate: issue.identifiedDate, owner: issue.owner, ownerId: issue.ownerId, status: issue.status });
     setShowIssueForm(true);
   };
 
@@ -359,7 +360,7 @@ export default function TractionDashboardPage() {
 
   const openEditTodo = (todo: Todo) => {
     setEditingTodo(todo);
-    setTodoForm({ description: todo.description, owner: todo.owner, ownerId: todo.ownerId, dueDate: todo.dueDate, status: todo.status, createdDate: todo.createdDate });
+    setTodoForm({ title: todo.title, description: todo.description, owner: todo.owner, ownerId: todo.ownerId, dueDate: todo.dueDate, status: todo.status, createdDate: todo.createdDate });
     setShowTodoForm(true);
   };
 
@@ -1776,5 +1777,13 @@ export default function TractionDashboardPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function TractionDashboardPage() {
+  return (
+    <AdminGuard>
+      <TractionDashboardPageContent />
+    </AdminGuard>
   );
 }

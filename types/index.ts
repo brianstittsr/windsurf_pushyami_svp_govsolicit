@@ -1,7 +1,7 @@
-// Core Types for Strategic Value Plus Platform
+// Core Types for ITMC Solutions Platform
 
 // User roles
-export type UserRole = 'admin' | 'team' | 'affiliate' | 'customer' | 'partner';
+export type UserRole = 'superadmin' | 'admin' | 'affiliate' | 'viewer' | 'team' | 'customer' | 'partner';
 
 // Organization types
 export type OrganizationType = 'customer' | 'affiliate' | 'partner' | 'oem' | 'internal';

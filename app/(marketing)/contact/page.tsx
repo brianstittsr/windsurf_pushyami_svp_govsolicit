@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Mail,
   Phone,
   MapPin,
@@ -20,18 +27,21 @@ import {
   ArrowRight,
   CheckCircle,
   Linkedin,
-  Building,
-  Users,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, Timestamp } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 
 const services = [
-  "Supplier Readiness & OEM Qualification",
-  "ISO/QMS Certification",
-  "Lean Manufacturing",
+  "Strategic Planning",
+  "IT Portfolio Management & TBM",
+  "Data Analytics & Reporting",
+  "Solution & Data Architecture",
+  "Intelligent Automation & Low-Code",
+  "Program / Project Management",
   "Digital Transformation",
-  "Reshoring Advisory",
-  "Workforce Development",
   "Other",
 ];
 
@@ -45,6 +55,19 @@ const companySizes = [
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookCallOpen, setBookCallOpen] = useState(false);
+  const [isBookingCall, setIsBookingCall] = useState(false);
+  const [bookCallForm, setBookCallForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    jobTitle: "",
+    preferredDate: "",
+    preferredTime: "",
+    message: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,6 +84,57 @@ export default function ContactPage() {
     (e.target as HTMLFormElement).reset();
   };
 
+  const handleBookCall = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsBookingCall(true);
+
+    try {
+      if (!db) {
+        throw new Error("Database not configured");
+      }
+
+      await addDoc(collection(db, COLLECTIONS.BOOK_CALL_LEADS), {
+        firstName: bookCallForm.firstName,
+        lastName: bookCallForm.lastName,
+        email: bookCallForm.email,
+        phone: bookCallForm.phone || null,
+        company: bookCallForm.company || null,
+        jobTitle: bookCallForm.jobTitle || null,
+        preferredDate: bookCallForm.preferredDate || null,
+        preferredTime: bookCallForm.preferredTime || null,
+        message: bookCallForm.message || null,
+        source: "contact-page",
+        status: "new",
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+
+      toast.success("Call request submitted!", {
+        description: "We'll contact you shortly to schedule your call.",
+      });
+
+      setBookCallForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        company: "",
+        jobTitle: "",
+        preferredDate: "",
+        preferredTime: "",
+        message: "",
+      });
+      setBookCallOpen(false);
+    } catch (error) {
+      console.error("Error submitting book call request:", error);
+      toast.error("Failed to submit request", {
+        description: "Please try again or contact us directly.",
+      });
+    } finally {
+      setIsBookingCall(false);
+    }
+  };
+
   return (
     <>
       {/* Hero Section */}
@@ -71,12 +145,12 @@ export default function ContactPage() {
               Get in Touch
             </Badge>
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-              Let's Start Your{" "}
-              <span className="text-primary">Transformation</span>
+              Let's Meet Your{" "}
+              <span className="text-primary">Milestones Together</span>
             </h1>
             <p className="mt-6 text-lg text-gray-300">
-              Ready to become an OEM-qualified supplier? Schedule a free assessment 
-              or reach out to discuss how we can help your manufacturing business grow.
+              Ready for a team you can count on? Reach out to discuss how we can help 
+              you optimize processes, ensure compliance, and reach your IT goals.
             </p>
           </div>
         </div>
@@ -90,7 +164,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-2xl">Request a Free Assessment</CardTitle>
+                  <CardTitle className="text-2xl">Connect with ITMC Solutions</CardTitle>
                   <CardDescription>
                     Fill out the form below and one of our experts will contact you within 24 hours.
                   </CardDescription>
@@ -189,7 +263,7 @@ export default function ContactPage() {
                         "Submitting..."
                       ) : (
                         <>
-                          Request Free Assessment
+                          Submit Request
                           <ArrowRight className="ml-2 h-5 w-5" />
                         </>
                       )}
@@ -212,10 +286,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium">Email</p>
                       <Link
-                        href="mailto:info@strategicvalueplus.com"
+                        href="mailto:contact@itmcsolutions.com"
                         className="text-muted-foreground hover:text-primary"
                       >
-                        info@strategicvalueplus.com
+                        contact@itmcsolutions.com
                       </Link>
                     </div>
                   </div>
@@ -224,10 +298,10 @@ export default function ContactPage() {
                     <div>
                       <p className="font-medium">Phone</p>
                       <Link
-                        href="tel:+1-555-123-4567"
+                        href="tel:+1-757-284-3986"
                         className="text-muted-foreground hover:text-primary"
                       >
-                        (555) 123-4567
+                        (757) 284-3986
                       </Link>
                     </div>
                   </div>
@@ -235,7 +309,7 @@ export default function ContactPage() {
                     <MapPin className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <p className="font-medium">Location</p>
-                      <p className="text-muted-foreground">United States</p>
+                      <p className="text-muted-foreground">100 7th St., Suite 104<br/>Portsmouth, VA 23704</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -258,14 +332,130 @@ export default function ContactPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Prefer to talk directly? Book a 30-minute discovery call with one of our experts.
+                    Prefer to talk directly? Book a call with one of our federal IT consulting experts.
                   </p>
-                  <Button className="w-full" asChild>
-                    <Link href="#">
-                      Book a Call
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
+                  <Dialog open={bookCallOpen} onOpenChange={setBookCallOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full">
+                        Book a Call
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[500px]">
+                      <DialogHeader>
+                        <DialogTitle>Book a Consultation Call</DialogTitle>
+                        <DialogDescription>
+                          Fill out the form below and we&apos;ll reach out to schedule your consultation.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleBookCall} className="space-y-4 mt-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="book-firstName">First Name *</Label>
+                            <Input
+                              id="book-firstName"
+                              required
+                              value={bookCallForm.firstName}
+                              onChange={(e) => setBookCallForm({ ...bookCallForm, firstName: e.target.value })}
+                              placeholder="John"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="book-lastName">Last Name *</Label>
+                            <Input
+                              id="book-lastName"
+                              required
+                              value={bookCallForm.lastName}
+                              onChange={(e) => setBookCallForm({ ...bookCallForm, lastName: e.target.value })}
+                              placeholder="Smith"
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="book-email">Email *</Label>
+                          <Input
+                            id="book-email"
+                            type="email"
+                            required
+                            value={bookCallForm.email}
+                            onChange={(e) => setBookCallForm({ ...bookCallForm, email: e.target.value })}
+                            placeholder="john@company.com"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="book-phone">Phone</Label>
+                            <Input
+                              id="book-phone"
+                              type="tel"
+                              value={bookCallForm.phone}
+                              onChange={(e) => setBookCallForm({ ...bookCallForm, phone: e.target.value })}
+                              placeholder="(555) 123-4567"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="book-company">Company</Label>
+                            <Input
+                              id="book-company"
+                              value={bookCallForm.company}
+                              onChange={(e) => setBookCallForm({ ...bookCallForm, company: e.target.value })}
+                              placeholder="Your Company"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="book-date">Preferred Date</Label>
+                            <Input
+                              id="book-date"
+                              type="date"
+                              value={bookCallForm.preferredDate}
+                              onChange={(e) => setBookCallForm({ ...bookCallForm, preferredDate: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="book-time">Preferred Time</Label>
+                            <Select
+                              value={bookCallForm.preferredTime}
+                              onValueChange={(value) => setBookCallForm({ ...bookCallForm, preferredTime: value })}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select time" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="morning">Morning (9am-12pm)</SelectItem>
+                                <SelectItem value="afternoon">Afternoon (12pm-5pm)</SelectItem>
+                                <SelectItem value="evening">Evening (5pm-7pm)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="book-message">What would you like to discuss?</Label>
+                          <Textarea
+                            id="book-message"
+                            value={bookCallForm.message}
+                            onChange={(e) => setBookCallForm({ ...bookCallForm, message: e.target.value })}
+                            placeholder="Tell us about your goals..."
+                            rows={3}
+                          />
+                        </div>
+                        <Button type="submit" className="w-full" disabled={isBookingCall}>
+                          {isBookingCall ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            <>
+                              Request Call
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </>
+                          )}
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </CardContent>
               </Card>
 
@@ -277,7 +467,7 @@ export default function ContactPage() {
                 <CardContent>
                   <div className="flex gap-3">
                     <Button variant="outline" size="icon" asChild>
-                      <Link href="https://linkedin.com">
+                      <Link href="https://www.linkedin.com/company/itmc-solutions" target="_blank">
                         <Linkedin className="h-5 w-5" />
                       </Link>
                     </Button>

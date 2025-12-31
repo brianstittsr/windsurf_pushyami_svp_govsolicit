@@ -8,51 +8,51 @@ import { ArrowRight, Wrench, Cpu, Brain, CheckCircle } from "lucide-react";
 
 const services = [
   {
-    title: "V+ EDGE™",
-    tagline: "Start Smart. Build Fast.",
+    title: "Strategic Planning & CPIC",
+    tagline: "Navigate Change with Confidence",
     description:
-      "Your entry point to transformation. Modular platform covering lean, automation, sustainability, quality, and workforce strategy.",
+      "Our seasoned experts help Senior Executives identify improvement areas, manage risks, and optimize IT services to meet new legislative and organizational demands.",
     icon: Wrench,
     color: "text-primary",
     bgColor: "bg-primary/10",
-    href: "/v-edge",
+    href: "/company",
     features: [
-      "Hands-on implementation with real-time KPIs",
-      "Modular design for immediate impact",
-      "Ideal for companies with 25–500 employees",
-      "No ERP overhaul required",
+      "IT Portfolio Management",
+      "Technology Business Management (TBM)",
+      "Cost optimization strategies",
+      "Risk management and compliance",
     ],
   },
   {
-    title: "TwinEDGE™",
-    tagline: "Simulate. Optimize. Reshore with Confidence.",
+    title: "Data Analytics & Architecture",
+    tagline: "Transform Data into Insights",
     description:
-      "Digital twin technology for workflow modeling, scenario testing, and supply chain redesign before making costly changes.",
+      "Turn complex information into clear, actionable recommendations. Future-proof your technology infrastructure with our enterprise architecture expertise.",
     icon: Cpu,
     color: "text-secondary",
     bgColor: "bg-secondary/10",
-    href: "/twinedge",
+    href: "/company",
     features: [
-      "Predictive simulations & ROI modeling",
-      "Smart reshoring and supply chain reengineering",
-      "Factory layout and flow optimization",
-      "Machine maintenance prediction",
+      "Data analytics and reporting",
+      "Solution and data architecture",
+      "Business outcome delivery",
+      "Scalable infrastructure design",
     ],
   },
   {
-    title: "IntellEDGE™",
-    tagline: "Decide Smarter. Lead Stronger.",
+    title: "Program Management",
+    tagline: "From Strategy to Execution",
     description:
-      "Executive-grade decision-making tools with predictive analytics and AI-powered insights for leadership teams.",
+      "From $100M+ engagements to $3B+ budgets, we've mastered complex project delivery. Our team brings precision and care to every project.",
     icon: Brain,
     color: "text-accent",
     bgColor: "bg-accent/10",
-    href: "/intelledge",
+    href: "/company",
     features: [
-      "Data-driven real-time dashboards",
-      "Prescriptive decision tools",
-      "Scenario modeling for executive strategy",
-      "Enhanced visibility and long-term planning",
+      "Program and project management",
+      "Intelligent automation and low-code",
+      "Digital transformation",
+      "Operational excellence",
     ],
   },
 ];
@@ -64,14 +64,15 @@ export function ServicesOverview() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <Badge variant="outline" className="mb-4">
-            Modular Industry 4.0/5.0 for Manufacturers
+            Comprehensive IT & Management Consulting
           </Badge>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            The EDGE™ Platform
+            What We Do
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            We help small- and mid-sized manufacturers drive real, scalable progress. 
-            Start where you need it most — then expand with purpose, precision, and measurable results.
+            As a veteran-, woman-, and minority-owned small business, we specialize in CPIC/portfolio management, 
+            Business and Solution architecture, Technology Business Management (TBM), Data Analytics, and a wide 
+            range of program/project management capabilities.
           </p>
         </div>
 
@@ -113,11 +114,11 @@ export function ServicesOverview() {
         {/* CTA */}
         <div className="mt-16 text-center">
           <p className="text-muted-foreground mb-4">
-            Not sure which solution is right for you?
+            Ready for a team you can count on?
           </p>
           <Button size="lg" asChild>
             <Link href="/contact">
-              Schedule a Discovery Call
+              Connect with Us
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>

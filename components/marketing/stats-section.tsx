@@ -5,32 +5,32 @@ import { Factory, Users, Award, TrendingUp } from "lucide-react";
 
 const stats = [
   {
-    label: "Years Experience",
-    value: 50,
+    label: "Years of Service",
+    value: 35,
     suffix: "+",
     icon: Award,
-    description: "Combined team expertise in manufacturing",
+    description: "Government consulting expertise",
   },
   {
-    label: "Industry Sectors",
-    value: 12,
-    suffix: "+",
+    label: "Budgets Managed",
+    value: 3,
+    suffix: "B+",
+    icon: TrendingUp,
+    description: "Successfully managed IT budgets",
+  },
+  {
+    label: "Large Engagements",
+    value: 100,
+    suffix: "M+",
     icon: Factory,
-    description: "Automotive, aerospace, medical & more",
+    description: "Years-long federal projects",
   },
   {
-    label: "Expert Affiliates",
-    value: 25,
+    label: "Combined Experience",
+    value: 70,
     suffix: "+",
     icon: Users,
-    description: "Nationwide network of specialists",
-  },
-  {
-    label: "Certifications",
-    value: 15,
-    suffix: "+",
-    icon: TrendingUp,
-    description: "ISO, IATF, AS9100 & more",
+    description: "Years of team expertise",
   },
 ];
 

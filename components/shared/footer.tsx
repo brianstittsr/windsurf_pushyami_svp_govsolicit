@@ -5,18 +5,18 @@ import { Separator } from "@/components/ui/separator";
 
 const footerLinks = {
   services: [
-    { title: "V+ EDGE™", href: "/v-edge" },
-    { title: "TwinEDGE™", href: "/twinedge" },
-    { title: "IntellEDGE™", href: "/intelledge" },
-    { title: "ISO & QMS", href: "/v-edge/quality" },
-    { title: "Reshoring", href: "/v-edge/reshore" },
-    { title: "Supplier Readiness", href: "/services/supplier-readiness" },
+    { title: "Strategic Planning", href: "/company" },
+    { title: "CPIC/Portfolio Management", href: "/company" },
+    { title: "Technology Business Management", href: "/company" },
+    { title: "Data Analytics", href: "/company" },
+    { title: "Solution Architecture", href: "/company" },
+    { title: "Program Management", href: "/company" },
   ],
   company: [
     { title: "About Us", href: "/about" },
-    { title: "Core Team", href: "/about#team" },
-    { title: "Affiliates", href: "/affiliates" },
-    { title: "Case Studies", href: "/case-studies" },
+    { title: "Leadership Team", href: "/company" },
+    { title: "Our Approach", href: "/about" },
+    { title: "Certifications", href: "/about" },
     { title: "Careers", href: "/careers" },
     { title: "Contact", href: "/contact" },
   ],
@@ -44,31 +44,23 @@ export function Footer() {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1 space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/VPlus_logo.webp"
-                alt="Strategic Value+ Logo"
-                width={40}
-                height={40}
-                className="h-10 w-auto"
-              />
               <div className="flex flex-col">
-                <span className="text-lg font-bold leading-none">Strategic Value+</span>
-                <span className="text-xs text-gray-400">Transforming U.S. Manufacturing</span>
+                <span className="text-lg font-bold leading-none">ITMC Solutions</span>
+                <span className="text-xs text-gray-400">IT & Management Consulting</span>
               </div>
             </Link>
             <p className="text-sm text-gray-400 max-w-xs">
-              Helping small- and mid-sized U.S. manufacturers win OEM contracts through 
-              supplier qualification, ISO certification, and operational readiness.
+              Trusted by Federal CIO organizations for decades. We're your partners from strategy to execution.
             </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>SBA 8(a) Certified</p>
+              <p>Veteran, Woman & Minority-Owned</p>
+              <p>GSA MAS: 47QTCA23D004X</p>
+              <p>SWAM: #69476</p>
+            </div>
             <div className="flex gap-4">
-              <Link href="https://linkedin.com" className="text-gray-400 hover:text-primary transition-colors">
+              <Link href="https://www.linkedin.com/company/itmc-solutions" target="_blank" className="text-gray-400 hover:text-primary transition-colors">
                 <Linkedin className="h-5 w-5" />
-              </Link>
-              <Link href="https://twitter.com" className="text-gray-400 hover:text-primary transition-colors">
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link href="https://youtube.com" className="text-gray-400 hover:text-primary transition-colors">
-                <Youtube className="h-5 w-5" />
               </Link>
             </div>
           </div>
@@ -121,18 +113,18 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-gray-400">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>United States</span>
+                <span>100 7th St., Suite 104<br/>Portsmouth, VA 23704</span>
               </li>
               <li>
-                <Link href="mailto:info@strategicvalueplus.com" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="mailto:contact@itmcsolutions.com" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
                   <Mail className="h-4 w-4" />
-                  info@strategicvalueplus.com
+                  contact@itmcsolutions.com
                 </Link>
               </li>
               <li>
-                <Link href="tel:+1-555-123-4567" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="tel:+1-757-284-3986" className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
                   <Phone className="h-4 w-4" />
-                  (555) 123-4567
+                  (757) 284-3986
                 </Link>
               </li>
             </ul>
@@ -144,7 +136,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} Strategic Value+ Solutions. All rights reserved.
+            © 2010-{new Date().getFullYear()} ITMC Solutions, LLC. All rights reserved.
           </p>
           <div className="flex gap-6">
             {footerLinks.legal.map((link) => (

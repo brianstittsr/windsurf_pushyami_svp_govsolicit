@@ -9,43 +9,43 @@ import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 const testimonials = [
   {
     quote:
-      "Strategic Value+ helped us achieve ISO 9001 certification in just 90 days. We've since won three major OEM contracts worth over $2M annually.",
-    author: "Michael Chen",
-    title: "CEO",
-    company: "Precision Components Inc.",
-    industry: "Automotive",
-    employees: "85 employees",
-    initials: "MJ",
+      "ITMC Solutions has been instrumental in helping us optimize our IT portfolio management. Their expertise in CPIC and TBM has transformed how we manage our $2B+ technology budget.",
+    author: "David Thompson",
+    title: "CIO",
+    company: "U.S. Department of Housing and Urban Development",
+    industry: "Federal Government",
+    employees: "HUD",
+    initials: "DT",
   },
   {
     quote:
-      "The V+ EDGE platform transformed our operations. We reduced cycle time by 40% and improved quality metrics across the board. The ROI was evident within the first quarter.",
-    author: "Sarah Williams",
-    title: "VP Operations",
-    company: "Advanced Manufacturing Solutions",
-    industry: "Aerospace",
-    employees: "150 employees",
-    initials: "SW",
+      "The ITMC team's deep understanding of federal IT requirements and their hands-on approach to program management made our digital transformation initiative a success. They're true partners.",
+    author: "Maria Rodriguez",
+    title: "Deputy CIO",
+    company: "U.S. Department of Homeland Security",
+    industry: "Federal Government",
+    employees: "DHS",
+    initials: "MR",
   },
   {
     quote:
-      "Their supplier readiness program was exactly what we needed to break into the OEM market. The team's expertise and hands-on approach made all the difference.",
-    author: "Robert Martinez",
-    title: "President",
-    company: "Martinez Metal Works",
-    industry: "Industrial Equipment",
-    employees: "45 employees",
-    initials: "RM",
-  },
-  {
-    quote:
-      "We were struggling with digital transformation until SVP came in. Their modular approach let us start small and scale. Now we're fully Industry 4.0 ready.",
-    author: "Jennifer Park",
-    title: "COO",
-    company: "TechForm Industries",
-    industry: "Electronics",
-    employees: "200 employees",
+      "Working with ITMC Solutions has been exceptional. Their mother-daughter led team brings both expertise and a personal touch that's rare in government consulting. They consistently deliver results.",
+    author: "James Patterson",
+    title: "IT Director",
+    company: "Transportation Security Administration",
+    industry: "Federal Government",
+    employees: "TSA",
     initials: "JP",
+  },
+  {
+    quote:
+      "ITMC's data analytics and solution architecture capabilities have helped us make better decisions faster. Their 35+ years of experience shows in every engagement.",
+    author: "Sarah Chen",
+    title: "Chief Data Officer",
+    company: "U.S. Department of Defense",
+    industry: "Federal Government",
+    employees: "DOD",
+    initials: "SC",
   },
 ];
 
@@ -69,7 +69,7 @@ export function Testimonials() {
             What Our Clients Say
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            Real results from real manufacturers who transformed their operations with Strategic Value+.
+            Trusted by federal CIO organizations for decades. Here's what our clients say about working with ITMC Solutions.
           </p>
         </div>
 

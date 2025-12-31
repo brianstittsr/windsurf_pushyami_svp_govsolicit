@@ -505,7 +505,7 @@ export default function ContactsTab() {
             <DialogDescription>
               {selectedContact?.isClient
                 ? `Are you sure you want to remove ${selectedContact?.firstName} ${selectedContact?.lastName} as a client?`
-                : `Mark ${selectedContact?.firstName} ${selectedContact?.lastName} as a client to serve them with SVP Tools.`}
+                : `Mark ${selectedContact?.firstName} ${selectedContact?.lastName} as a client to serve them with ITMC Tools.`}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

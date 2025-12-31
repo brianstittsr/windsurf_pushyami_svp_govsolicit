@@ -118,7 +118,7 @@ const industries = [
   "Defense",
 ];
 
-// SVP Tools list with role-based access
+// ITMC Tools list with role-based access
 interface SVPTool {
   id: string;
   name: string;
@@ -356,7 +356,7 @@ export default function ProfilePage() {
         <div>
           <h1 className="text-3xl font-bold">My Profile</h1>
           <p className="text-muted-foreground">
-            Manage your profile, networking preferences, and SVP tools
+            Manage your profile, networking preferences, and ITMC tools
           </p>
         </div>
         <Button onClick={saveProfile} disabled={isSaving}>
@@ -476,7 +476,7 @@ export default function ProfilePage() {
           </TabsTrigger>
           <TabsTrigger value="tools" className="text-xs sm:text-sm">
             <Wrench className="h-4 w-4 mr-1 hidden sm:inline" />
-            SVP Tools
+            ITMC Tools
           </TabsTrigger>
           <TabsTrigger value="recordings" className="text-xs sm:text-sm">
             <Video className="h-4 w-4 mr-1 hidden sm:inline" />
@@ -1110,13 +1110,13 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        {/* SVP Tools Tab */}
+        {/* ITMC Tools Tab */}
         <TabsContent value="tools" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>SVP Tools</CardTitle>
+              <CardTitle>ITMC Tools</CardTitle>
               <CardDescription>
-                Access Strategic Value+ platform tools based on your role
+                Access ITMC Solutions platform tools based on your role
                 {(profile.role === "team_member" || profile.role === "admin") && (
                   <Badge variant="secondary" className="ml-2">Team Access</Badge>
                 )}

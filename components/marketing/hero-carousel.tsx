@@ -30,63 +30,39 @@ export interface HeroSlide {
 const defaultSlides: HeroSlide[] = [
   {
     id: "1",
-    badge: "Introducing EDGE-X™ — Next-Gen Manufacturing Intelligence",
-    headline: "Win OEM Contracts.",
-    highlightedText: "Transform",
-    subheadline: "We help small- and mid-sized U.S. manufacturers become qualified suppliers through ISO certification, operational readiness, and supplier development.",
-    benefits: ["OEM Supplier Qualification", "ISO/QMS Certification", "Industry 4.0 Ready"],
-    primaryCta: { text: "Get Your Free Assessment", href: "/contact" },
-    secondaryCta: { text: "See Success Stories", href: "/case-studies" },
+    badge: "SBA 8(a) Certified | Veteran, Woman & Minority-Owned",
+    headline: "Streamline, Stay Compliant &",
+    highlightedText: "Reach Your IT Goals",
+    subheadline: "Trusted by Federal CIO organizations from HUD to DHS & beyond, we're your partners from strategy to execution.",
+    benefits: ["CPIC/Portfolio Management", "Technology Business Management", "Data Analytics"],
+    primaryCta: { text: "Connect with Us", href: "/contact" },
+    secondaryCta: { text: "Learn More", href: "/about" },
     isPublished: true,
     order: 1,
   },
   {
     id: "2",
-    badge: "V+ TwinEDGE™ — Digital Twin Solutions",
-    headline: "Visualize Your Factory.",
-    highlightedText: "Optimize",
-    subheadline: "Create digital replicas of your manufacturing processes to simulate, analyze, and improve operations before making costly physical changes.",
-    benefits: ["Real-time Monitoring", "Predictive Analytics", "Process Simulation"],
-    primaryCta: { text: "Explore Digital Twins", href: "/services/twinedge" },
-    secondaryCta: { text: "Watch Demo", href: "/demo" },
+    badge: "35+ Years of Federal Experience",
+    headline: "Optimize IT Spend.",
+    highlightedText: "Drive Mission Success",
+    subheadline: "We help federal agencies achieve smarter IT investments with clear budget insights, cost allocation strategies, and measurable IT value aligned with mission priorities.",
+    benefits: ["Cost Optimization", "Budget Insights", "Measurable ROI"],
+    primaryCta: { text: "View Our Services", href: "/company" },
+    secondaryCta: { text: "Meet Our Team", href: "/about" },
     isPublished: true,
     order: 2,
   },
   {
     id: "3",
-    badge: "V+ IntellEDGE™ — AI-Powered Insights",
-    headline: "Make Smarter Decisions.",
-    highlightedText: "Faster",
-    subheadline: "Leverage artificial intelligence to gain actionable insights from your manufacturing data, predict maintenance needs, and optimize production schedules.",
-    benefits: ["AI-Driven Analytics", "Predictive Maintenance", "Smart Scheduling"],
-    primaryCta: { text: "Discover AI Solutions", href: "/services/intelledge" },
-    secondaryCta: { text: "Learn More", href: "/about" },
+    badge: "Strategy | Partnership | Peace of Mind",
+    headline: "From Strategy to",
+    highlightedText: "Execution",
+    subheadline: "As experts in solution architecture, digital transformation, and program management, we guide government IT leaders to optimize processes, ensure compliance, and consistently reach targets.",
+    benefits: ["Solution Architecture", "Digital Transformation", "Program Management"],
+    primaryCta: { text: "Schedule a Call", href: "/contact" },
+    secondaryCta: { text: "Our Approach", href: "/company" },
     isPublished: true,
     order: 3,
-  },
-  {
-    id: "4",
-    badge: "Reshoring Initiative Partner",
-    headline: "Bring Manufacturing",
-    highlightedText: "Home",
-    subheadline: "Join the reshoring movement. We help companies navigate the complexities of bringing manufacturing back to the United States with comprehensive support.",
-    benefits: ["Supply Chain Security", "Quality Control", "Job Creation"],
-    primaryCta: { text: "Start Reshoring", href: "/services/reshoring" },
-    secondaryCta: { text: "View Case Studies", href: "/case-studies" },
-    isPublished: true,
-    order: 4,
-  },
-  {
-    id: "5",
-    badge: "NEW — AntiFragile Supply Chain Analysis",
-    headline: "Build Resilient",
-    highlightedText: "Supply Chains",
-    subheadline: "Go beyond risk mitigation. Our AntiFragile methodology helps your supply chain actually grow stronger from disruptions, volatility, and uncertainty.",
-    benefits: ["Stress Testing", "Redundancy Mapping", "Adaptive Strategies"],
-    primaryCta: { text: "Schedule Discovery Call", href: "/antifragile" },
-    secondaryCta: { text: "Learn More", href: "/antifragile" },
-    isPublished: true,
-    order: 5,
   },
 ];
 
@@ -145,7 +121,7 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
             {/* Headline */}
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
               {currentSlide.headline}{" "}
-              <span className="text-primary">{currentSlide.highlightedText}</span> Your Manufacturing.
+              <span className="text-primary">{currentSlide.highlightedText}</span>
             </h1>
 
             {/* Subheadline */}
@@ -216,27 +192,27 @@ export function HeroCarousel({ slides = defaultSlides, autoPlayInterval = 6000 }
 
           {/* Trust Indicators */}
           <div className="mt-16 pt-8 border-t border-white/10">
-            <p className="text-sm text-gray-400 mb-6">Certifications & Partnerships</p>
+            <p className="text-sm text-gray-400 mb-6">Trusted by Federal Agencies for Decades</p>
             <div className="flex flex-wrap justify-center items-center gap-6 md:gap-10">
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">ISO 9001</span>
+                <span className="text-lg font-bold text-white">SBA 8(a)</span>
                 <span className="text-xs text-gray-400">Certified</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">IATF 16949</span>
-                <span className="text-xs text-gray-400">Automotive</span>
+                <span className="text-lg font-bold text-white">Veteran</span>
+                <span className="text-xs text-gray-400">Owned</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">MEP</span>
-                <span className="text-xs text-gray-400">Network Partner</span>
+                <span className="text-lg font-bold text-white">Woman</span>
+                <span className="text-xs text-gray-400">Owned</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">Reshoring</span>
-                <span className="text-xs text-gray-400">Initiative</span>
+                <span className="text-lg font-bold text-white">GSA MAS</span>
+                <span className="text-xs text-gray-400">Contract</span>
               </div>
               <div className="flex flex-col items-center text-center">
-                <span className="text-lg font-bold text-white">NIST</span>
-                <span className="text-xs text-gray-400">Aligned</span>
+                <span className="text-lg font-bold text-white">SWAM</span>
+                <span className="text-xs text-gray-400">#69476</span>
               </div>
             </div>
           </div>

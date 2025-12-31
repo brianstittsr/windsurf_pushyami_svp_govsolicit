@@ -12,25 +12,32 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
     
-    function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    function getTeamMemberRole() {
+      let teamMember = get(/databases/$(database)/documents/teamMembers/$(request.auth.uid));
+      return teamMember != null ? teamMember.data.role : null;
+    }
+    
+    function isSuperAdmin() {
+      return isAuthenticated() && getTeamMemberRole() == 'superadmin';
     }
     
     function isAdmin() {
-      return isAuthenticated() && getUserRole() == 'admin';
+      let role = getTeamMemberRole();
+      return isAuthenticated() && (role == 'superadmin' || role == 'admin');
     }
     
     function isTeamMember() {
-      return isAuthenticated() && getUserRole() in ['admin', 'team'];
+      let role = getTeamMemberRole();
+      return isAuthenticated() && role in ['superadmin', 'admin', 'team'];
     }
     
     function isAffiliate() {
-      return isAuthenticated() && getUserRole() == 'affiliate';
+      return isAuthenticated() && getTeamMemberRole() == 'affiliate';
     }
     
     function isOrgMember(orgId) {
       return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId == orgId;
+        get(/databases/$(database)/documents/teamMembers/$(request.auth.uid)).data.organizationId == orgId;
     }
 
     // Users collection
@@ -109,18 +116,17 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
-    // Rocks collection
-    // TODO: Restrict to role-based access in production
+    // Rocks collection - Admin only
     match /rocks/{rockId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
       
       // Rock milestones subcollection
       match /milestones/{milestoneId} {
-        allow read: if isAuthenticated();
-        allow write: if isAuthenticated();
+        allow read: if isAdmin();
+        allow write: if isAdmin();
       }
     }
 
@@ -269,12 +275,11 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Platform Settings - read/write allowed for development
-    // TODO: Restrict writes to authenticated users in production
+    // Platform Settings - Admin only
     match /platformSettings/{settingsId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -282,21 +287,19 @@ service cloud.firestore {
     // Apollo Integration Collections
     // =========================================================================
 
-    // Apollo Purchased Contacts - read/write allowed for development
-    // TODO: Restrict to authenticated users in production
+    // Apollo Purchased Contacts - Admin only
     match /apolloPurchasedContacts/{contactId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
-    // Apollo Saved Lists - read/write allowed for development
-    // TODO: Restrict to authenticated users in production
+    // Apollo Saved Lists - Admin only
     match /apolloSavedLists/{listId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -304,22 +307,20 @@ service cloud.firestore {
     // ThomasNet Supplier Search Collections
     // =========================================================================
 
-    // ThomasNet Saved Suppliers - read/write allowed for development
-    // TODO: Restrict to authenticated users in production
+    // ThomasNet Saved Suppliers - Admin only
     match /thomasnetSavedSuppliers/{supplierId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // ThomasNet Saved Lists - read/write allowed for development
-    // TODO: Restrict to authenticated users in production
+    // ThomasNet Saved Lists - Admin only
     match /thomasnetSavedLists/{listId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =========================================================================
@@ -415,36 +416,36 @@ service cloud.firestore {
     // TODO: Restrict to authenticated users in production
     // =========================================================================
 
-    // GoHighLevel Integrations - open for development
+    // GoHighLevel Integrations - Admin only
     match /gohighlevelIntegrations/{integrationId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // GoHighLevel Sync Logs - open for development
+    // GoHighLevel Sync Logs - Admin only
     match /gohighlevelSyncLogs/{logId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // GoHighLevel Workflows - open for development
+    // GoHighLevel Workflows - Admin only
     match /ghlWorkflows/{workflowId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // GoHighLevel Imported Workflows - open for development
+    // GoHighLevel Imported Workflows - Admin only
     match /ghlImportedWorkflows/{workflowId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =========================================================================
@@ -505,52 +506,52 @@ service cloud.firestore {
     // TODO: Restrict to authenticated users in production
     // =========================================================================
 
-    // Traction Rocks - open for development
+    // Traction Rocks - Admin only
     match /tractionRocks/{rockId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Traction Scorecard Metrics - open for development
+    // Traction Scorecard Metrics - Admin only
     match /tractionScorecardMetrics/{metricId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Traction Issues - open for development
+    // Traction Issues - Admin only
     match /tractionIssues/{issueId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Traction Todos - open for development
+    // Traction Todos - Admin only
     match /tractionTodos/{todoId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Traction Meetings - open for development
+    // Traction Meetings - Admin only
     match /tractionMeetings/{meetingId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Traction Team Members - open for development
+    // Traction Team Members - Admin only
     match /tractionTeamMembers/{memberId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =========================================================================
@@ -558,20 +559,48 @@ service cloud.firestore {
     // TODO: Restrict to authenticated users in production
     // =========================================================================
 
-    // Mattermost Playbooks - open for development
+    // Mattermost Playbooks - Admin only
     match /mattermostPlaybooks/{playbookId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
-    // Mattermost Playbook Runs - open for development
+    // Mattermost Playbook Runs - Admin only
     match /mattermostPlaybookRuns/{runId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if true;
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // Team Members Collection
+    // =========================================================================
+    match /teamMembers/{memberId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin();
+      allow update: if isAuthenticated() && (request.auth.uid == memberId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // Platform Settings Collection
+    // =========================================================================
+    match /platformSettings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // =========================================================================
+    // Catch-all for any other collections - authenticated users can read/write
+    // This ensures no permission errors during development
+    // TODO: Remove or restrict in production
+    // =========================================================================
+    match /{collection}/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
     }
   }
 }

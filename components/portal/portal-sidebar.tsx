@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import NextImage from "next/image";
 import { usePathname } from "next/navigation";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
 import { useUserProfile } from "@/contexts/user-profile-context";
 import {
   Sidebar,
@@ -67,6 +70,8 @@ import {
   Plug,
   Bug,
   Heart,
+  Phone,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,16 +107,41 @@ const mainNavItems = [
 
 const workItems = [
   {
+    title: "Gov Solicitations",
+    href: "/portal/work/solicitations/dashboard",
+    icon: Search,
+    badge: "NEW",
+    subItems: [
+      {
+        title: "Dashboard",
+        href: "/portal/work/solicitations/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Search",
+        href: "/portal/work/solicitations/search",
+        icon: Search,
+      },
+      {
+        title: "Configuration",
+        href: "/portal/work/solicitations/config",
+        icon: Settings,
+      },
+    ],
+  },
+  {
     title: "Apollo Search",
     href: "/portal/apollo-search",
     icon: Search,
     badge: "AI",
+    adminOnly: true,
   },
   {
     title: "Supplier Search",
     href: "/portal/supplier-search",
     icon: Factory,
     badge: "AI",
+    adminOnly: true,
   },
   {
     title: "Documents",
@@ -137,6 +167,7 @@ const workItems = [
     title: "Rocks",
     href: "/portal/rocks",
     icon: CheckSquare,
+    adminOnly: true,
   },
   {
     title: "Networking",
@@ -159,6 +190,7 @@ const workItems = [
     href: "/portal/eos2",
     icon: Target,
     badge: "EOS",
+    adminOnly: true,
   },
   {
     title: "DocuSeal",
@@ -182,6 +214,7 @@ const workItems = [
     href: "/portal/gohighlevel",
     icon: Plug,
     badge: "CRM",
+    adminOnly: true,
   },
   {
     title: "Bug Tracker",
@@ -189,7 +222,7 @@ const workItems = [
     icon: Bug,
   },
   {
-    title: "SVP Tools",
+    title: "ITMC Tools",
     href: "/portal/svp-tools",
     icon: Sparkles,
     badge: "AI",
@@ -208,6 +241,11 @@ const adminItems = [
     icon: Building2,
   },
   {
+    title: "Marketing Pages",
+    href: "/portal/admin/marketing-pages",
+    icon: FileText,
+  },
+  {
     title: "Hero Management",
     href: "/portal/admin/hero",
     icon: ImageIcon,
@@ -216,6 +254,16 @@ const adminItems = [
     title: "Contact Popup",
     href: "/portal/admin/popup",
     icon: MessageSquare,
+  },
+  {
+    title: "Events",
+    href: "/portal/admin/events",
+    icon: CalendarClock,
+  },
+  {
+    title: "Government Solicitations",
+    href: "/portal/admin/government-solicitations",
+    icon: FileText,
   },
 ];
 
@@ -242,7 +290,24 @@ const aiItems = [
 
 export function PortalSidebar() {
   const pathname = usePathname();
-  const { getDisplayName, getInitials, profile } = useUserProfile();
+  const { getDisplayName, getInitials, profile, isAdmin } = useUserProfile();
+  const [bookCallLeadsCount, setBookCallLeadsCount] = useState(0);
+
+  // Subscribe to BookCallLeads count (new leads only)
+  useEffect(() => {
+    if (!db) return;
+    
+    const q = query(
+      collection(db, COLLECTIONS.BOOK_CALL_LEADS),
+      where("status", "==", "new")
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setBookCallLeadsCount(snapshot.size);
+    });
+    
+    return () => unsubscribe();
+  }, []);
   
   // Collapsible state for each section
   const [openSections, setOpenSections] = useState({
@@ -261,15 +326,8 @@ export function PortalSidebar() {
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border">
         <Link href="/portal" className="flex items-center gap-2 px-2 py-4">
-          <NextImage
-            src="/VPlus_logo.webp"
-            alt="Strategic Value+ Logo"
-            width={40}
-            height={40}
-            style={{ width: 'auto', height: 'auto' }}
-          />
           <div className="flex flex-col">
-            <span className="text-lg font-bold leading-none">Strategic Value+</span>
+            <span className="text-lg font-bold leading-none">ITMC Solutions</span>
             <span className="text-xs text-sidebar-foreground/60">Business Portal</span>
           </div>
         </Link>
@@ -331,20 +389,22 @@ export function PortalSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {workItems.map((item) => (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={pathname === item.href}
-                        tooltip={item.title}
-                      >
-                        <Link href={item.href}>
-                          <item.icon className="h-4 w-4" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {workItems
+                    .filter((item) => !item.adminOnly || isAdmin())
+                    .map((item) => (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                          tooltip={item.title}
+                        >
+                          <Link href={item.href}>
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
@@ -387,7 +447,8 @@ export function PortalSidebar() {
           </SidebarGroup>
         </Collapsible>
 
-        {/* Admin */}
+        {/* Admin - Only show for admin users */}
+        {isAdmin() && (
         <Collapsible open={openSections.admin} onOpenChange={() => toggleSection("admin")}>
           <SidebarGroup>
             <CollapsibleTrigger asChild>
@@ -403,6 +464,24 @@ export function PortalSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  {/* Book Call Leads - with dynamic count */}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === "/portal/admin/book-call-leads"}
+                      tooltip="Book Call Leads"
+                    >
+                      <Link href="/portal/admin/book-call-leads">
+                        <Phone className="h-4 w-4" />
+                        <span>Book Call Leads</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    {bookCallLeadsCount > 0 && (
+                      <SidebarMenuBadge className="bg-red-500 text-white">
+                        {bookCallLeadsCount}
+                      </SidebarMenuBadge>
+                    )}
+                  </SidebarMenuItem>
                   {adminItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
@@ -422,6 +501,7 @@ export function PortalSidebar() {
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
+        )}
 
         {/* Initiatives */}
         <Collapsible open={openSections.initiatives} onOpenChange={() => toggleSection("initiatives")}>
