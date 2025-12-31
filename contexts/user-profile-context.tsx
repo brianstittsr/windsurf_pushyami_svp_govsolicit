@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged, signOut as firebaseSignOut, User as FirebaseUser } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { getTeamMemberByAuthUid, findAndLinkTeamMember } from "@/lib/auth-team-member-link";
 import type { TeamMemberDoc } from "@/lib/schema";
@@ -18,7 +18,7 @@ export interface UserProfile {
   location: string;
   bio: string;
   avatarUrl: string;
-  role: "admin" | "affiliate" | "customer" | "team_member";
+  role: "superadmin" | "admin" | "affiliate" | "viewer" | "customer" | "team_member";
   
   // Affiliate-specific fields
   isAffiliate: boolean;
@@ -141,8 +141,10 @@ function mapTeamMemberToProfile(teamMember: TeamMemberDoc): Partial<UserProfile>
     location: teamMember.location || "",
     bio: teamMember.bio || "",
     avatarUrl: teamMember.avatar || "",
-    role: teamMember.role === "admin" ? "admin" : 
+    role: teamMember.role === "superadmin" ? "superadmin" :
+          teamMember.role === "admin" ? "admin" : 
           teamMember.role === "affiliate" ? "affiliate" : 
+          teamMember.role === "viewer" ? "viewer" :
           teamMember.role === "consultant" ? "affiliate" : "team_member",
     isAffiliate: teamMember.role === "affiliate" || teamMember.role === "consultant",
   };
@@ -167,6 +169,8 @@ interface UserProfileContextType {
   isAuthenticated: boolean;
   linkedTeamMember: TeamMemberDoc | null;
   isAdmin: () => boolean;
+  isSuperAdmin: () => boolean;
+  signOut: () => Promise<void>;
 }
 
 const UserProfileContext = createContext<UserProfileContextType | undefined>(undefined);
@@ -290,7 +294,26 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
   };
 
   const isAdmin = () => {
-    return profile.role === "admin";
+    return profile.role === "admin" || profile.role === "superadmin";
+  };
+
+  const isSuperAdmin = () => {
+    return profile.role === "superadmin";
+  };
+
+  const signOut = async () => {
+    if (auth) {
+      try {
+        await firebaseSignOut(auth);
+        setIsAuthenticated(false);
+        setLinkedTeamMember(null);
+        setProfile(defaultProfile);
+        // Redirect to sign-in page
+        window.location.href = "/sign-in";
+      } catch (error) {
+        console.error("Error signing out:", error);
+      }
+    }
   };
 
   return (
@@ -313,6 +336,8 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         linkedTeamMember,
         isAdmin,
+        isSuperAdmin,
+        signOut,
       }}
     >
       {children}

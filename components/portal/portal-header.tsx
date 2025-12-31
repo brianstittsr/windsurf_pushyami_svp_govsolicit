@@ -66,7 +66,7 @@ const notifications = [
 
 export function PortalHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
-  const { getDisplayName, getInitials, profile } = useUserProfile();
+  const { getDisplayName, getInitials, profile, signOut } = useUserProfile();
   const unreadCount = notifications.filter((n) => n.unread).length;
 
   return (
@@ -186,7 +186,7 @@ export function PortalHeader() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
               Sign Out
             </DropdownMenuItem>

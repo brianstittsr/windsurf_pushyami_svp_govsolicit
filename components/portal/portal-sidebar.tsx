@@ -290,7 +290,7 @@ const aiItems = [
 
 export function PortalSidebar() {
   const pathname = usePathname();
-  const { getDisplayName, getInitials, profile, isAdmin } = useUserProfile();
+  const { getDisplayName, getInitials, profile, isAdmin, signOut } = useUserProfile();
   const [bookCallLeadsCount, setBookCallLeadsCount] = useState(0);
 
   // Subscribe to BookCallLeads count (new leads only)
@@ -580,7 +580,7 @@ export function PortalSidebar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">
+                <DropdownMenuItem className="text-destructive" onClick={signOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
