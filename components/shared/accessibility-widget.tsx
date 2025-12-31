@@ -13,12 +13,7 @@ export function AccessibilityWidget({ accountId }: AccessibilityWidgetProps) {
   const userWayAccountId = accountId || process.env.NEXT_PUBLIC_USERWAY_ACCOUNT_ID;
 
   if (!userWayAccountId) {
-    // In development, show a console warning
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "UserWay account ID not configured. Set NEXT_PUBLIC_USERWAY_ACCOUNT_ID in your environment variables."
-      );
-    }
+    // Silently return null if not configured - no console spam
     return null;
   }
 
