@@ -85,58 +85,110 @@ import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 // Feature Visibility Types and Data
+type UserRole = "superadmin" | "admin" | "team" | "affiliate" | "consultant" | "viewer";
+
 interface FeatureVisibility {
   id: string;
   name: string;
   description: string;
   category: "main" | "work" | "ai" | "admin" | "initiatives";
-  visible: boolean;
   requiresSubscription?: boolean;
 }
 
+interface RoleFeatureSettings {
+  [featureId: string]: boolean;
+}
+
+interface AllRoleFeatureSettings {
+  [role: string]: RoleFeatureSettings;
+}
+
+const ROLES: { id: UserRole; name: string; description: string }[] = [
+  { id: "superadmin", name: "SuperAdmin", description: "Full platform access and control" },
+  { id: "admin", name: "Admin", description: "Administrative access without delete permissions" },
+  { id: "team", name: "Team Member", description: "Internal team member access" },
+  { id: "affiliate", name: "Affiliate", description: "External affiliate partner access" },
+  { id: "consultant", name: "Consultant", description: "Consultant access" },
+  { id: "viewer", name: "Viewer", description: "Read-only access" },
+];
+
 const DEFAULT_FEATURES: FeatureVisibility[] = [
   // Main Navigation
-  { id: "command-center", name: "Command Center", description: "Dashboard and overview", category: "main", visible: true },
-  { id: "opportunities", name: "Opportunities", description: "Business opportunities tracking", category: "main", visible: true },
-  { id: "projects", name: "Projects", description: "Project management", category: "main", visible: true },
-  { id: "affiliates", name: "Affiliates", description: "Affiliate network management", category: "main", visible: true },
-  { id: "customers", name: "Customers", description: "Customer relationship management", category: "main", visible: true },
+  { id: "command-center", name: "Command Center", description: "Dashboard and overview", category: "main" },
+  { id: "opportunities", name: "Opportunities", description: "Business opportunities tracking", category: "main" },
+  { id: "projects", name: "Projects", description: "Project management", category: "main" },
+  { id: "affiliates", name: "Affiliates", description: "Affiliate network management", category: "main" },
+  { id: "customers", name: "Customers", description: "Customer relationship management", category: "main" },
   
   // Work Items
-  { id: "gov-solicitations", name: "Gov Solicitations", description: "Government contract opportunities", category: "work", visible: true },
-  { id: "fpds-search", name: "FPDS Search", description: "Federal procurement data search", category: "work", visible: true },
-  { id: "apollo-search", name: "Apollo Search", description: "Contact and company search", category: "work", visible: true, requiresSubscription: true },
-  { id: "supplier-search", name: "Supplier Search", description: "Supplier database search", category: "work", visible: true, requiresSubscription: true },
-  { id: "documents", name: "Documents", description: "Document management", category: "work", visible: true },
-  { id: "calendar", name: "Calendar", description: "Calendar and scheduling", category: "work", visible: true },
-  { id: "availability", name: "Availability", description: "Team availability tracking", category: "work", visible: true },
-  { id: "meetings", name: "Meetings", description: "Meeting management", category: "work", visible: true },
-  { id: "rocks", name: "Rocks", description: "EOS Rocks tracking", category: "work", visible: true },
-  { id: "networking", name: "Networking", description: "Professional networking", category: "work", visible: true },
-  { id: "deals", name: "Deals", description: "Deal pipeline management", category: "work", visible: true },
-  { id: "linkedin-content", name: "LinkedIn Content", description: "LinkedIn content creation", category: "work", visible: true },
-  { id: "eos2", name: "EOS2 Dashboard", description: "EOS traction tools", category: "work", visible: true },
-  { id: "docuseal", name: "DocuSeal", description: "Document signing", category: "work", visible: true },
-  { id: "bug-tracker", name: "Bug Tracker", description: "Issue tracking", category: "work", visible: true },
-  { id: "xprotege-tools", name: "XProtege Tools", description: "Platform utilities", category: "work", visible: true },
-  { id: "careers", name: "Careers", description: "Job listings management", category: "work", visible: true },
+  { id: "gov-solicitations", name: "Gov Solicitations", description: "Government contract opportunities", category: "work" },
+  { id: "fpds-search", name: "FPDS Search", description: "Federal procurement data search", category: "work" },
+  { id: "apollo-search", name: "Apollo Search", description: "Contact and company search", category: "work", requiresSubscription: true },
+  { id: "supplier-search", name: "Supplier Search", description: "Supplier database search", category: "work", requiresSubscription: true },
+  { id: "documents", name: "Documents", description: "Document management", category: "work" },
+  { id: "calendar", name: "Calendar", description: "Calendar and scheduling", category: "work" },
+  { id: "availability", name: "Availability", description: "Team availability tracking", category: "work" },
+  { id: "meetings", name: "Meetings", description: "Meeting management", category: "work" },
+  { id: "rocks", name: "Rocks", description: "EOS Rocks tracking", category: "work" },
+  { id: "networking", name: "Networking", description: "Professional networking", category: "work" },
+  { id: "deals", name: "Deals", description: "Deal pipeline management", category: "work" },
+  { id: "linkedin-content", name: "LinkedIn Content", description: "LinkedIn content creation", category: "work" },
+  { id: "eos2", name: "EOS2 Dashboard", description: "EOS traction tools", category: "work" },
+  { id: "docuseal", name: "DocuSeal", description: "Document signing", category: "work" },
+  { id: "bug-tracker", name: "Bug Tracker", description: "Issue tracking", category: "work" },
+  { id: "xprotege-tools", name: "XProtege Tools", description: "Platform utilities", category: "work" },
+  { id: "careers", name: "Careers", description: "Job listings management", category: "work" },
   
   // AI Tools
-  { id: "ai-workforce", name: "AI Workforce", description: "AI agent management", category: "ai", visible: true, requiresSubscription: true },
-  { id: "proposals", name: "Proposal Creator", description: "AI-powered proposal generation", category: "ai", visible: true, requiresSubscription: true },
-  { id: "ask", name: "Ask IntellEDGE", description: "AI assistant", category: "ai", visible: true },
+  { id: "ai-workforce", name: "AI Workforce", description: "AI agent management", category: "ai", requiresSubscription: true },
+  { id: "proposals", name: "Proposal Creator", description: "AI-powered proposal generation", category: "ai", requiresSubscription: true },
+  { id: "ask", name: "Ask IntellEDGE", description: "AI assistant", category: "ai" },
   
   // Admin
-  { id: "book-call-leads", name: "Book Call Leads", description: "Lead management", category: "admin", visible: true },
-  { id: "team-members", name: "Team Members", description: "User management", category: "admin", visible: true },
-  { id: "strategic-partners", name: "Strategic Partners", description: "Partner management", category: "admin", visible: true },
-  { id: "gohighlevel", name: "GoHighLevel", description: "CRM integration", category: "admin", visible: true, requiresSubscription: true },
-  { id: "platform-settings", name: "Platform Settings", description: "System configuration", category: "admin", visible: true },
+  { id: "book-call-leads", name: "Book Call Leads", description: "Lead management", category: "admin" },
+  { id: "team-members", name: "Team Members", description: "User management", category: "admin" },
+  { id: "strategic-partners", name: "Strategic Partners", description: "Partner management", category: "admin" },
+  { id: "gohighlevel", name: "GoHighLevel", description: "CRM integration", category: "admin", requiresSubscription: true },
+  { id: "platform-settings", name: "Platform Settings", description: "System configuration", category: "admin" },
   
   // Initiatives
-  { id: "initiatives", name: "Initiatives", description: "Strategic initiatives", category: "initiatives", visible: true },
-  { id: "tbmnc", name: "TBMNC Suppliers", description: "TBMNC supplier database", category: "initiatives", visible: true },
+  { id: "initiatives", name: "Initiatives", description: "Strategic initiatives", category: "initiatives" },
+  { id: "tbmnc", name: "TBMNC Suppliers", description: "TBMNC supplier database", category: "initiatives" },
 ];
+
+// Default role permissions - SuperAdmin gets all, others get limited
+const getDefaultRoleSettings = (): AllRoleFeatureSettings => {
+  const settings: AllRoleFeatureSettings = {};
+  
+  ROLES.forEach(role => {
+    settings[role.id] = {};
+    DEFAULT_FEATURES.forEach(feature => {
+      // SuperAdmin gets everything
+      if (role.id === "superadmin") {
+        settings[role.id][feature.id] = true;
+      }
+      // Admin gets most things except some admin features
+      else if (role.id === "admin") {
+        settings[role.id][feature.id] = true;
+      }
+      // Team members get work features
+      else if (role.id === "team") {
+        settings[role.id][feature.id] = feature.category !== "admin" || feature.id === "platform-settings";
+      }
+      // Affiliates get limited features
+      else if (role.id === "affiliate" || role.id === "consultant") {
+        settings[role.id][feature.id] = ["main", "work"].includes(feature.category) && 
+          !["team-members", "strategic-partners", "book-call-leads", "gohighlevel", "platform-settings"].includes(feature.id);
+      }
+      // Viewers get read-only main features
+      else if (role.id === "viewer") {
+        settings[role.id][feature.id] = feature.category === "main" || feature.id === "command-center";
+      }
+    });
+  });
+  
+  return settings;
+};
 
 const FEATURE_CATEGORIES = [
   { id: "main", name: "Main Navigation", icon: "📊" },
@@ -149,7 +201,8 @@ const FEATURE_CATEGORIES = [
 // Feature Visibility Content Component
 function FeatureVisibilityContent() {
   const { profile } = useUserProfile();
-  const [features, setFeatures] = useState<FeatureVisibility[]>(DEFAULT_FEATURES);
+  const [roleSettings, setRoleSettings] = useState<AllRoleFeatureSettings>(getDefaultRoleSettings());
+  const [selectedRole, setSelectedRole] = useState<UserRole>("superadmin");
   const [featureLoading, setFeatureLoading] = useState(true);
   const [featureSaving, setFeatureSaving] = useState(false);
   const [featureHasChanges, setFeatureHasChanges] = useState(false);
@@ -161,13 +214,22 @@ function FeatureVisibilityContent() {
   const loadFeatureSettings = async () => {
     try {
       if (!db) return;
-      const settingsRef = doc(db, "platformSettings", "featureVisibility");
+      const settingsRef = doc(db, "platformSettings", "featureVisibilityByRole");
       const settingsDoc = await getDoc(settingsRef);
       
       if (settingsDoc.exists()) {
-        const savedFeatures = settingsDoc.data().features as FeatureVisibility[];
-        if (savedFeatures && savedFeatures.length > 0) {
-          setFeatures(savedFeatures);
+        const savedSettings = settingsDoc.data().roleSettings as AllRoleFeatureSettings;
+        if (savedSettings) {
+          // Merge with defaults to handle new features
+          const merged = getDefaultRoleSettings();
+          Object.keys(savedSettings).forEach(role => {
+            if (merged[role]) {
+              Object.keys(savedSettings[role]).forEach(featureId => {
+                merged[role][featureId] = savedSettings[role][featureId];
+              });
+            }
+          });
+          setRoleSettings(merged);
         }
       }
     } catch (error) {
@@ -178,25 +240,41 @@ function FeatureVisibilityContent() {
   };
 
   const handleToggleFeature = (featureId: string) => {
-    setFeatures((prev) =>
-      prev.map((f) =>
-        f.id === featureId ? { ...f, visible: !f.visible } : f
-      )
-    );
+    setRoleSettings((prev) => ({
+      ...prev,
+      [selectedRole]: {
+        ...prev[selectedRole],
+        [featureId]: !prev[selectedRole][featureId],
+      },
+    }));
     setFeatureHasChanges(true);
   };
 
   const handleToggleCategory = (category: string, visible: boolean) => {
-    if (category === "all") {
-      setFeatures((prev) => prev.map((f) => ({ ...f, visible })));
-    } else {
-      setFeatures((prev) =>
-        prev.map((f) =>
-          f.category === category ? { ...f, visible } : f
-        )
-      );
-    }
+    const featuresToToggle = category === "all" 
+      ? DEFAULT_FEATURES 
+      : DEFAULT_FEATURES.filter(f => f.category === category);
+    
+    setRoleSettings((prev) => {
+      const newRoleSettings = { ...prev[selectedRole] };
+      featuresToToggle.forEach(f => {
+        newRoleSettings[f.id] = visible;
+      });
+      return {
+        ...prev,
+        [selectedRole]: newRoleSettings,
+      };
+    });
     setFeatureHasChanges(true);
+  };
+
+  const handleCopyFromRole = (sourceRole: UserRole) => {
+    setRoleSettings((prev) => ({
+      ...prev,
+      [selectedRole]: { ...prev[sourceRole] },
+    }));
+    setFeatureHasChanges(true);
+    toast.info(`Copied settings from ${ROLES.find(r => r.id === sourceRole)?.name}`);
   };
 
   const handleSaveFeatures = async () => {
@@ -206,9 +284,9 @@ function FeatureVisibilityContent() {
         toast.error("Database not initialized");
         return;
       }
-      const settingsRef = doc(db, "platformSettings", "featureVisibility");
+      const settingsRef = doc(db, "platformSettings", "featureVisibilityByRole");
       await setDoc(settingsRef, {
-        features,
+        roleSettings,
         updatedAt: new Date(),
         updatedBy: profile.email,
       });
@@ -224,18 +302,32 @@ function FeatureVisibilityContent() {
   };
 
   const handleResetFeatures = () => {
-    setFeatures(DEFAULT_FEATURES);
+    setRoleSettings(getDefaultRoleSettings());
     setFeatureHasChanges(true);
-    toast.info("Reset to default settings");
+    toast.info("Reset all roles to default settings");
+  };
+
+  const handleResetCurrentRole = () => {
+    const defaults = getDefaultRoleSettings();
+    setRoleSettings((prev) => ({
+      ...prev,
+      [selectedRole]: defaults[selectedRole],
+    }));
+    setFeatureHasChanges(true);
+    toast.info(`Reset ${ROLES.find(r => r.id === selectedRole)?.name} to default settings`);
   };
 
   const getVisibleCount = (category: string) => {
-    return features.filter((f) => f.category === category && f.visible).length;
+    return DEFAULT_FEATURES.filter(
+      (f) => f.category === category && roleSettings[selectedRole]?.[f.id]
+    ).length;
   };
 
   const getTotalCount = (category: string) => {
-    return features.filter((f) => f.category === category).length;
+    return DEFAULT_FEATURES.filter((f) => f.category === category).length;
   };
+
+  const currentRoleSettings = roleSettings[selectedRole] || {};
 
   if (featureLoading) {
     return (
@@ -253,19 +345,53 @@ function FeatureVisibilityContent() {
           <div className="flex gap-3">
             <AlertCircle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <p className="font-medium text-yellow-900">Important</p>
+              <p className="font-medium text-yellow-900">Role-Based Feature Visibility</p>
               <p className="text-sm text-yellow-700">
-                Hidden features will not appear in the navigation panel for any users. Use this to hide features
-                that are not paid for or not yet ready for production. Changes affect all users immediately after saving.
+                Configure which features each role can access. Select a role below to customize their navigation panel.
+                Changes affect users with that role immediately after saving.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Role Selector */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Select Role to Configure
+          </CardTitle>
+          <CardDescription>
+            Choose a role to view and modify its feature access
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {ROLES.map((role) => (
+              <Button
+                key={role.id}
+                variant={selectedRole === role.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedRole(role.id)}
+                className="flex items-center gap-2"
+              >
+                {role.name}
+                <Badge variant="secondary" className="ml-1">
+                  {Object.values(roleSettings[role.id] || {}).filter(Boolean).length}/{DEFAULT_FEATURES.length}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground mt-3">
+            {ROLES.find(r => r.id === selectedRole)?.description}
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Quick Actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button
             variant="outline"
             size="sm"
@@ -285,11 +411,23 @@ function FeatureVisibilityContent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleResetFeatures}
+            onClick={handleResetCurrentRole}
           >
             <RotateCcw className="h-4 w-4 mr-2" />
-            Reset to Default
+            Reset This Role
           </Button>
+          <Select onValueChange={(value) => handleCopyFromRole(value as UserRole)}>
+            <SelectTrigger className="w-[180px] h-9">
+              <SelectValue placeholder="Copy from role..." />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLES.filter(r => r.id !== selectedRole).map((role) => (
+                <SelectItem key={role.id} value={role.id}>
+                  {role.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <Button
           onClick={handleSaveFeatures}
@@ -303,7 +441,7 @@ function FeatureVisibilityContent() {
           ) : (
             <>
               <Save className="h-4 w-4 mr-2" />
-              Save Changes
+              Save All Changes
             </>
           )}
         </Button>
@@ -311,7 +449,7 @@ function FeatureVisibilityContent() {
 
       {/* Feature Categories */}
       {FEATURE_CATEGORIES.map((category) => {
-        const categoryFeatures = features.filter((f) => f.category === category.id);
+        const categoryFeatures = DEFAULT_FEATURES.filter((f) => f.category === category.id);
         const visibleCount = getVisibleCount(category.id);
         const totalCount = getTotalCount(category.id);
 
@@ -324,7 +462,7 @@ function FeatureVisibilityContent() {
                   <div>
                     <CardTitle>{category.name}</CardTitle>
                     <CardDescription>
-                      {visibleCount} of {totalCount} features visible
+                      {visibleCount} of {totalCount} features enabled for {ROLES.find(r => r.id === selectedRole)?.name}
                     </CardDescription>
                   </div>
                 </div>
@@ -334,14 +472,14 @@ function FeatureVisibilityContent() {
                     size="sm"
                     onClick={() => handleToggleCategory(category.id, true)}
                   >
-                    Show All
+                    Enable All
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleToggleCategory(category.id, false)}
                   >
-                    Hide All
+                    Disable All
                   </Button>
                 </div>
               </div>
@@ -353,7 +491,7 @@ function FeatureVisibilityContent() {
                     <TableHead>Feature</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Visible</TableHead>
+                    <TableHead className="text-right">Enabled</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -376,13 +514,13 @@ function FeatureVisibilityContent() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {feature.visible ? (
+                          {currentRoleSettings[feature.id] ? (
                             <CheckCircle className="h-4 w-4 text-green-600" />
                           ) : (
                             <EyeOff className="h-4 w-4 text-muted-foreground" />
                           )}
                           <Switch
-                            checked={feature.visible}
+                            checked={currentRoleSettings[feature.id] || false}
                             onCheckedChange={() => handleToggleFeature(feature.id)}
                           />
                         </div>
