@@ -67,6 +67,8 @@ import {
 import { db } from "@/lib/firebase";
 import { COLLECTIONS, type TeamMemberDoc, type OneToOneQueueItemDoc } from "@/lib/schema";
 import { logTeamMemberAdded, logActivity } from "@/lib/activity-logger";
+import { useUserProfile } from "@/contexts/user-profile-context";
+import { canEditUser, canDeleteUser, canChangeRoleTo, getAssignableRoles, hasPermission } from "@/lib/role-permissions";
 import Link from "next/link";
 
 // Seed data for Team Members
@@ -117,6 +119,10 @@ const seedTeamMembers: Omit<TeamMemberDoc, "id" | "createdAt" | "updatedAt">[] =
 ];
 
 export default function TeamMembersPage() {
+  const { profile, isSuperAdmin, getEffectiveRole } = useUserProfile();
+  const currentUserRole = getEffectiveRole();
+  const assignableRoles = getAssignableRoles(currentUserRole);
+  
   const [members, setMembers] = useState<TeamMemberDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -334,9 +340,16 @@ export default function TeamMembersPage() {
     }
   };
 
-  // Delete member
-  const handleDeleteMember = async (id: string, memberName: string) => {
+  // Delete member - with permission check
+  const handleDeleteMember = async (id: string, memberName: string, memberRole: string) => {
     if (!db) return;
+    
+    // Check if current user can delete this member
+    if (!canDeleteUser(currentUserRole, memberRole)) {
+      alert("You don't have permission to delete this user. Only SuperAdmins can delete other SuperAdmins.");
+      return;
+    }
+    
     if (!confirm("Are you sure you want to delete this team member?")) return;
     try {
       await deleteDoc(doc(db, COLLECTIONS.TEAM_MEMBERS, id));
@@ -354,8 +367,14 @@ export default function TeamMembersPage() {
     }
   };
 
-  // Edit member
+  // Edit member - with permission check
   const handleEditMember = (member: TeamMemberDoc) => {
+    // Check if current user can edit this member
+    if (!canEditUser(currentUserRole, member.role)) {
+      alert("You don't have permission to edit this user. Only SuperAdmins can edit other SuperAdmins.");
+      return;
+    }
+    
     setEditingMember(member);
     setFormData({
       firstName: member.firstName,
@@ -610,20 +629,45 @@ export default function TeamMembersPage() {
                     <Label htmlFor="role">Role *</Label>
                     <Select
                       value={formData.role}
-                      onValueChange={(value: "admin" | "team" | "affiliate" | "consultant") => 
-                        setFormData({ ...formData, role: value })
-                      }
+                      onValueChange={(value: "superadmin" | "admin" | "team" | "affiliate" | "consultant" | "viewer") => {
+                        // Check if user can assign this role
+                        if (!canChangeRoleTo(currentUserRole, value)) {
+                          alert(`You don't have permission to assign the ${value} role.`);
+                          return;
+                        }
+                        setFormData({ ...formData, role: value });
+                      }}
+                      disabled={editingMember?.role === "superadmin" && !isSuperAdmin()}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="team">Team</SelectItem>
-                        <SelectItem value="affiliate">Affiliate</SelectItem>
-                        <SelectItem value="consultant">Consultant</SelectItem>
+                        {assignableRoles.includes("superadmin") && (
+                          <SelectItem value="superadmin">SuperAdmin</SelectItem>
+                        )}
+                        {assignableRoles.includes("admin") && (
+                          <SelectItem value="admin">Admin</SelectItem>
+                        )}
+                        {assignableRoles.includes("team") && (
+                          <SelectItem value="team">Team</SelectItem>
+                        )}
+                        {assignableRoles.includes("affiliate") && (
+                          <SelectItem value="affiliate">Affiliate</SelectItem>
+                        )}
+                        {assignableRoles.includes("consultant") && (
+                          <SelectItem value="consultant">Consultant</SelectItem>
+                        )}
+                        {assignableRoles.includes("viewer") && (
+                          <SelectItem value="viewer">Viewer</SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
+                    {editingMember?.role === "superadmin" && !isSuperAdmin() && (
+                      <p className="text-xs text-muted-foreground">
+                        Only SuperAdmins can change another SuperAdmin's role.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -1048,15 +1092,19 @@ export default function TeamMembersPage() {
                             variant="ghost"
                             size="icon"
                             onClick={() => handleEditMember(member)}
+                            disabled={!canEditUser(currentUserRole, member.role)}
+                            title={!canEditUser(currentUserRole, member.role) ? "Only SuperAdmins can edit SuperAdmin users" : "Edit member"}
                           >
-                            <Pencil className="h-4 w-4" />
+                            <Pencil className={`h-4 w-4 ${!canEditUser(currentUserRole, member.role) ? "text-muted-foreground" : ""}`} />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`)}
+                            onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`, member.role)}
+                            disabled={!canDeleteUser(currentUserRole, member.role)}
+                            title={!canDeleteUser(currentUserRole, member.role) ? "Only SuperAdmins can delete SuperAdmin users" : "Delete member"}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className={`h-4 w-4 ${!canDeleteUser(currentUserRole, member.role) ? "text-muted-foreground" : "text-destructive"}`} />
                           </Button>
                         </div>
                       </TableCell>
@@ -1148,15 +1196,19 @@ export default function TeamMembersPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEditMember(member)}
+                      disabled={!canEditUser(currentUserRole, member.role)}
+                      title={!canEditUser(currentUserRole, member.role) ? "Only SuperAdmins can edit SuperAdmin users" : "Edit member"}
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Pencil className={`h-4 w-4 ${!canEditUser(currentUserRole, member.role) ? "text-muted-foreground" : ""}`} />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`)}
+                      onClick={() => handleDeleteMember(member.id, `${member.firstName} ${member.lastName}`, member.role)}
+                      disabled={!canDeleteUser(currentUserRole, member.role)}
+                      title={!canDeleteUser(currentUserRole, member.role) ? "Only SuperAdmins can delete SuperAdmin users" : "Delete member"}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
+                      <Trash2 className={`h-4 w-4 ${!canDeleteUser(currentUserRole, member.role) ? "text-muted-foreground" : "text-destructive"}`} />
                     </Button>
                   </div>
                 </div>

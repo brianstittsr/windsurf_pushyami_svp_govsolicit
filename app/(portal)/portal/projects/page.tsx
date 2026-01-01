@@ -12,6 +12,8 @@ import { Plus, Calendar, CheckCircle, FolderKanban } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { collection, query, orderBy, getDocs, Timestamp } from "firebase/firestore";
 import { COLLECTIONS } from "@/lib/schema";
+import { useUserProfile } from "@/contexts/user-profile-context";
+import { filterDataByRole } from "@/lib/role-permissions";
 
 interface ProjectDisplay {
   id: string;
@@ -50,6 +52,10 @@ function formatDate(date: Date | Timestamp | undefined): string {
 }
 
 export default function ProjectsPage() {
+  const { profile, getEffectiveRole } = useUserProfile();
+  const currentUserRole = getEffectiveRole();
+  const userId = profile?.id || "";
+  
   const [projects, setProjects] = useState<ProjectDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -62,7 +68,7 @@ export default function ProjectsPage() {
         const projectsQuery = query(projectsRef, orderBy("createdAt", "desc"));
         const snapshot = await getDocs(projectsQuery);
         
-        const projectList: ProjectDisplay[] = snapshot.docs.map((doc) => {
+        const allProjects = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
@@ -79,10 +85,26 @@ export default function ProjectsPage() {
             teamIds: data.teamIds || [],
             milestonesCompleted: data.milestonesCompleted || 0,
             milestonesTotal: data.milestonesTotal || 0,
+            // Include fields for role-based filtering
+            ownerId: data.ownerId || data.createdBy || "",
+            assignedTo: data.assignedTo || data.teamIds || [],
+            affiliateId: data.affiliateId || "",
+            customerId: data.customerId || "",
           };
         });
         
-        setProjects(projectList);
+        // Filter projects based on user role
+        // SuperAdmin, Admin, Team can see all projects
+        // Affiliates, Customers, Viewers can only see assigned projects
+        const filteredProjects = filterDataByRole(
+          allProjects,
+          currentUserRole,
+          userId,
+          "assignedTo",
+          "ownerId"
+        );
+        
+        setProjects(filteredProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
       } finally {
@@ -91,7 +113,7 @@ export default function ProjectsPage() {
     }
     
     fetchProjects();
-  }, []);
+  }, [currentUserRole, userId]);
 
   const activeCount = projects.filter((p) => p.status === "active").length;
   const atRiskCount = projects.filter((p) => p.status === "at-risk").length;

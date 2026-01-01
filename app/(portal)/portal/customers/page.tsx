@@ -1,10 +1,13 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -32,14 +35,25 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { COLLECTIONS } from "@/lib/schema";
+import { useUserProfile } from "@/contexts/user-profile-context";
+import { filterDataByRole } from "@/lib/role-permissions";
 
-export const metadata: Metadata = {
-  title: "Customers",
-  description: "Manage customer relationships and engagements",
-};
-
-// Customers will be loaded from Firebase
-const customers: any[] = [];
+interface CustomerDisplay {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  status: string;
+  location: string;
+  projectCount: number;
+  ownerId?: string;
+  assignedTo?: string[];
+  affiliateId?: string;
+}
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -55,9 +69,98 @@ function getStatusBadge(status: string) {
 }
 
 export default function CustomersPage() {
-  const activeCustomers = 0;
-  const prospects = 0;
-  const totalProjects = 0;
+  const { profile, getEffectiveRole } = useUserProfile();
+  const currentUserRole = getEffectiveRole();
+  const userId = profile?.id || "";
+  
+  const [customers, setCustomers] = useState<CustomerDisplay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    async function fetchCustomers() {
+      if (!db) {
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        const customersRef = collection(db, "customers");
+        const customersQuery = query(customersRef, orderBy("createdAt", "desc"));
+        const snapshot = await getDocs(customersQuery);
+        
+        const allCustomers: CustomerDisplay[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || data.contactName || "Unknown",
+            company: data.company || data.organizationName || "",
+            email: data.email || data.emailPrimary || "",
+            phone: data.phone || data.mobile || "",
+            status: data.status || "active",
+            location: data.location || data.city || "",
+            projectCount: data.projectCount || 0,
+            ownerId: data.ownerId || data.createdBy || "",
+            assignedTo: data.assignedTo || [],
+            affiliateId: data.affiliateId || "",
+          };
+        });
+        
+        // Filter customers based on user role
+        const filteredCustomers = filterDataByRole(
+          allCustomers as unknown as Record<string, unknown>[],
+          currentUserRole,
+          userId,
+          "assignedTo",
+          "ownerId"
+        ) as unknown as CustomerDisplay[];
+        
+        setCustomers(filteredCustomers);
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchCustomers();
+  }, [currentUserRole, userId]);
+
+  const activeCustomers = customers.filter(c => c.status === "active").length;
+  const prospects = customers.filter(c => c.status === "prospect").length;
+  const totalProjects = customers.reduce((sum, c) => sum + c.projectCount, 0);
+  
+  const filteredCustomers = customers.filter(c => 
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

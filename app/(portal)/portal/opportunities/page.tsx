@@ -47,6 +47,8 @@ import { db } from "@/lib/firebase";
 import { collection, query, orderBy, getDocs, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { COLLECTIONS, type OpportunityDoc } from "@/lib/schema";
 import { logActivity } from "@/lib/activity-logger";
+import { useUserProfile } from "@/contexts/user-profile-context";
+import { filterDataByRole } from "@/lib/role-permissions";
 
 interface OpportunityDisplay {
   id: string;
@@ -94,6 +96,10 @@ function formatDate(date: Date) {
 }
 
 export default function OpportunitiesPage() {
+  const { profile, getEffectiveRole } = useUserProfile();
+  const currentUserRole = getEffectiveRole();
+  const userId = profile?.id || "";
+  
   const [opportunities, setOpportunities] = useState<OpportunityDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -101,7 +107,7 @@ export default function OpportunitiesPage() {
 
   useEffect(() => {
     fetchOpportunities();
-  }, []);
+  }, [currentUserRole, userId]);
 
   async function fetchOpportunities() {
     if (!db) {
@@ -114,12 +120,12 @@ export default function OpportunitiesPage() {
       const oppsQuery = query(oppsRef, orderBy("updatedAt", "desc"));
       const snapshot = await getDocs(oppsQuery);
 
-      const oppsData: OpportunityDisplay[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data() as OpportunityDoc;
+      const allOpps: (OpportunityDisplay & Record<string, unknown>)[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data() as OpportunityDoc & Record<string, unknown>;
         const expectedClose = data.expectedCloseDate?.toDate() || new Date();
-        oppsData.push({
-          id: doc.id,
+        allOpps.push({
+          id: docSnap.id,
           name: data.name || "Unnamed Opportunity",
           company: (data as any).organizationName || "",
           stage: data.stage || "lead",
@@ -127,9 +133,24 @@ export default function OpportunitiesPage() {
           probability: data.probability || 0,
           expectedClose: formatDate(expectedClose),
           owner: { name: "Owner", initials: "OW" },
+          // Include fields for role-based filtering
+          ownerId: data.ownerId || data.createdBy || "",
+          assignedTo: data.assignedTo || [],
+          affiliateId: data.affiliateId || "",
+          customerId: data.customerId || "",
         });
       });
-      setOpportunities(oppsData);
+      
+      // Filter opportunities based on user role
+      const filteredOpps = filterDataByRole(
+        allOpps,
+        currentUserRole,
+        userId,
+        "assignedTo",
+        "ownerId"
+      );
+      
+      setOpportunities(filteredOpps);
     } catch (error) {
       console.error("Error fetching opportunities:", error);
     } finally {
