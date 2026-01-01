@@ -78,17 +78,19 @@ const DEFAULT_FEATURES: FeatureVisibility[] = [
 ];
 
 export default function FeatureVisibilityPage() {
-  const { profile, isAdmin } = useUserProfile();
+  const { profile, isSuperAdmin: checkIsSuperAdmin, isLoading: profileLoading } = useUserProfile();
   const [features, setFeatures] = useState<FeatureVisibility[]>(DEFAULT_FEATURES);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const isSuperAdmin = profile.role === "superadmin" as any;
+  const isSuperAdmin = checkIsSuperAdmin();
 
   useEffect(() => {
-    loadFeatureSettings();
-  }, []);
+    if (!profileLoading) {
+      loadFeatureSettings();
+    }
+  }, [profileLoading]);
 
   const loadFeatureSettings = async () => {
     try {
@@ -159,6 +161,18 @@ export default function FeatureVisibilityPage() {
     toast.info("Reset to default settings");
   };
 
+  // Show loading while profile is loading
+  if (profileLoading || loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="h-8 w-8 mx-auto animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Loading feature settings...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isSuperAdmin) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -172,6 +186,9 @@ export default function FeatureVisibilityPage() {
           <CardContent>
             <p className="text-muted-foreground">
               Only SuperAdmin users can access feature visibility settings.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Current role: {profile.role}
             </p>
           </CardContent>
         </Card>
