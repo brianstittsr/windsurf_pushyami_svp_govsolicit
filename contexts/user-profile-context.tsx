@@ -213,15 +213,21 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         console.log("User authenticated:", firebaseUser.uid, firebaseUser.email);
         
         try {
-          // Try to find and link Team Member by UID first, then by email
-          let teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
+          let teamMember: TeamMemberDoc | null = null;
           
-          if (!teamMember && firebaseUser.email) {
-            // Try to find and link by email using client-side
-            teamMember = await findAndLinkTeamMember(firebaseUser.email, firebaseUser.uid);
+          // First, try server-side API to get team member (most reliable, bypasses Firestore rules)
+          try {
+            const response = await fetch(`/api/get-team-member?uid=${firebaseUser.uid}`);
+            const result = await response.json();
+            if (result.teamMember) {
+              console.log("Found team member via server API:", result.teamMember.role);
+              teamMember = result.teamMember as TeamMemberDoc;
+            }
+          } catch (apiError) {
+            console.error("Get team member API error:", apiError);
           }
           
-          // If still no team member, try server-side auto-link API (bypasses Firestore rules)
+          // If not found by UID, try auto-link by email
           if (!teamMember && firebaseUser.email) {
             try {
               const response = await fetch("/api/auto-link", {
@@ -232,12 +238,25 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
               const result = await response.json();
               if (result.linked && result.teamMember) {
                 console.log("Auto-linked via API:", result.teamMember);
-                // Re-fetch the team member after linking
-                teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
+                // Re-fetch via server API after linking
+                const refetchResponse = await fetch(`/api/get-team-member?uid=${firebaseUser.uid}`);
+                const refetchResult = await refetchResponse.json();
+                if (refetchResult.teamMember) {
+                  teamMember = refetchResult.teamMember as TeamMemberDoc;
+                }
               }
             } catch (apiError) {
               console.error("Auto-link API error:", apiError);
             }
+          }
+          
+          // Fallback to client-side if server APIs fail
+          if (!teamMember) {
+            teamMember = await getTeamMemberByAuthUid(firebaseUser.uid);
+          }
+          
+          if (!teamMember && firebaseUser.email) {
+            teamMember = await findAndLinkTeamMember(firebaseUser.email, firebaseUser.uid);
           }
           
           if (teamMember) {
