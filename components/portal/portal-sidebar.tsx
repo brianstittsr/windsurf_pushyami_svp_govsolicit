@@ -75,6 +75,7 @@ import {
   Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFeatureVisibility } from "@/lib/feature-visibility";
 
 const mainNavItems = [
   {
@@ -305,6 +306,10 @@ export function PortalSidebar() {
   const pathname = usePathname();
   const { getDisplayName, getInitials, profile, isAdmin, isSuperAdmin, signOut, getEffectiveRole, isViewingAsOtherRole } = useUserProfile();
   const [bookCallLeadsCount, setBookCallLeadsCount] = useState(0);
+  
+  // Get the effective role for feature visibility
+  const effectiveRole = getEffectiveRole();
+  const { isFeatureVisible } = useFeatureVisibility(effectiveRole);
 
   // Subscribe to BookCallLeads count (new leads only)
   useEffect(() => {
@@ -363,7 +368,9 @@ export function PortalSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {mainNavItems.map((item) => (
+                  {mainNavItems
+                    .filter((item) => isFeatureVisible(item.title))
+                    .map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         asChild
@@ -404,8 +411,9 @@ export function PortalSidebar() {
                 <SidebarMenu>
                   {workItems
                     .filter((item) => {
-                      // Use effective role for filtering when SuperAdmin is viewing as another role
-                      const effectiveRole = getEffectiveRole();
+                      // Check feature visibility first
+                      if (!isFeatureVisible(item.title)) return false;
+                      // Then check admin-only items
                       const effectiveIsAdmin = effectiveRole === "admin" || effectiveRole === "superadmin";
                       return !item.adminOnly || effectiveIsAdmin;
                     })
@@ -445,7 +453,9 @@ export function PortalSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {aiItems.map((item) => (
+                  {aiItems
+                    .filter((item) => isFeatureVisible(item.title))
+                    .map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         asChild
@@ -487,6 +497,7 @@ export function PortalSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {/* Book Call Leads - with dynamic count */}
+                  {isFeatureVisible("Book Call Leads") && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild
@@ -504,7 +515,10 @@ export function PortalSidebar() {
                       </SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>
-                  {adminItems.map((item) => (
+                  )}
+                  {adminItems
+                    .filter((item) => isFeatureVisible(item.title))
+                    .map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         asChild
@@ -541,7 +555,9 @@ export function PortalSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {initiativeItems.map((item) => (
+                  {initiativeItems
+                    .filter((item) => isFeatureVisible(item.title))
+                    .map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         asChild
