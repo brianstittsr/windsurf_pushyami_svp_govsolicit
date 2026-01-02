@@ -366,14 +366,26 @@ export function UserProfileProvider({ children }: { children: ReactNode }) {
         setLinkedTeamMember(null);
         setProfile(defaultProfile);
         setViewAsRole(null);
-        // Clear any session storage
+        // Clear all storage
         if (typeof window !== "undefined") {
           sessionStorage.clear();
+          localStorage.clear();
         }
-        // Redirect to home page
-        window.location.href = "/";
+        // Force redirect to home page
+        window.location.replace("/");
       } catch (error) {
         console.error("Error signing out:", error);
+        // Even if there's an error, try to redirect
+        if (typeof window !== "undefined") {
+          window.location.replace("/");
+        }
+      }
+    } else {
+      // If no auth, still clear storage and redirect
+      if (typeof window !== "undefined") {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.replace("/");
       }
     }
   };
