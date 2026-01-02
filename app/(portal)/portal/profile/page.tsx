@@ -179,7 +179,9 @@ const mockOneToOnes = [
 ];
 
 export default function ProfilePage() {
-  const { profile: userProfile, getDisplayName, getInitials } = useUserProfile();
+  const { profile: userProfile, getDisplayName, getInitials, linkedTeamMember, updateProfile: updateContextProfile } = useUserProfile();
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
@@ -241,6 +243,36 @@ export default function ProfilePage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
+
+  // Sync local profile state with linked team member data when it loads
+  useEffect(() => {
+    if (linkedTeamMember) {
+      setProfile((prev) => ({
+        ...prev,
+        firstName: linkedTeamMember.firstName || prev.firstName,
+        lastName: linkedTeamMember.lastName || prev.lastName,
+        email: linkedTeamMember.emailPrimary || prev.email,
+        phone: linkedTeamMember.mobile || prev.phone,
+        title: linkedTeamMember.title || prev.title,
+        company: linkedTeamMember.company || prev.company,
+        location: linkedTeamMember.location || prev.location,
+        bio: linkedTeamMember.bio || prev.bio,
+        linkedin: linkedTeamMember.linkedIn || prev.linkedin,
+        website: linkedTeamMember.website || prev.website,
+        role: (linkedTeamMember.role === "consultant" ? "affiliate" : 
+               linkedTeamMember.role === "team" ? "team_member" : 
+               linkedTeamMember.role) || prev.role,
+        expertise: linkedTeamMember.expertise 
+          ? (typeof linkedTeamMember.expertise === 'string' 
+              ? linkedTeamMember.expertise.split(',').map((s: string) => s.trim()).filter(Boolean)
+              : prev.expertise)
+          : prev.expertise,
+      }));
+      if (linkedTeamMember.avatar) {
+        setAvatarPreview(linkedTeamMember.avatar);
+      }
+    }
+  }, [linkedTeamMember]);
 
   const updateProfile = (field: string, value: any) => {
     setProfile({ ...profile, [field]: value });
@@ -305,10 +337,66 @@ export default function ProfilePage() {
   };
 
   const saveProfile = async () => {
+    setSaveError(null);
+    setSaveSuccess(null);
     setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    alert("Profile saved successfully!");
+    
+    try {
+      // Get the Firebase UID from the linked team member
+      const firebaseUid = linkedTeamMember?.firebaseUid;
+      
+      if (!firebaseUid) {
+        setSaveError("Your account is not linked to a team member profile. Please contact an administrator.");
+        setIsSaving(false);
+        return;
+      }
+      
+      // Prepare updates to send to the API
+      const updates = {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        mobile: profile.phone,
+        company: profile.company,
+        title: profile.title,
+        location: profile.location,
+        bio: profile.bio,
+        linkedIn: profile.linkedin,
+        website: profile.website,
+        expertise: profile.expertise.join(", "),
+      };
+      
+      const response = await fetch("/api/update-team-member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firebaseUid, updates }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update profile");
+      }
+      
+      // Update the context profile with the new data
+      if (result.teamMember) {
+        updateContextProfile({
+          firstName: result.teamMember.firstName || "",
+          lastName: result.teamMember.lastName || "",
+          phone: result.teamMember.mobile || "",
+          company: result.teamMember.company || "",
+          jobTitle: result.teamMember.title || "",
+          location: result.teamMember.location || "",
+          bio: result.teamMember.bio || "",
+        });
+      }
+      
+      setSaveSuccess("Profile saved successfully!");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      setSaveError(error instanceof Error ? error.message : "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -364,6 +452,19 @@ export default function ProfilePage() {
           {isSaving ? "Saving..." : "Save Changes"}
         </Button>
       </div>
+
+      {/* Save Status Messages */}
+      {saveError && (
+        <Alert variant="destructive">
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
+      {saveSuccess && (
+        <Alert className="border-green-500 bg-green-50 text-green-700">
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>{saveSuccess}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Profile Header Card with Photo */}
       <Card>

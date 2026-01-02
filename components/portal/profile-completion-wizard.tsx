@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useUserProfile } from "@/contexts/user-profile-context";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -75,8 +76,10 @@ const steps = [
 ];
 
 export function ProfileCompletionWizard() {
-  const { profile, updateProfile, profileCompletion, showProfileWizard, setShowProfileWizard } = useUserProfile();
+  const { profile, updateProfile, profileCompletion, showProfileWizard, setShowProfileWizard, linkedTeamMember } = useUserProfile();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     firstName: profile.firstName || "",
     lastName: profile.lastName || "",
@@ -104,16 +107,87 @@ export function ProfileCompletionWizard() {
     }
   };
 
-  const handleComplete = () => {
-    updateProfile({
-      ...formData,
-      profileCompletedAt: new Date().toISOString(),
-    });
-    setShowProfileWizard(false);
+  const handleComplete = async () => {
+    setSaveError(null);
+    setIsSaving(true);
+    
+    try {
+      const firebaseUid = linkedTeamMember?.firebaseUid;
+      
+      if (!firebaseUid) {
+        // If no linked team member, just update context and close
+        updateProfile({
+          ...formData,
+          profileCompletedAt: new Date().toISOString(),
+        });
+        setShowProfileWizard(false);
+        return;
+      }
+      
+      // Save to Firebase via API
+      const updates = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        mobile: formData.phone,
+        company: formData.company,
+        title: formData.jobTitle,
+        location: formData.location,
+        bio: formData.bio,
+      };
+      
+      const response = await fetch("/api/update-team-member", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firebaseUid, updates }),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update profile");
+      }
+      
+      // Update context with new data
+      updateProfile({
+        ...formData,
+        profileCompletedAt: new Date().toISOString(),
+      });
+      
+      setShowProfileWizard(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      setSaveError(error instanceof Error ? error.message : "Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     // Save what we have so far
+    const firebaseUid = linkedTeamMember?.firebaseUid;
+    
+    if (firebaseUid) {
+      try {
+        const updates = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          mobile: formData.phone,
+          company: formData.company,
+          title: formData.jobTitle,
+          location: formData.location,
+          bio: formData.bio,
+        };
+        
+        await fetch("/api/update-team-member", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firebaseUid, updates }),
+        });
+      } catch (error) {
+        console.error("Error saving partial profile:", error);
+      }
+    }
+    
     updateProfile(formData);
     setShowProfileWizard(false);
   };
@@ -186,6 +260,13 @@ export function ProfileCompletionWizard() {
               );
             })}
           </div>
+
+          {/* Error message */}
+          {saveError && (
+            <Alert variant="destructive" className="mx-4 mb-4">
+              <AlertDescription>{saveError}</AlertDescription>
+            </Alert>
+          )}
 
           {/* Step content */}
           <div className="space-y-4 px-4">
@@ -325,9 +406,9 @@ export function ProfileCompletionWizard() {
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button onClick={handleComplete} disabled={!isStepValid()}>
+              <Button onClick={handleComplete} disabled={!isStepValid() || isSaving}>
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Complete Profile
+                {isSaving ? "Saving..." : "Complete Profile"}
               </Button>
             )}
           </div>
