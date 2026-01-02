@@ -122,7 +122,7 @@ export function LeadershipTeam() {
       {team.map((member) => (
         <Card key={member.id} className="overflow-hidden">
           <CardContent className="p-6 text-center">
-            <Avatar className="h-24 w-24 mx-auto mb-4">
+            <Avatar className="h-48 w-48 mx-auto mb-4">
               <AvatarImage src={member.avatar} />
               <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
                 {member.name
