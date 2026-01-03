@@ -31,7 +31,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, ExternalLink, Settings, FileText } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import {
@@ -241,10 +242,24 @@ export default function GovernmentSolicitationsAdminPage() {
           <h1 className="text-3xl font-bold tracking-tight">Government Solicitations</h1>
           <p className="text-muted-foreground">Track opportunities, due dates, and notes.</p>
         </div>
-        <Button onClick={() => openDialog()}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Solicitation
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/portal/work/sam-gov-migration">
+              <FileText className="h-4 w-4 mr-2" />
+              SAM.gov Guide
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/portal/settings/sam-gov">
+              <Settings className="h-4 w-4 mr-2" />
+              Configure SAM.gov
+            </Link>
+          </Button>
+          <Button onClick={() => openDialog()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Solicitation
+          </Button>
+        </div>
       </div>
 
       {sorted.length === 0 ? (

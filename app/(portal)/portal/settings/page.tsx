@@ -58,6 +58,8 @@ import {
   Instagram,
   Globe,
   Shield,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WEBHOOK_EVENTS, testWebhookConnection, sendToBrianStitt, type WebhookEventType } from "@/lib/mattermost";
@@ -595,6 +597,8 @@ const apiConfigs: ApiKeyConfig[] = [
   },
 ];
 
+// SAM.gov integration is configured separately - link to dedicated settings page
+
 const llmProviders = [
   { id: "openai", name: "OpenAI", models: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"] },
   { id: "anthropic", name: "Anthropic", models: ["claude-3-opus", "claude-3-sonnet", "claude-3-haiku"] },
@@ -1030,6 +1034,52 @@ function SettingsPageContent() {
                 </CardContent>
               </Card>
             ))}
+
+            {/* SAM.gov Integration Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Globe className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        SAM.gov Integration
+                        <Badge variant="secondary">Government</Badge>
+                      </CardTitle>
+                      <CardDescription>
+                        Federal contract opportunity search with natural language AI
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/portal/settings/sam-gov">
+                      Configure
+                    </Link>
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Configure SAM.gov API credentials, LLM provider for natural language search, and view the integration documentation.
+                </p>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/portal/work/sam-gov-migration">
+                      <FileText className="h-4 w-4 mr-2" />
+                      View Migration Guide
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <a href="https://sam.gov" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      SAM.gov
+                    </a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
